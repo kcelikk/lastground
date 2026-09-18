@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3de31e0681a0374629896dd41a1e523d, type: 3}
+  m_Name: CAM_TopDown
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Presentation.CameraProfile
+  Pitch: 55
+  FieldOfView: 35
+  Distance: 22
+  FollowSmoothTime: 0.12
+  AimLookAhead: 2.5
+  MoveLookAhead: 1.5
+  LookAheadSmoothTime: 0.35
+  MaxShakeOffset: 0.3
+  MaxShakeAngle: 1.5
+  ShakeFrequency: 18
+  TraumaDecay: 1.6
+  HurtTrauma: 0.45

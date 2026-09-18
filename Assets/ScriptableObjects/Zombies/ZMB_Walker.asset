@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0473e62ded2303b9a3b1ec5b7ca98d8, type: 3}
+  m_Name: ZMB_Walker
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Zombies.ZombieDefinition
+  Id: walker
+  TypeIndex: 0
+  MaxHealth: 45
+  MinSpeed: 1.3
+  MaxSpeed: 2.1
+  AttackDamage: 8
+  AttackWindup: 0.45
+  AttackCooldown: 1.4
+  AttackReachGrace: 0.35
+  KnockbackScale: 1
