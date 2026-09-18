@@ -17,7 +17,7 @@
 | B1 | T14'te boş SO-DIMM yuvası var mı (16 → 24/32 GB)? Cihaz geldiğinde `sudo dmidecode -t memory` ile birlikte bakabiliriz. Şart değil | Build ve editör konforu | ⏳ Bilgi |
 | B2 | HIGH sınıf (Snapdragon 8 serisi vb.) bir cihaza erişim var mı? Test grubundan ödünç alınabilir mi? | Üst segment FPS doğrulaması (M10'a kadar gerekmez) | ⏳ Bilgi |
 | B3 | 21 kişilik test grubundaki kaç kişi **aynı ortamda ikişerli** test yapabilir? LAN co-op yalnızca aynı Wi-Fi'da çalışır | Co-op test planı | ⏳ Bilgi |
-| B4 | **OnePlus 5T USB'de algılanmıyor** (2026-09-18: `lsusb`'de yok → kablo/port/USB modu). Ertelendi; veri kablosu, diğer port ve "Dosya aktarımı" modu denenecek. Redmi Pad Pro henüz bağlanmadı | M0 sonu APK kurulumu ve profiler bağlantısı | ⏳ Ertelendi |
+| B4 | OnePlus 5T bağlantısı — **çözüldü** (2026-09-18: telefon recovery/sideload modundaydı, sonra USB debugging kapalıydı; TalkBack geliştirici menüsü Developer options ile karıştırılmıştı). Redmi Pad Pro henüz bağlanmadı | M1 iki cihaz testi | ⏳ Redmi bekliyor |
 
 ## C. Yayın / altyapı (M14'e kadar gerekmiyor)
 

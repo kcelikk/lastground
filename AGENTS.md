@@ -40,6 +40,10 @@ Localization ← Core   Save / Meta ← Core, Data   Platform ← Core   App ←
 - Gameplay sırasında `Instantiate/Destroy` yok — pool kullan (TDD_02 §20).
 - UI sayıları TMP `SetText(format, number)` ile.
 
+### IL2CPP stripping
+- Yalnızca reflection ile oluşturulan tipler (Newtonsoft ile okunan JSON veri sınıfları) `Assets/link.xml`'e eklenir ve `LinkXmlTests.JsonTypes` listesine yazılır. Aksi hâlde Editor'de çalışır, cihazda constructor bulunamaz (M0'da yaşandı).
+- Editor'de geçen test cihazda çalışmanın kanıtı değildir; her milestone sonunda APK cihazda açılıp logcat kontrol edilir.
+
 ### Determinizm
 - Rastgelelik yalnızca `DeterministicRandom` (run seed + alt akış). `UnityEngine.Random` / `System.Random` yasak.
 - Sim zamanı host tick'inden türetilir; sim kodunda `Time.time` yok.

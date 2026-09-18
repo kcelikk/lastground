@@ -1,0 +1,14 @@
+<!--
+  IL2CPP managed stripping keeps only code reachable from normal calls. Types that are created only through
+  reflection (Newtonsoft JSON deserialization) lose their constructors unless they are preserved here.
+  Rule (AGENTS.md): every JSON data class must be listed. LinkXmlTests fails when an entry no longer exists.
+-->
+<linker>
+  <assembly fullname="LastGround.Localization">
+    <type fullname="LastGround.Localization.LanguageCatalog" preserve="all" />
+    <type fullname="LastGround.Localization.LanguageInfo" preserve="all" />
+  </assembly>
+  <assembly fullname="LastGround.Save">
+    <type fullname="LastGround.Save.SettingsData" preserve="all" />
+  </assembly>
+</linker>
