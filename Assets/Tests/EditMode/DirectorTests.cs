@@ -71,6 +71,10 @@ namespace LastGround.Tests
             public readonly List<float> Intensity = new List<float>();
             public readonly HashSet<DirectorState> StatesSeen = new HashSet<DirectorState>();
             public int OnScreenSpawns;
+            /// <summary>Run seconds at which each zombie type first appeared (−1 = never).</summary>
+            public readonly float[] FirstSeen = { -1f, -1f, -1f, -1f, -1f, -1f, -1f, -1f };
+            public int EliteSpawns;
+            public float FirstElite = -1f;
             public int CloseSpawns;
             public int MaxAlive;
             readonly bool[] _wasAlive = new bool[512];
@@ -80,15 +84,22 @@ namespace LastGround.Tests
 
             public SimRun(uint seed, DirectorProfile profile, ThreatCurveDefinition threat, PlayerCountScalingProfile scaling,
                 ZombieDefinition walker, PlayerDefinition player, CameraProfile camera)
+                : this(seed, profile, threat, scaling, new[] { walker }, null, null, player, camera)
+            {
+            }
+
+            public SimRun(uint seed, DirectorProfile profile, ThreatCurveDefinition threat, PlayerCountScalingProfile scaling,
+                ZombieDefinition[] types, SpawnDeckDefinition deck, LastGround.Data.Combat.EliteModifierDefinition[] elites,
+                PlayerDefinition player, CameraProfile camera)
             {
                 Players.SetLocal(0f, 0f, 0f, 0f, 0f);
-                World = new ZombieWorld(Crowd, Players, Nav, new ZombieTuning(), walker, seed);
+                World = new ZombieWorld(Crowd, Players, Nav, new ZombieTuning(), types, seed) { Elites = elites };
                 Health = new PlayerHealthSystem(Players, player);
                 World.DamageSink = Health;
                 World.Respawns = Health.Respawns;
                 _footprint = new CameraFootprint(camera, 0f);
                 Director = new HordeDirector(World, Players, profile, threat, scaling, new CameraFootprint(camera, 3f),
-                    player.MaxHealth, Status, seed);
+                    player.MaxHealth, Status, seed) { Deck = deck };
             }
 
             /// <summary>A bot that stands in the middle and kills the nearest zombie within 8 m ~3 times a second.</summary>
@@ -118,6 +129,13 @@ namespace LastGround.Tests
                         var p = new float2(Crowd.PosX[i], Crowd.PosZ[i]);
                         if (_footprint.Contains(float2.zero, p)) OnScreenSpawns++;
                         if (math.length(p) < 21.9f) CloseSpawns++;
+                        byte type = Crowd.Type[i];
+                        if (FirstSeen[type] < 0f) FirstSeen[type] = Status.RunSeconds;
+                        if (Crowd.Elite[i] != 0)
+                        {
+                            EliteSpawns++;
+                            if (FirstElite < 0f) FirstElite = Status.RunSeconds;
+                        }
                     }
                     _wasAlive[i] = alive;
                 }
@@ -158,6 +176,43 @@ namespace LastGround.Tests
             player.SoloAdrenaline = 1000;
             return new SimRun(seed, Asset<DirectorProfile>(), Asset<ThreatCurveDefinition>(), Asset<PlayerCountScalingProfile>(),
                 Asset<ZombieDefinition>(), player, Asset<CameraProfile>());
+        }
+
+        [Test]
+        public void SpawnDeck_UnlocksTypesOnSchedule_AndPacesElites()
+        {
+            var catalog = UnityEditor.AssetDatabase.LoadAssetAtPath<LastGround.Data.Combat.CombatCatalog>("Assets/ScriptableObjects/Combat/CMB_Catalog.asset");
+            var deck = UnityEditor.AssetDatabase.LoadAssetAtPath<SpawnDeckDefinition>("Assets/ScriptableObjects/Director/DIR_SpawnDeck.asset");
+            var player = Asset<PlayerDefinition>();
+            player.SoloAdrenaline = 1000;
+            using (var run = new SimRun(21u, Asset<DirectorProfile>(), Asset<ThreatCurveDefinition>(), Asset<PlayerCountScalingProfile>(),
+                catalog.Zombies, deck, catalog.Elites, player, Asset<CameraProfile>()))
+            {
+                var announcements = run.Status.Announcements.CreateReader();
+                run.Run(600f);
+                Debug.Log($"[Test] deck 10 min: first seen {string.Join(", ", System.Array.ConvertAll(run.FirstSeen, t => t.ToString("0")))} s, " +
+                          $"elites {run.EliteSpawns} (first {run.FirstElite:0} s), spawned {run.Director.Spawned}");
+                Assert.That(run.FirstSeen[0], Is.InRange(0f, 15f), "walkers right after the calm start");
+                for (int type = 1; type < catalog.Zombies.Length; type++)
+                {
+                    float unlock = System.Array.Find(deck.Cards, c => c.Zombie.TypeIndex == type).MinRunSeconds;
+                    Assert.GreaterOrEqual(run.FirstSeen[type], unlock, catalog.Zombies[type].Id + " not before its unlock");
+                    Assert.Less(run.FirstSeen[type], unlock + 120f, catalog.Zombies[type].Id + " shows up within two minutes of unlocking");
+                }
+                Assert.Greater(run.EliteSpawns, 0);
+                Assert.GreaterOrEqual(run.FirstElite, deck.EliteMinRunSeconds);
+                Assert.LessOrEqual(run.EliteSpawns, (600f - deck.EliteMinRunSeconds) / deck.EliteMinInterval + 1f, "elite pacing");
+
+                int newTypes = 0, elites = 0;
+                while (run.Status.Announcements.TryRead(ref announcements, out DirectorAnnouncement a))
+                {
+                    if (a.Kind == AnnouncementKind.NewZombieType) newTypes++;
+                    else elites++;
+                }
+                Assert.AreEqual(catalog.Zombies.Length - 1, newTypes, "one banner per new type, none for walkers");
+                Assert.AreEqual(run.EliteSpawns, elites);
+                Assert.AreEqual(0, run.OnScreenSpawns);
+            }
         }
 
         [Test]

@@ -3,9 +3,19 @@ using Unity.Mathematics;
 
 namespace LastGround.Gameplay.Director
 {
-    /// <summary>Pattern selection, spawn queue and far-zombie cleanup.</summary>
+    /// <summary>
+    /// Pattern selection, spawn queue and far-zombie cleanup. A pattern's size is in spawn points; each planned spawn
+    /// draws its zombie type from the deck (cost, unlock time, weight, cap) and may become an elite.
+    /// </summary>
     public sealed partial class HordeDirector
     {
+        struct QueuedSpawn
+        {
+            public float2 Position;
+            public byte Type;
+            public byte Elite;
+        }
+
         void PlanPattern(int cap)
         {
             int room = cap - _world.Crowd.ActiveCount;
@@ -26,24 +36,37 @@ namespace LastGround.Gameplay.Director
             if (player < 0) return;
             float angle = _rng.Range(-math.PI, math.PI);
             float spread = math.radians(_profile.PackSpreadDeg);
-            int planned = 0;
-            switch (pattern)
+            int sectors = pattern == HordePattern.Surround ? _rng.Range(_profile.SurroundSectors.x, _profile.SurroundSectors.y + 1) : 1;
+            int players = CountTargetable();
+            _deck?.CountAlive(_world.Crowd);
+            int spent = 0;
+            for (int i = 0; spent < size && i < size; i++)
             {
-                case HordePattern.Trickle:
-                    for (int i = 0; i < size; i++) planned += Plan(player, _rng.Range(-math.PI, math.PI), math.PI / 6f);
-                    break;
-                case HordePattern.Pack:
-                    for (int i = 0; i < size; i++) planned += Plan(player, angle, spread);
-                    break;
-                case HordePattern.Pincer:
-                    for (int i = 0; i < size; i++) planned += Plan(player, angle + (i % 2) * math.PI, spread);
-                    break;
-                default:
-                    int sectors = _rng.Range(_profile.SurroundSectors.x, _profile.SurroundSectors.y + 1);
-                    for (int i = 0; i < size; i++) planned += Plan(player, angle + (i % sectors) * (2f * math.PI / sectors), spread);
-                    break;
+                byte type = 0, elite = 0;
+                int cost = 1;
+                if (_deck != null)
+                {
+                    int card = _deck.Pick(_status.RunSeconds, size - spent, math.max(1, players), ref _rng);
+                    if (card >= 0)
+                    {
+                        type = _deck.Card(card).Zombie.TypeIndex;
+                        cost = math.max(1, _deck.Card(card).Cost);
+                        elite = _deck.RollElite(card, _status.RunSeconds, math.max(1, players), ref _rng);
+                    }
+                }
+                float a;
+                float s;
+                switch (pattern)
+                {
+                    case HordePattern.Trickle: a = _rng.Range(-math.PI, math.PI); s = math.PI / 6f; break;
+                    case HordePattern.Pack: a = angle; s = spread; break;
+                    case HordePattern.Pincer: a = angle + (i % 2) * math.PI; s = spread; break;
+                    default: a = angle + (i % sectors) * (2f * math.PI / sectors); s = spread; break;
+                }
+                if (Plan(player, a, s, type, elite) == 0) continue;
+                spent += cost;
             }
-            _budget -= planned;
+            _budget -= spent;
             LastPattern = pattern;
             Patterns++;
         }
@@ -85,12 +108,13 @@ namespace LastGround.Gameplay.Director
             }
         }
 
-        int Plan(int player, float angle, float spread)
+        int Plan(int player, float angle, float spread, byte type, byte elite)
         {
             if (_queueCount >= _queue.Length) return 0;
             if (!_locator.TryFind(player, angle, spread, ref _rng, out float2 position)) return 0;
-            _queue[(_queueHead + _queueCount) % _queue.Length] = position;
+            _queue[(_queueHead + _queueCount) % _queue.Length] = new QueuedSpawn { Position = position, Type = type, Elite = elite };
             _queueCount++;
+            _deck?.OnQueued(type);
             return 1;
         }
 
@@ -102,14 +126,40 @@ namespace LastGround.Gameplay.Director
                 {
                     // Over the cap (governor dropped it): give the points back and forget the rest.
                     _budget += _queueCount;
-                    _queueCount = 0;
+                    while (_queueCount > 0) Dequeue();
                     return;
                 }
-                float2 position = _queue[_queueHead];
-                _queueHead = (_queueHead + 1) % _queue.Length;
-                _queueCount--;
-                if (_world.Spawn(position, _rng.Range(0f, 360f)) >= 0) Spawned++;
+                QueuedSpawn spawn = Dequeue();
+                if (_world.Spawn(spawn.Position, _rng.Range(0f, 360f), spawn.Type, spawn.Elite) < 0) continue;
+                Spawned++;
+                Announce(spawn);
             }
+        }
+
+        QueuedSpawn Dequeue()
+        {
+            QueuedSpawn spawn = _queue[_queueHead];
+            _queueHead = (_queueHead + 1) % _queue.Length;
+            _queueCount--;
+            _deck?.OnDequeued(spawn.Type);
+            return spawn;
+        }
+
+        void Announce(in QueuedSpawn spawn)
+        {
+            if (spawn.Type < _typeSeen.Length && !_typeSeen[spawn.Type])
+            {
+                _typeSeen[spawn.Type] = true;
+                // Walkers are the baseline: no banner for them.
+                if (spawn.Type != 0)
+                    _status.Announcements.Publish(new DirectorAnnouncement { Kind = AnnouncementKind.NewZombieType, ZombieType = spawn.Type });
+            }
+            if (spawn.Elite == 0) return;
+            Elites++;
+            _status.Announcements.Publish(new DirectorAnnouncement
+            {
+                Kind = AnnouncementKind.EliteSpawned, ZombieType = spawn.Type, Elite = spawn.Elite,
+            });
         }
 
         void DespawnFar()
