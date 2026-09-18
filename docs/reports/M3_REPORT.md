@@ -1,6 +1,6 @@
 # M3 Raporu — Horde Simulation
 
-- **Tarih:** 2026-09-18 · **Branch:** `m3-horde` · **Unity:** 6000.3.24f1 · **Durum:** ⏳ Onay bekliyor
+- **Tarih:** 2026-09-18 · **Branch:** `m3-horde` · **Unity:** 6000.3.24f1 · **Durum:** ✅ Onaylandı (2026-09-18), `main`e merge edildi
 - **Cihazlar:** Redmi Pad Pro = MID (host, kablosuz ADB) · OnePlus 5T = LOW (client, USB). Aynı Wi-Fi.
 
 ## Çıkış kriterleri (TDD_03 §36 M3)
