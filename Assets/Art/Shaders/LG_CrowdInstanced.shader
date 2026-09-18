@@ -45,6 +45,11 @@ Shader "LG/CrowdInstanced"
             // Tint palette (8 entries), set globally by the render system.
             float4 _LGCrowdTints[8];
 
+            // Lighting grid (TDD_02 §21.2): top-down light map; xy = world min XZ, zw = 1 / size.
+            TEXTURE2D(_LGLightGrid);
+            SAMPLER(sampler_LGLightGrid);
+            float4 _LGLightGridRect;
+
             UNITY_INSTANCING_BUFFER_START(Props)
                 UNITY_DEFINE_INSTANCED_PROP(float4, _Anim)
             UNITY_INSTANCING_BUFFER_END(Props)
@@ -111,7 +116,9 @@ Shader "LG/CrowdInstanced"
                 half3 albedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).rgb * input.tint.rgb;
                 float3 normal = normalize(input.normalWS);
                 Light light = GetMainLight();
-                half3 color = albedo * (light.color * saturate(dot(normal, light.direction)) + SampleSH(normal));
+                float2 gridUV = (input.positionWS.xz - _LGLightGridRect.xy) * _LGLightGridRect.zw;
+                half3 pool = SAMPLE_TEXTURE2D(_LGLightGrid, sampler_LGLightGrid, gridUV).rgb;
+                half3 color = albedo * (light.color * saturate(dot(normal, light.direction)) + SampleSH(normal) + pool);
             #if defined(LG_RIM)
                 float3 view = normalize(GetWorldSpaceViewDir(input.positionWS));
                 color += _RimColor.rgb * pow(1.0 - saturate(dot(normal, view)), _RimPower);

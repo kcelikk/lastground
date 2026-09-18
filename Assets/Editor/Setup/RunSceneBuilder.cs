@@ -51,6 +51,14 @@ namespace LastGround.EditorTools.Setup
             groundGo.GetComponent<MeshRenderer>().sharedMaterial = ground;
             Object.DestroyImmediate(groundGo.GetComponent<Collider>());
 
+            // Light pools: one quad over the ground drawing the lighting grid additively.
+            var pools = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            pools.name = "LightPools (lighting grid)";
+            pools.transform.SetPositionAndRotation(new Vector3(0f, 0.02f, 0f), Quaternion.Euler(90f, 0f, 0f));
+            pools.transform.localScale = new Vector3(GroundSize, GroundSize, 1f);
+            pools.GetComponent<MeshRenderer>().sharedMaterial = CreateFxMaterial("M_LightPools", "LG/LightPoolGround");
+            Object.DestroyImmediate(pools.GetComponent<Collider>());
+
             var world = new GameObject("World");
             Mesh capsule = Resources.GetBuiltinResource<Mesh>("Capsule.fbx");
 

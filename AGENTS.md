@@ -81,11 +81,17 @@ $U -batchmode -nographics -projectPath . -buildTarget Linux64 -executeMethod Las
 # LAN otomasyonu (yalnızca dev build): masaüstünde argüman, Android'de intent extra
 Builds/Linux/LastGround.x86_64 -lg-host -lg-start-at 2
 adb shell am start -n com.asgardgame.lastground/com.unity3d.player.UnityPlayerGameActivity -e lgargs "-lg-join 192.168.1.10"
+# Render benchmark (20→300, CSV → persistentDataPath/bench): kalite 0/1/2, adım saniyesi
+adb -s <cihaz> shell "am start -n com.asgardgame.lastground/com.unity3d.player.UnityPlayerGameActivity -e lgargs '-lg-quality 1 -lg-bench 30'"
+# GC kaynağı: cihazda -lg-gc-capture → adb pull gc_<Scene>.raw → -executeMethod LastGround.EditorTools.Tools.GcAllocReport.AnalyzeBatch -lgRaw <dosya>
+# Sürü gövdeleri: -executeMethod LastGround.EditorTools.Crowd.CrowdBaker.BakeAllBatch (CrowdBodySource tablosu)
 # Ölçüm: [NetStats] satırları (5 s'de bir) → adb logcat -s Unity | grep NetStats ; ~/.config/unity3d/AsgardGame/Last\ Ground/Player.log
 ```
 - Sahneleri bilerek yeniden üretmek: `-executeMethod LastGround.EditorTools.Setup.ProjectSetup.RebuildScenesBatch` (Menu ve Run'ın üzerine yazar).
 - Unity Editor açıkken batchmode aynı projeyi açamaz; önce Editor'ü kapat.
-- **Performans verisi yalnızca gerçek telefondan** (OnePlus 5T = LOW, Redmi Pad Pro = MID). Editor ölçümü kabul edilmez.
+- **Performans verisi yalnızca gerçek telefondan** (OnePlus 5T = LOW, USB `3e415066`; Redmi Pad Pro = MID, kablosuz `adb-368a7a72-t2xyr9._adb-tls-connect._tcp`). Editor ölçümü kabul edilmez.
+- İki cihaz bağlıyken her `adb` komutunda `-s <seri>` kullan.
+- Dev build GC ölçümü Mirror `KcpTransport.OnGUI`'den ~360 B/frame içerir (release'te derlenmez); oyun kodunun payı `GcAllocReport` ile ayrılır.
 
 ## 6. Unity ayarları (değiştirme)
 Force Text serialization, Visible Meta Files, Input System only, Linear, IL2CPP ARM64, min API 26, Vulkan + GLES3, ASTC, URP Forward, kalite seviyeleri LOW/MEDIUM/HIGH (`Assets/Settings/Rendering/URP_*`). Hepsi `ProjectSetup.cs` içinde; elle değiştirmek yerine script'i güncelle.

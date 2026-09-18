@@ -14,6 +14,7 @@ using LastGround.Networking.Replication;
 using LastGround.Rendering;
 using LastGround.Rendering.Carnage;
 using LastGround.Rendering.Crowd;
+using LastGround.Rendering.Lighting;
 using LastGround.Rendering.Quality;
 using LastGround.UI.Run;
 using UnityEngine;
@@ -108,6 +109,7 @@ namespace LastGround.App
             loop.Register(TickPhase.Presentation, new TickAction(_ => sync.Interpolate()));
             loop.Register(TickPhase.Presentation, new FollowCamera(_camera, players));
 
+            _disposables.Add(new LightingGrid(new Vector2(-WorldSize * 0.5f, -WorldSize * 0.5f), WorldSize, 256, LightingGrid.GreyboxLamps()));
             var crowdRenderer = new ZombieRenderSystem(crowdSource, _crowdCatalog, _camera, preset, deaths);
             _disposables.Add(crowdRenderer);
             loop.Register(TickPhase.Presentation, crowdRenderer);
