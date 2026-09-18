@@ -1,13 +1,11 @@
 namespace LastGround.Gameplay.Zombies
 {
     /// <summary>
-    /// Walker behaviour numbers (TDD_01 §8). Starting hypotheses; become ZombieDefinition / DirectorProfile SO
-    /// fields when more types arrive (M6).
+    /// Crowd-movement technical constants (TDD_01 §8). Per-type balance (health, speed, attack) lives in
+    /// <see cref="LastGround.Data.Zombies.ZombieDefinition"/>.
     /// </summary>
     public sealed class ZombieTuning
     {
-        public float MinSpeed = 1.3f;
-        public float MaxSpeed = 2.1f;
         public float Acceleration = 6f;
         public float Radius = 0.45f;
         public float SeparationStrength = 2.5f;

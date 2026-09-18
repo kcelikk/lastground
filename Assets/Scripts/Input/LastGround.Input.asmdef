@@ -3,7 +3,8 @@
     "rootNamespace": "LastGround.Input",
     "references": [
         "LastGround.Core",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

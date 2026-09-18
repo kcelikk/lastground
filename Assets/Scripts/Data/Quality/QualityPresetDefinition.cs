@@ -27,5 +27,10 @@ namespace LastGround.Data.Quality
         public float CorpseLifetime = 12f;
         public int BloodSplatCap = 96;
         [Range(0f, 1f)] public float ParticleMultiplier = 0.8f;
+
+        [Header("Combat feedback (TDD_02 §20.2)")]
+        public int TracerCap = 48;
+        public int DamageNumberCap = 24;
+        public int AudioVoices = 24;
     }
 }

@@ -23,6 +23,7 @@ namespace LastGround.Rendering.Crowd
         const float SinkDuration = 1.5f;
         const float SinkDepth = 0.6f;
         const int MaxPerDraw = 1023;
+        const float HitFlashDuration = 0.12f;
 
         static readonly int AnimId = Shader.PropertyToID("_Anim");
         static readonly int BoneTexId = Shader.PropertyToID("_BoneTex");
@@ -42,6 +43,9 @@ namespace LastGround.Rendering.Crowd
         readonly Camera _camera;
         readonly QualityPresetDefinition _preset;
         readonly IGameEventStream<CrowdDeath> _deaths;
+        readonly IGameEventStream<CrowdHit> _hits;
+        readonly float[] _flashUntil;
+        EventReader<CrowdHit> _hitReader;
         readonly Material _material;
         readonly Batch[] _batches;
         readonly GroundFootprint _footprint = new GroundFootprint();
@@ -52,7 +56,7 @@ namespace LastGround.Rendering.Crowd
         float _time;
 
         public ZombieRenderSystem(ICrowdRenderSource source, CrowdVisualCatalog catalog, Camera camera,
-            QualityPresetDefinition preset, IGameEventStream<CrowdDeath> deaths)
+            QualityPresetDefinition preset, IGameEventStream<CrowdDeath> deaths, IGameEventStream<CrowdHit> hits = null)
         {
             _source = source;
             _catalog = catalog;
@@ -60,6 +64,9 @@ namespace LastGround.Rendering.Crowd
             _preset = preset;
             _deaths = deaths;
             if (deaths != null) _deathReader = deaths.CreateReader();
+            _hits = hits;
+            if (hits != null) _hitReader = hits.CreateReader();
+            _flashUntil = new float[source.Capacity];
 
             _material = new Material(catalog.Material) { name = "Crowd (runtime)", enableInstancing = true };
             if (preset.RimLight) _material.EnableKeyword("LG_RIM");
@@ -109,6 +116,7 @@ namespace LastGround.Rendering.Crowd
             for (int i = 0; i < _batches.Length; i++) _batches[i].Count = 0;
 
             CollectDeaths();
+            CollectHits();
             int drawn = AddCrowd();
             drawn += AddCorpses();
             Draw();
@@ -126,6 +134,13 @@ namespace LastGround.Rendering.Crowd
             while (_deaths.TryRead(ref _deathReader, out CrowdDeath death))
                 _corpses.Add(death.Slot, death.X, death.Z, death.Yaw, _time);
             _corpses.Expire(_time, _preset.CorpseLifetime + SinkDuration);
+        }
+
+        void CollectHits()
+        {
+            if (_hits == null) return;
+            while (_hits.TryRead(ref _hitReader, out CrowdHit hit))
+                if ((uint)hit.Slot < (uint)_flashUntil.Length) _flashUntil[hit.Slot] = _time + HitFlashDuration;
         }
 
         int AddCrowd()
@@ -162,7 +177,8 @@ namespace LastGround.Rendering.Crowd
                 int slot = _candidates[c];
                 float d2 = _candidateDistance[c];
                 int lod = d2 < lod0 ? 0 : d2 < lod1 ? 1 : 2;
-                Emit(slot, xs[slot], 0f, zs[slot], yaws[slot], lod, (CrowdClipId)anim[slot], -1f);
+                float flash = Mathf.Clamp01((_flashUntil[slot] - _time) / HitFlashDuration);
+                Emit(slot, xs[slot], 0f, zs[slot], yaws[slot], lod, (CrowdClipId)anim[slot], -1f, flash);
             }
             return count;
         }
@@ -189,7 +205,7 @@ namespace LastGround.Rendering.Crowd
         }
 
         /// <summary>Adds one instance. <paramref name="deathAge"/> ≥ 0 plays the death clip once and holds the last frame.</summary>
-        bool Emit(int slot, float x, float y, float z, float yaw, int lod, CrowdClipId clipId, float deathAge)
+        bool Emit(int slot, float x, float y, float z, float yaw, int lod, CrowdClipId clipId, float deathAge, float flash = 0f)
         {
             uint hash = CrowdVariety.Hash(slot);
             int body = CrowdVariety.Body(hash, _catalog.Bodies.Length);
@@ -213,7 +229,7 @@ namespace LastGround.Rendering.Crowd
 
             float scale = CrowdVariety.Scale(hash, _catalog.ScaleVariation);
             batch.Matrices[batch.Count] = Matrix4x4.TRS(new Vector3(x, y, z), Quaternion.Euler(0f, yaw, 0f), new Vector3(scale, scale, scale));
-            batch.Anim[batch.Count] = new Vector4(clip.StartFrame + a, clip.StartFrame + b, frame - a, CrowdVariety.Tint(hash));
+            batch.Anim[batch.Count] = new Vector4(clip.StartFrame + a, clip.StartFrame + b, frame - a, CrowdVariety.Tint(hash) + flash * 0.99f);
             batch.Count++;
             return true;
         }

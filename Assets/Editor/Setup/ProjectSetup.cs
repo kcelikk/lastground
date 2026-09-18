@@ -31,6 +31,7 @@ namespace LastGround.EditorTools.Setup
             ApplyPlayerSettings();
             ApplyRendering();
             QualityPresetBuilder.Build();
+            CombatContentBuilder.Build();
             SceneBuilder.BuildAll();
             AssetDatabase.SaveAssets();
             Debug.Log("[Setup] Project settings applied.");

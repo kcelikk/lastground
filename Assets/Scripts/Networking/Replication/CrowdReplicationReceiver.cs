@@ -73,8 +73,8 @@ namespace LastGround.Networking.Replication
                 float z = Quantize.Position((ushort)r.ReadBits(16));
                 float yaw = Quantize.Yaw(r.ReadBits(ReplicationTuning.YawBits), ReplicationTuning.YawBits);
                 byte anim = (byte)r.ReadBits(ReplicationTuning.AnimBits);
-                r.ReadBits(ReplicationTuning.FlagBits);
-                if (!r.Failed) _replica.Update(slot, x, z, yaw, time, anim);
+                byte flags = (byte)r.ReadBits(ReplicationTuning.FlagBits);
+                if (!r.Failed) _replica.Update(slot, x, z, yaw, time, anim, flags);
             }
         }
 

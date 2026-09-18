@@ -40,6 +40,11 @@ namespace LastGround.Gameplay.Crowd
         public float[] Z => PosZ;
         public float[] Yaw => Heading;
         public byte[] AnimState => Anim;
+        public byte[] FlagBits => Flags;
+        public byte GenerationOf(int slot) => Generation[slot];
+
+        /// <summary>Authoritative hits (host): blood, hit flash, damage numbers, sound.</summary>
+        public readonly EventChannel<CrowdHit> Hits = new EventChannel<CrowdHit>(256);
 
         /// <summary>Activates a free slot; returns -1 when full.</summary>
         public int Spawn(byte type, float x, float z, float heading)

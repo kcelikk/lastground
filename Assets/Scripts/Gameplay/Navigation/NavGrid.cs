@@ -53,6 +53,51 @@ namespace LastGround.Gameplay.Navigation
 
         public float2 CellCentre(int2 cell) => Origin + ((float2)cell + 0.5f) * CellSize;
 
+        /// <summary>
+        /// Distance along the segment <paramref name="from"/> → <paramref name="from"/> + dir × maxDistance to the first
+        /// blocked (or out-of-bounds) cell, or maxDistance when clear. Grid DDA: exact for axis-aligned cells, used as
+        /// the line-of-sight test for shots (TDD_01 §5.1) on host and clients alike.
+        /// </summary>
+        public float Raycast(float2 from, float2 dir, float maxDistance)
+        {
+            int2 cell = CellOf(from);
+            if (!InBounds(cell) || Walkable[cell.y * Width + cell.x] == 0) return 0f;
+            int2 step = new int2(dir.x > 0f ? 1 : -1, dir.y > 0f ? 1 : -1);
+            float2 local = (from - Origin) / CellSize;
+            float2 inv = new float2(math.abs(dir.x) > 1e-6f ? 1f / math.abs(dir.x) : float.MaxValue,
+                math.abs(dir.y) > 1e-6f ? 1f / math.abs(dir.y) : float.MaxValue);
+            float2 next = new float2(dir.x > 0f ? cell.x + 1 - local.x : local.x - cell.x,
+                dir.y > 0f ? cell.y + 1 - local.y : local.y - cell.y) * inv * CellSize;
+            float2 delta = inv * CellSize;
+            while (true)
+            {
+                float travelled;
+                if (next.x < next.y)
+                {
+                    travelled = next.x;
+                    next.x += delta.x;
+                    cell.x += step.x;
+                }
+                else
+                {
+                    travelled = next.y;
+                    next.y += delta.y;
+                    cell.y += step.y;
+                }
+                if (travelled >= maxDistance) return maxDistance;
+                if (!InBounds(cell) || Walkable[cell.y * Width + cell.x] == 0) return travelled;
+            }
+        }
+
+        /// <summary>True when nothing blocks the straight line between two points.</summary>
+        public bool HasLineOfSight(float2 from, float2 to)
+        {
+            float2 d = to - from;
+            float length = math.length(d);
+            if (length < 1e-4f) return true;
+            return Raycast(from, d / length, length) >= length - 1e-3f;
+        }
+
         public void Dispose()
         {
             if (Walkable.IsCreated) Walkable.Dispose();

@@ -48,11 +48,12 @@ namespace LastGround.Tests
             public PlayerStateTable Players = new PlayerStateTable { Local = new PlayerId(0) };
             public ZombieWorld World;
             public TestHordeSpawner Spawner;
+            public LastGround.Data.Zombies.ZombieDefinition Walker = UnityEngine.ScriptableObject.CreateInstance<LastGround.Data.Zombies.ZombieDefinition>();
 
             public Rig(NavGrid nav, int population, float kills = 0f)
             {
                 Nav = nav;
-                World = new ZombieWorld(Crowd, Players, nav, new ZombieTuning(), 3u);
+                World = new ZombieWorld(Crowd, Players, nav, new ZombieTuning(), Walker, 3u);
                 Spawner = new TestHordeSpawner(World, Players, 3u) { Population = population, KillsPerSecond = kills };
             }
 
@@ -69,6 +70,7 @@ namespace LastGround.Tests
             {
                 World.Dispose();
                 Nav.Dispose();
+                UnityEngine.Object.DestroyImmediate(Walker);
             }
         }
 

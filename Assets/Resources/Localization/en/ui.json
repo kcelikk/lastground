@@ -39,5 +39,11 @@
   "net.reject.version": "The host runs a different game version.",
   "net.reject.full": "The game is full.",
   "net.reject.in_progress": "The game has already started.",
-  "net.reject.refused": "The host refused the connection."
+  "net.reject.refused": "The host refused the connection.",
+  "hud.ammo": "{0} / {1}",
+  "hud.reloading": "RELOADING",
+  "hud.down": "DOWN — BACK IN {0}",
+  "hud.auto_fire_on": "AUTO FIRE: ON",
+  "hud.auto_fire_off": "AUTO FIRE: OFF",
+  "weapon.assault_rifle": "ASSAULT RIFLE"
 }

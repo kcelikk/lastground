@@ -29,6 +29,10 @@ namespace LastGround.Core.Net.Protocol
         public const byte ZombieExit = 32;
         public const byte ZombieDeath = 33;
 
+        // Combat (40–49)
+        public const byte HitClaimBatch = 40;
+        public const byte PlayerVitals = 41;
+
         public const int Count = 256;
     }
 }

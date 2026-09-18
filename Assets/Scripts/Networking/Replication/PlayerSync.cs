@@ -12,12 +12,14 @@ namespace LastGround.Networking.Replication
     /// <summary>
     /// Player movement sync (TDD_02 §15.5, §16): clients send their own state to the host at 30 Hz; the host
     /// validates speed and broadcasts every player's state at 20 Hz. Remote players are displayed interpolated.
+    /// A flags byte carries the trigger state so other devices draw that player's tracers.
     /// </summary>
     public sealed class PlayerSync : ITickable, IDisposable
     {
         const float BroadcastInterval = 1f / 20f;
         const float SpeedTolerance = 1.5f;
         const float DistanceSlack = 0.5f;
+        const byte FlagFiring = 1 << 0;
 
         readonly ISession _session;
         readonly PlayerStateTable _table;
@@ -68,6 +70,7 @@ namespace LastGround.Networking.Replication
             w.WriteShort(Quantize.Velocity(_table.VelX[i]));
             w.WriteShort(Quantize.Velocity(_table.VelZ[i]));
             w.WriteByte((byte)Quantize.Yaw(_table.Yaw[i], 8));
+            w.WriteByte(_table.Firing[i] ? FlagFiring : (byte)0);
             _session.SendToHost(NetChannel.Unreliable);
         }
 
@@ -103,6 +106,7 @@ namespace LastGround.Networking.Replication
                 w.WriteShort(Quantize.Velocity(_table.VelX[i]));
                 w.WriteShort(Quantize.Velocity(_table.VelZ[i]));
                 w.WriteByte((byte)Quantize.Yaw(_table.Yaw[i], 8));
+                w.WriteByte(_table.Firing[i] ? FlagFiring : (byte)0);
             }
             _session.SendToClients(NetChannel.Unreliable);
         }
@@ -115,6 +119,7 @@ namespace LastGround.Networking.Replication
             float vx = Quantize.Velocity(r.ReadShort());
             float vz = Quantize.Velocity(r.ReadShort());
             float yaw = Quantize.Yaw(r.ReadByte(), 8);
+            byte flags = r.ReadByte();
             if (r.Failed || !sender.IsValid || sender.Value >= PlayerStateTable.Max) return;
 
             int i = sender.Value;
@@ -135,6 +140,7 @@ namespace LastGround.Networking.Replication
                 }
             }
             _table.PushRemote(sender, x, z, yaw, vx, vz, _session.Clock.HostTime, _localTime);
+            _table.Firing[i] = (flags & FlagFiring) != 0 && !_table.Dead[i];
         }
 
         void OnStates(PlayerId sender, ref NetReader r)
@@ -149,7 +155,10 @@ namespace LastGround.Networking.Replication
                 float vx = Quantize.Velocity(r.ReadShort());
                 float vz = Quantize.Velocity(r.ReadShort());
                 float yaw = Quantize.Yaw(r.ReadByte(), 8);
-                if (!r.Failed) _table.PushRemote(id, x, z, yaw, vx, vz, time, _localTime);
+                byte flags = r.ReadByte();
+                if (r.Failed || id == _table.Local || id.Value >= PlayerStateTable.Max) continue;
+                _table.PushRemote(id, x, z, yaw, vx, vz, time, _localTime);
+                _table.Firing[id.Value] = (flags & FlagFiring) != 0;
             }
         }
 

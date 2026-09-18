@@ -55,7 +55,9 @@ namespace LastGround.Gameplay.Zombies
     /// <summary>
     /// Per-zombie steering (TDD_01 §8.2 steps 4–6): flow field far away, surround slot near the target, separation
     /// from up to 8 neighbours, keep-out around players, wall sliding on the walkable grid, AI LOD step skipping.
-    /// Writes into separate output arrays so parallel iterations never race.
+    /// Staggered zombies (knockback, respawn push) do not steer; their velocity decays by friction instead.
+    /// Zombies without a target idle but still separate and slide. Writes into separate output arrays so
+    /// parallel iterations never race.
     /// </summary>
     [BurstCompile]
     public struct ZombieSteeringJob : IJobParallelFor
@@ -66,6 +68,7 @@ namespace LastGround.Gameplay.Zombies
         public const byte NoTarget = 255;
         const int MaxNeighbours = 8;
         const float MinPlayerDistance = 0.7f;
+        const float StaggerFriction = 2f;
 
         [ReadOnly] public NativeArray<float2> Position;
         [ReadOnly] public NativeArray<float2> Velocity;
@@ -75,6 +78,7 @@ namespace LastGround.Gameplay.Zombies
         [ReadOnly] public NativeArray<float> SlotRing;
         [ReadOnly] public NativeArray<byte> Target;
         [ReadOnly] public NativeArray<byte> Alive;
+        [ReadOnly] public NativeArray<float> Stagger;
 
         [ReadOnly] public NativeArray<float2> PlayerPosition;
         [ReadOnly] public NativeArray<byte> PlayerActive;
@@ -119,28 +123,35 @@ namespace LastGround.Gameplay.Zombies
             if (Alive[i] == 0) return;
 
             byte t = Target[i];
-            if (t == NoTarget || PlayerActive[t] == 0)
-            {
-                OutVelocity[i] = float2.zero;
-                return;
-            }
+            bool hasTarget = t != NoTarget && PlayerActive[t] != 0;
+            bool staggered = Stagger[i] > 0f;
+            if (!hasTarget && !staggered && math.lengthsq(v) < 1e-4f) return;
 
-            float2 tp = PlayerPosition[t];
+            float2 tp = hasTarget ? PlayerPosition[t] : p;
             float2 toTarget = tp - p;
             float distance = math.length(toTarget);
 
             // AI LOD (TDD_01 §8.2): near every tick, mid every 2nd, far every 6th with a larger step.
-            int step = distance < TierA ? 1 : distance < TierB ? 2 : 6;
+            int step = staggered ? 1 : !hasTarget ? 6 : distance < TierA ? 1 : distance < TierB ? 2 : 6;
             if (((uint)i + Tick) % (uint)step != 0)
             {
-                OutState[i] = StateWalk;
+                OutState[i] = hasTarget ? StateWalk : StateIdle;
                 return;
             }
             float dt = Dt * step;
 
             float2 desired;
             byte state = StateWalk;
-            if (distance < AttackRange)
+            if (staggered)
+            {
+                desired = float2.zero;
+            }
+            else if (!hasTarget)
+            {
+                desired = float2.zero;
+                state = StateIdle;
+            }
+            else if (distance < AttackRange)
             {
                 desired = float2.zero;
                 state = StateAttack;
@@ -173,7 +184,7 @@ namespace LastGround.Gameplay.Zombies
                 if (d < 0.9f && d > 1e-4f) desired += away / d * (0.9f - d) * 8f;
             }
 
-            v = math.lerp(v, desired, math.saturate(Acceleration * dt));
+            v = math.lerp(v, desired, math.saturate((staggered ? StaggerFriction : Acceleration) * dt));
             float2 next = p + v * dt;
 
             // Hard constraint: crowd pressure must never push a zombie into a player.

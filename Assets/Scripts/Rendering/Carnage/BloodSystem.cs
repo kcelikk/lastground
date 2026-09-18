@@ -12,6 +12,7 @@ namespace LastGround.Rendering.Carnage
     /// <summary>
     /// Blood layers 1 and 2 (TDD_02 §21.5): L1 = one shared particle system fed with Emit() per death,
     /// L2 = instanced ground splats in a ring buffer that fade out. L3 (accumulation texture) comes with M11.
+    /// Hits spray a small burst from the same particle system.
     /// </summary>
     public sealed class BloodSystem : ITickable, System.IDisposable
     {
@@ -27,6 +28,9 @@ namespace LastGround.Rendering.Carnage
         }
 
         readonly IGameEventStream<CrowdDeath> _deaths;
+        readonly IGameEventStream<CrowdHit> _hits;
+        readonly int _hitBurstCount;
+        EventReader<CrowdHit> _hitReader;
         readonly ParticleSystem _burst;
         readonly int _burstCount;
         readonly RingBuffer<Splat> _splats;
@@ -40,11 +44,14 @@ namespace LastGround.Rendering.Carnage
         uint _seed = 1;
 
         public BloodSystem(IGameEventStream<CrowdDeath> deaths, QualityPresetDefinition preset, Transform parent,
-            Material particleMaterial, Material splatMaterial)
+            Material particleMaterial, Material splatMaterial, IGameEventStream<CrowdHit> hits = null)
         {
             _deaths = deaths;
             _reader = deaths.CreateReader();
+            _hits = hits;
+            if (hits != null) _hitReader = hits.CreateReader();
             _burstCount = Mathf.Max(3, Mathf.RoundToInt(14 * preset.ParticleMultiplier));
+            _hitBurstCount = Mathf.Max(2, Mathf.RoundToInt(5 * preset.ParticleMultiplier));
             _burst = CreateBurst(parent, particleMaterial, Mathf.RoundToInt(500 * preset.ParticleMultiplier));
 
             int cap = Mathf.Max(0, preset.BloodSplatCap);
@@ -64,6 +71,14 @@ namespace LastGround.Rendering.Carnage
             _time += dt;
             while (_deaths.TryRead(ref _reader, out CrowdDeath death))
                 OnDeath(death);
+            if (_hits != null)
+            {
+                while (_hits.TryRead(ref _hitReader, out CrowdHit hit))
+                {
+                    var emit = new ParticleSystem.EmitParams { position = new Vector3(hit.X, 1.25f, hit.Z), applyShapeToPosition = true };
+                    _burst.Emit(emit, _hitBurstCount);
+                }
+            }
 
             if (!SplatsEnabled || _splats.Count == 0) return;
             while (_splats.Count > 0 && _time - _splats[0].BornAt > SplatLife) _splats.TryPopOldest(out _);

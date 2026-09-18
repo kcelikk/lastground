@@ -39,5 +39,11 @@
   "net.reject.version": "Host farklı bir oyun sürümü kullanıyor.",
   "net.reject.full": "Oyun dolu.",
   "net.reject.in_progress": "Oyun zaten başladı.",
-  "net.reject.refused": "Host bağlantıyı reddetti."
+  "net.reject.refused": "Host bağlantıyı reddetti.",
+  "hud.ammo": "{0} / {1}",
+  "hud.reloading": "ŞARJÖR DOLUYOR",
+  "hud.down": "YERE DÜŞTÜN — {0} SN SONRA KALKIYORSUN",
+  "hud.auto_fire_on": "OTOMATİK ATEŞ: AÇIK",
+  "hud.auto_fire_off": "OTOMATİK ATEŞ: KAPALI",
+  "weapon.assault_rifle": "PİYADE TÜFEĞİ"
 }
