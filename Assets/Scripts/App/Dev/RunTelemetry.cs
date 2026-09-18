@@ -6,6 +6,7 @@ using LastGround.Gameplay.Combat;
 using LastGround.Gameplay.Crowd;
 using LastGround.Gameplay.Director;
 using LastGround.Gameplay.Players;
+using LastGround.Gameplay.Upgrades;
 using LastGround.Gameplay.Zombies;
 using UnityEngine;
 
@@ -28,6 +29,8 @@ namespace LastGround.App.Dev
         PlayerStateTable _players;
         RunStatus _status;
         HordeDirector _director;
+        TeamXp _xp;
+        TeamBuilds _builds;
         float _simMsSum;
         float _simMsMax;
         int _simSamples;
@@ -57,6 +60,12 @@ namespace LastGround.App.Dev
         {
             _status = status;
             _director = director;
+        }
+
+        public void BindProgress(TeamXp xp, TeamBuilds builds)
+        {
+            _xp = xp;
+            _builds = builds;
         }
 
         void Update()
@@ -107,6 +116,9 @@ namespace LastGround.App.Dev
             }
             if (_health != null) line += string.Format(CultureInfo.InvariantCulture, " downs={0} playerDeaths={1} revives={2}", _health.Downs, _health.Deaths, _health.Revives);
             if (_world != null) line += string.Format(CultureInfo.InvariantCulture, " zAttacks={0} zDodged={1}", _world.AttacksLanded, _world.AttacksDodged);
+            if (_xp != null)
+                line += string.Format(CultureInfo.InvariantCulture, " level={0} xp={1}/{2} picks={3}", _xp.Level, _xp.Xp, _xp.XpToNext,
+                    _builds.Of(me).Picks);
             if (_status != null)
             {
                 line += string.Format(CultureInfo.InvariantCulture, " run={0:0} horde={1} threat={2}", _status.RunSeconds, _status.Horde, _status.Threat);

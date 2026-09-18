@@ -31,6 +31,8 @@ namespace LastGround.EditorTools.Setup
         static TeamPanel _teamPanel;
         static TeammateIndicators _indicators;
         static ResultsScreen _results;
+        static LevelUpPanel _levelUp;
+        static XpBar _xpBar;
 
         public static void Build(string path)
         {
@@ -101,6 +103,10 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_teamPanel", _teamPanel);
             UiFactory.Assign(installer, "_teammateIndicators", _indicators);
             UiFactory.Assign(installer, "_results", _results);
+            UiFactory.Assign(installer, "_levelUp", _levelUp);
+            UiFactory.Assign(installer, "_xpBar", _xpBar);
+            UiFactory.Assign(installer, "_upgrades", AssetDatabase.LoadAssetAtPath<LastGround.Data.Upgrades.UpgradeCatalog>(UpgradeContentBuilder.CatalogPath));
+            UiFactory.Assign(installer, "_levelCurve", AssetDatabase.LoadAssetAtPath<LastGround.Data.Upgrades.LevelCurveDefinition>(UpgradeContentBuilder.LevelCurvePath));
             UiFactory.Assign(installer, "_directorProfile", AssetDatabase.LoadAssetAtPath<LastGround.Data.Director.DirectorProfile>(CombatContentBuilder.DirectorPath));
             UiFactory.Assign(installer, "_threatCurve", AssetDatabase.LoadAssetAtPath<LastGround.Data.Director.ThreatCurveDefinition>(CombatContentBuilder.ThreatPath));
             UiFactory.Assign(installer, "_playerScaling", AssetDatabase.LoadAssetAtPath<LastGround.Data.Director.PlayerCountScalingProfile>(CombatContentBuilder.ScalingPath));
@@ -142,7 +148,8 @@ namespace LastGround.EditorTools.Setup
 
             (Image healthFill, TMP_Text healthLabel) = BuildHealthBar(safe);
             TMP_Text ammo = UiFactory.Label("Ammo", safe, null, 40, FontStyles.Bold, Color.white);
-            UiFactory.Place(ammo.rectTransform, new Vector2(0f, 1f), new Vector2(74f, -72f), new Vector2(400f, 50f));
+            UiFactory.Place(ammo.rectTransform, new Vector2(0f, 1f), new Vector2(74f, -86f), new Vector2(400f, 50f));
+            _xpBar = BuildXpBar(safe);
             Image reloadRing = BuildReloadRing(safe);
 
             // Dev stats sit at the bottom centre above the PerfHud rows (development builds only).
@@ -161,6 +168,7 @@ namespace LastGround.EditorTools.Setup
             (GameObject deathOverlay, TMP_Text deathLabel, Image reviveRing) = BuildDeathOverlay(canvasGo.transform);
             _teamPanel = BuildTeamPanel(safe);
             _indicators = BuildIndicators(canvasGo.transform);
+            _levelUp = BuildLevelUp(canvasGo.transform);
             _results = BuildResults(canvasGo.transform);
 
             var input = canvasGo.AddComponent<TouchTwinStickInput>();

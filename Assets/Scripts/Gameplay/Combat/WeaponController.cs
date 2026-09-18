@@ -5,6 +5,7 @@ using LastGround.Data.Weapons;
 using LastGround.Gameplay.Crowd;
 using LastGround.Gameplay.Navigation;
 using LastGround.Gameplay.Players;
+using LastGround.Gameplay.Upgrades;
 using Unity.Mathematics;
 
 namespace LastGround.Gameplay.Combat
@@ -45,6 +46,8 @@ namespace LastGround.Gameplay.Combat
         readonly bool[] _presumedDead;
         int _presumedCount;
         float _time;
+        WeaponStats _stats;
+        int _statsVersion = -1;
 
         float _cooldown;
         float _reloadTimer;
@@ -71,13 +74,20 @@ namespace LastGround.Gameplay.Combat
             _dealtGeneration = new byte[targets.Capacity];
             _presumedDeadUntil = new float[targets.Capacity];
             _presumedDead = new bool[targets.Capacity];
-            Ammo = weapon.MagazineSize;
+            _stats = WeaponStats.From(weapon, null);
+            Ammo = _stats.MagazineSize;
         }
 
+        /// <summary>Team builds (M5 upgrades); null = the weapon's base values.</summary>
+        public TeamBuilds Builds { get; set; }
+
+        /// <summary>The weapon's current numbers after upgrades.</summary>
+        public WeaponStats Stats => _stats;
+
         public int Ammo { get; private set; }
-        public int MagazineSize => _weapon.MagazineSize;
+        public int MagazineSize => _stats.MagazineSize;
         public bool Reloading => _reloadTimer > 0f;
-        public float ReloadProgress => Reloading ? 1f - _reloadTimer / _weapon.ReloadTime : 0f;
+        public float ReloadProgress => Reloading ? 1f - _reloadTimer / _stats.ReloadTime : 0f;
         public WeaponDefinition Weapon => _weapon;
         public int ShotsFired { get; private set; }
         public int ClaimsSent { get; private set; }
@@ -92,11 +102,12 @@ namespace LastGround.Gameplay.Combat
         {
             int me = _players.Local.IsValid ? _players.Local.Value : -1;
             if (me < 0 || !_players.Active[me]) return;
+            RefreshStats(me);
             if (!_players.CanAct(me))
             {
                 // Going down refills the magazine: the player gets back up ready to fight.
                 _reloadTimer = 0f;
-                Ammo = _weapon.MagazineSize;
+                Ammo = _stats.MagazineSize;
                 _players.Firing[me] = false;
                 return;
             }
@@ -110,7 +121,7 @@ namespace LastGround.Gameplay.Combat
                 if (_reloadTimer <= 0f)
                 {
                     _reloadTimer = 0f;
-                    Ammo = _weapon.MagazineSize;
+                    Ammo = _stats.MagazineSize;
                 }
             }
 
@@ -122,7 +133,7 @@ namespace LastGround.Gameplay.Combat
             while (trigger && _cooldown <= 0f && Ammo > 0 && _reloadTimer <= 0f)
             {
                 Fire(me, new float2(frame.AimX, frame.AimY));
-                _cooldown += _weapon.ShotInterval;
+                _cooldown += _stats.ShotInterval;
                 Ammo--;
                 _sinceFired = 0f;
             }
@@ -130,8 +141,8 @@ namespace LastGround.Gameplay.Combat
             // after every reload. Carry-over below zero only matters inside the loop above.
             if (_cooldown < 0f) _cooldown = 0f;
 
-            if (_reloadTimer <= 0f && Ammo < _weapon.MagazineSize && (Ammo == 0 || _sinceFired > IdleReloadDelay))
-                _reloadTimer = _weapon.ReloadTime;
+            if (_reloadTimer <= 0f && Ammo < _stats.MagazineSize && (Ammo == 0 || _sinceFired > IdleReloadDelay))
+                _reloadTimer = _stats.ReloadTime;
 
             _players.Firing[me] = _sinceFired < FiringFlagHold;
         }
@@ -142,16 +153,16 @@ namespace LastGround.Gameplay.Combat
             float2 baseDir = math.normalizesafe(aim, new float2(0f, 1f));
             ushort seq = ++_shotSeq;
             uint seed = ShotRng.Seed(_runSeed, me, seq);
-            int pellets = math.max(1, _weapon.PelletCount);
-            int maxHits = math.min(MaxHitsPerPellet, math.max(0, _weapon.Penetration) + 1);
+            int pellets = math.max(1, _stats.PelletCount);
+            int maxHits = math.min(MaxHitsPerPellet, math.max(0, _stats.Penetration) + 1);
             ShotsFired++;
 
             for (int pellet = 0; pellet < pellets; pellet++)
             {
-                float angle = ShotRng.SpreadRadians(seed, pellet, _weapon.SpreadDeg);
+                float angle = ShotRng.SpreadRadians(seed, pellet, _stats.SpreadDeg);
                 math.sincos(angle, out float sin, out float cos);
                 var dir = new float2(baseDir.x * cos - baseDir.y * sin, baseDir.x * sin + baseDir.y * cos);
-                int hits = HitQuery.Cast(_targets, _nav, origin, dir, _weapon.Range, HitRadius, maxHits, _hitSlots, _hitDistances,
+                int hits = HitQuery.Cast(_targets, _nav, origin, dir, _stats.Range, HitRadius, maxHits, _hitSlots, _hitDistances,
                     out float end, _presumedDead);
 
                 for (int k = 0; k < hits; k++)
@@ -171,7 +182,7 @@ namespace LastGround.Gameplay.Combat
                     };
                     _sink.Submit(claim);
                     ClaimsSent++;
-                    float damage = DamageResolver.Resolve(_weapon, seed, pellet, out bool crit);
+                    float damage = DamageResolver.Resolve(_stats, seed, pellet, out bool crit);
                     TrackDamage(slot, claim.Generation, damage);
                     if (_predictions != null)
                     {
@@ -191,6 +202,18 @@ namespace LastGround.Gameplay.Combat
                     FirstPellet = pellet == 0, Local = true,
                 });
             }
+        }
+
+        void RefreshStats(int me)
+        {
+            PlayerBuild build = Builds?.Of(me);
+            int version = build != null ? build.Version : 0;
+            if (version == _statsVersion) return;
+            _statsVersion = version;
+            int oldMagazine = _stats.MagazineSize;
+            _stats = WeaponStats.From(_weapon, build);
+            // A bigger magazine is usable at once; a full magazine stays full.
+            if (Ammo == oldMagazine || Ammo > _stats.MagazineSize) Ammo = _stats.MagazineSize;
         }
 
         void TrackDamage(int slot, byte generation, float damage)

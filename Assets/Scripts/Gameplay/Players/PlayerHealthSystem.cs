@@ -1,6 +1,8 @@
 using LastGround.Core.Events;
 using LastGround.Core.Tick;
 using LastGround.Data.Players;
+using LastGround.Data.Upgrades;
+using LastGround.Gameplay.Upgrades;
 
 namespace LastGround.Gameplay.Players
 {
@@ -25,6 +27,8 @@ namespace LastGround.Gameplay.Players
         readonly bool[] _known = new bool[PlayerStateTable.Max];
         int _adrenaline;
         bool _wipeReported;
+        EventReader<BuildChanged> _buildReader;
+        TeamBuilds _builds;
 
         /// <summary>Players getting back up with a push (respawn from dead).</summary>
         public readonly EventChannel<PlayerRespawn> Respawns = new EventChannel<PlayerRespawn>(16);
@@ -35,6 +39,17 @@ namespace LastGround.Gameplay.Players
             _definition = definition;
             _adrenaline = definition.SoloAdrenaline;
             for (int p = 0; p < _sinceHurt.Length; p++) _sinceHurt[p] = float.MaxValue;
+        }
+
+        /// <summary>Team builds: max health, damage reduction and heal-on-kill follow upgrades. Optional.</summary>
+        public TeamBuilds Builds
+        {
+            get => _builds;
+            set
+            {
+                _builds = value;
+                if (value != null) _buildReader = value.Changed.CreateReader();
+            }
         }
 
         public int Downs { get; private set; }
@@ -50,6 +65,8 @@ namespace LastGround.Gameplay.Players
             if (player < 0 || player >= PlayerStateTable.Max || !_players.Active[player]) return;
             if (_players.Life[player] != PlayerLife.Alive || _players.Invulnerable[player] || amount <= 0f) return;
             _sinceHurt[player] = 0f;
+            if (_builds != null)
+                amount *= 1f - UnityEngine.Mathf.Min(0.6f, _builds.Of(player).Get(StatId.DamageReductionPct) / 100f);
             float health = _players.Health[player] - amount;
             bool down = health <= 0f;
             _players.Health[player] = down ? 0f : health;
@@ -57,8 +74,17 @@ namespace LastGround.Gameplay.Players
             _players.Hurt.Publish(new PlayerHurt { Player = player, Amount = amount, Died = down });
         }
 
+        /// <summary>The shooter killed a zombie: heal-on-kill upgrades (TDD_01 §7.2 OnKillEffect).</summary>
+        public void OnKill(int player)
+        {
+            if (_builds == null || (uint)player >= PlayerStateTable.Max || !_players.CanAct(player)) return;
+            float heal = _builds.Of(player).Get(StatId.HealOnKill);
+            if (heal > 0f) _players.Health[player] = UnityEngine.Mathf.Min(_players.MaxHealth[player], _players.Health[player] + heal);
+        }
+
         public void Tick(float dt, uint tick)
         {
+            ApplyBuildChanges();
             int active = 0, standing = 0;
             for (int p = 0; p < PlayerStateTable.Max; p++)
             {
@@ -99,10 +125,26 @@ namespace LastGround.Gameplay.Players
             }
         }
 
+        void ApplyBuildChanges()
+        {
+            if (_builds == null) return;
+            while (_builds.Changed.TryRead(ref _buildReader, out BuildChanged change))
+            {
+                float max = MaxHealthOf(change.Player);
+                float gained = max - _players.MaxHealth[change.Player];
+                _players.MaxHealth[change.Player] = max;
+                // More max health also heals by the same amount (a pick should feel good right away).
+                if (gained > 0f && _players.Life[change.Player] == PlayerLife.Alive) _players.Health[change.Player] += gained;
+            }
+        }
+
+        float MaxHealthOf(int p) => _definition.MaxHealth + (_builds != null ? _builds.Of(p).Get(StatId.MaxHealth) : 0f);
+
         void Join(int p)
         {
             _known[p] = true;
-            _players.Health[p] = _definition.MaxHealth;
+            _players.MaxHealth[p] = MaxHealthOf(p);
+            _players.Health[p] = _players.MaxHealth[p];
             _players.Life[p] = PlayerLife.Alive;
             _players.Invulnerable[p] = false;
             _players.Countdown[p] = 0f;

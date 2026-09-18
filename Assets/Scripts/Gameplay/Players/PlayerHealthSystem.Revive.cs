@@ -51,7 +51,7 @@ namespace LastGround.Gameplay.Players
             _players.Countdown[p] -= dt;
             if (_players.Countdown[p] > 0f) return;
             _players.Life[p] = PlayerLife.Alive;
-            _players.Health[p] = _definition.MaxHealth * _definition.RespawnHealthFraction;
+            _players.Health[p] = _players.MaxHealth[p] * _definition.RespawnHealthFraction;
             _players.Countdown[p] = 0f;
             _downsThisLife[p] = 0;
             MakeInvulnerable(p, _definition.RespawnInvulnerability);
@@ -65,7 +65,7 @@ namespace LastGround.Gameplay.Players
         void Revive(int p)
         {
             _players.Life[p] = PlayerLife.Alive;
-            _players.Health[p] = _definition.MaxHealth * _definition.ReviveHealthFraction;
+            _players.Health[p] = _players.MaxHealth[p] * _definition.ReviveHealthFraction;
             _players.ReviveProgress[p] = 0f;
             _players.Countdown[p] = 0f;
             MakeInvulnerable(p, _definition.ReviveInvulnerability);

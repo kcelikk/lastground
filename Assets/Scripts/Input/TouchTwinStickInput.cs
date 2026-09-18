@@ -27,6 +27,9 @@ namespace LastGround.Input
         [SerializeField] RectTransform _aimKnob;
         [SerializeField] UnityEngine.UI.Image _aimKnobImage;
 
+        /// <summary>UI areas where a new touch belongs to the UI, not to a stick (e.g. the level-up panel).</summary>
+        public System.Func<RectTransform> Blocker { get; set; }
+
         readonly FloatingJoystick _move = new FloatingJoystick();
         readonly FloatingJoystick _aim = new FloatingJoystick();
         int _moveFinger = -1;
@@ -171,6 +174,8 @@ namespace LastGround.Input
 
                 Vector2 p = touch.screenPosition;
                 if (p.y > Screen.height * ZoneTop) continue;
+                RectTransform blocker = Blocker?.Invoke();
+                if (blocker != null && RectTransformUtility.RectangleContainsScreenPoint(blocker, p, null)) continue;
                 if (p.x < Screen.width * 0.5f)
                 {
                     if (_moveFinger >= 0) continue;

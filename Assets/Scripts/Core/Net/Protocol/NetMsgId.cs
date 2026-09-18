@@ -37,6 +37,12 @@ namespace LastGround.Core.Net.Protocol
         // Director / run status (50–59)
         public const byte DirectorInfo = 50;
 
+        // Progression (60–69)
+        public const byte TeamXp = 60;
+        public const byte UpgradeOffer = 61;
+        public const byte SelectUpgrade = 62;
+        public const byte BuildChanged = 63;
+
         public const int Count = 256;
     }
 }

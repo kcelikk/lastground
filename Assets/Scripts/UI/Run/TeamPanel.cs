@@ -56,7 +56,7 @@ namespace LastGround.UI.Run
             {
                 if (!_rows[r].activeSelf) continue;
                 int p = _rowPlayer[r];
-                _healthFills[r].fillAmount = _players.Health[p] / _maxHealth;
+                _healthFills[r].fillAmount = _players.Health[p] / Mathf.Max(1f, _players.MaxHealth[p]);
                 PlayerLife life = _players.Life[p];
                 int countdown = Mathf.CeilToInt(_players.Countdown[p]);
                 int revive = Mathf.RoundToInt(_players.ReviveProgress[p] * 100f);

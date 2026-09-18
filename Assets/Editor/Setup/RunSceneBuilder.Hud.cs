@@ -62,7 +62,7 @@ namespace LastGround.EditorTools.Setup
         static Image BuildReloadRing(RectTransform parent)
         {
             RectTransform rect = UiFactory.Rect("ReloadRing", parent);
-            UiFactory.Place(rect, new Vector2(0f, 1f), new Vector2(24f, -72f), new Vector2(40f, 40f));
+            UiFactory.Place(rect, new Vector2(0f, 1f), new Vector2(24f, -86f), new Vector2(40f, 40f));
             var ring = rect.gameObject.AddComponent<Image>();
             ring.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
             ring.type = Image.Type.Filled;
@@ -112,6 +112,103 @@ namespace LastGround.EditorTools.Setup
             return (band.gameObject, label, ring);
         }
 
+        static readonly Color XpOrange = new Color(1f, 0.6f, 0.15f);
+
+        static XpBar BuildXpBar(RectTransform parent)
+        {
+            RectTransform frame = UiFactory.Rect("XpBar", parent);
+            UiFactory.Place(frame, new Vector2(0f, 1f), new Vector2(24f, -62f), new Vector2(380f, 12f));
+            var background = frame.gameObject.AddComponent<Image>();
+            background.color = new Color(0.05f, 0.05f, 0.06f, 0.8f);
+            background.raycastTarget = false;
+            RectTransform fillRect = UiFactory.Rect("Fill", frame);
+            UiFactory.Stretch(fillRect);
+            var fill = fillRect.gameObject.AddComponent<Image>();
+            fill.sprite = WhiteSprite();
+            fill.type = Image.Type.Filled;
+            fill.fillMethod = Image.FillMethod.Horizontal;
+            fill.fillAmount = 0f;
+            fill.color = XpOrange;
+            fill.raycastTarget = false;
+            TMP_Text level = UiFactory.Label("Level", parent, null, 26, FontStyles.Bold, XpOrange);
+            UiFactory.Place(level.rectTransform, new Vector2(0f, 1f), new Vector2(412f, -52f), new Vector2(90f, 32f));
+            level.alignment = TextAlignmentOptions.MidlineLeft;
+            var bar = parent.gameObject.AddComponent<XpBar>();
+            UiFactory.Assign(bar, "_fill", fill);
+            UiFactory.Assign(bar, "_level", level);
+            return bar;
+        }
+
+        static LevelUpPanel BuildLevelUp(Transform canvas)
+        {
+            RectTransform panel = UiFactory.Rect("LevelUp", canvas);
+            UiFactory.Place(panel, new Vector2(0.5f, 0f), new Vector2(0f, 30f), new Vector2(900f, 320f));
+            var background = panel.gameObject.AddComponent<Image>();
+            background.color = new Color(0.04f, 0.045f, 0.055f, 0.92f);
+            TMP_Text title = UiFactory.Label("Title", panel, null, 28, FontStyles.Bold, XpOrange);
+            UiFactory.Place(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -12f), new Vector2(800f, 40f));
+            title.alignment = TextAlignmentOptions.Center;
+
+            var cards = new Button[3];
+            var bands = new Image[3];
+            var names = new TMP_Text[3];
+            var values = new TMP_Text[3];
+            var rarities = new TMP_Text[3];
+            for (int i = 0; i < 3; i++)
+            {
+                RectTransform card = UiFactory.Rect("Card" + (i + 1), panel);
+                UiFactory.Place(card, new Vector2(0.5f, 0f), new Vector2((i - 1) * 292f, 22f), new Vector2(276f, 230f));
+                var cardImage = card.gameObject.AddComponent<Image>();
+                cardImage.color = new Color(0.12f, 0.13f, 0.16f, 1f);
+                cards[i] = card.gameObject.AddComponent<Button>();
+                RectTransform band = UiFactory.Rect("Rarity", card);
+                band.anchorMin = new Vector2(0f, 1f);
+                band.anchorMax = new Vector2(1f, 1f);
+                band.pivot = new Vector2(0.5f, 1f);
+                band.sizeDelta = new Vector2(0f, 8f);
+                bands[i] = band.gameObject.AddComponent<Image>();
+                bands[i].raycastTarget = false;
+                names[i] = UiFactory.Label("Name", card, null, 30, FontStyles.Bold, Color.white);
+                UiFactory.Place(names[i].rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -22f), new Vector2(260f, 76f));
+                names[i].alignment = TextAlignmentOptions.Top;
+                names[i].textWrappingMode = TextWrappingModes.Normal;
+                values[i] = UiFactory.Label("Value", card, null, 24, FontStyles.Normal, new Color(0.9f, 0.9f, 0.9f));
+                UiFactory.Place(values[i].rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -18f), new Vector2(250f, 70f));
+                values[i].alignment = TextAlignmentOptions.Center;
+                values[i].textWrappingMode = TextWrappingModes.Normal;
+                rarities[i] = UiFactory.Label("RarityName", card, null, 20, FontStyles.Bold, Color.white);
+                UiFactory.Place(rarities[i].rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 12f), new Vector2(250f, 28f));
+                rarities[i].alignment = TextAlignmentOptions.Bottom;
+            }
+
+            Button minimize = UiFactory.Button("Minimize", panel, null, new Vector2(64f, 48f), out TMP_Text minimizeLabel, 34f);
+            UiFactory.Place((RectTransform)minimize.transform, new Vector2(1f, 1f), new Vector2(-8f, -8f), new Vector2(64f, 48f));
+            minimizeLabel.text = "–";
+            minimizeLabel.alignment = TextAlignmentOptions.Center;
+            minimizeLabel.rectTransform.offsetMin = Vector2.zero;
+
+            Button badge = UiFactory.Button("LevelUpBadge", canvas, null, new Vector2(340f, 80f), out TMP_Text badgeLabel, 30f);
+            UiFactory.Place((RectTransform)badge.transform, new Vector2(0.5f, 0f), new Vector2(0f, 130f), new Vector2(340f, 80f));
+            badge.GetComponent<Image>().color = new Color(0.55f, 0.3f, 0.05f, 0.95f);
+            badgeLabel.alignment = TextAlignmentOptions.Center;
+            badgeLabel.rectTransform.offsetMin = Vector2.zero;
+
+            var levelUp = canvas.gameObject.AddComponent<LevelUpPanel>();
+            UiFactory.Assign(levelUp, "_panel", panel.gameObject);
+            UiFactory.Assign(levelUp, "_panelRect", panel);
+            UiFactory.Assign(levelUp, "_title", title);
+            UiFactory.AssignArray(levelUp, "_cards", cards);
+            UiFactory.AssignArray(levelUp, "_cardBands", bands);
+            UiFactory.AssignArray(levelUp, "_cardNames", names);
+            UiFactory.AssignArray(levelUp, "_cardValues", values);
+            UiFactory.AssignArray(levelUp, "_cardRarities", rarities);
+            UiFactory.Assign(levelUp, "_minimize", minimize);
+            UiFactory.Assign(levelUp, "_badge", badge);
+            UiFactory.Assign(levelUp, "_badgeLabel", badgeLabel);
+            panel.gameObject.SetActive(false);
+            return levelUp;
+        }
+
         static TeamPanel BuildTeamPanel(RectTransform parent)
         {
             const int Rows = 3;
@@ -123,7 +220,7 @@ namespace LastGround.EditorTools.Setup
             for (int i = 0; i < Rows; i++)
             {
                 RectTransform row = UiFactory.Rect("Teammate" + (i + 1), parent);
-                UiFactory.Place(row, new Vector2(0f, 1f), new Vector2(24f, -126f - i * 42f), new Vector2(520f, 36f));
+                UiFactory.Place(row, new Vector2(0f, 1f), new Vector2(24f, -142f - i * 42f), new Vector2(520f, 36f));
                 var background = row.gameObject.AddComponent<Image>();
                 background.color = new Color(0.05f, 0.05f, 0.06f, 0.6f);
                 background.raycastTarget = false;

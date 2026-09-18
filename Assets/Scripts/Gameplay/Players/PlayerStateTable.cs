@@ -28,6 +28,8 @@ namespace LastGround.Gameplay.Players
 
         /// <summary>Vitals: host-authoritative, replicated to clients on change (PlayerVitals).</summary>
         public readonly float[] Health = new float[Max];
+        /// <summary>Base plus upgrades (HP bar scale).</summary>
+        public readonly float[] MaxHealth = { 100f, 100f, 100f, 100f };
         public readonly PlayerLife[] Life = new PlayerLife[Max];
         public readonly bool[] Invulnerable = new bool[Max];
         /// <summary>Downed: seconds until death. Dead: seconds until back in (0 = waiting for a standing teammate).</summary>

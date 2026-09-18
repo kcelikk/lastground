@@ -42,6 +42,9 @@ namespace LastGround.Networking.Replication
             session.PlayerLeft += OnPlayerLeft;
         }
 
+        /// <summary>Team builds: move speed upgrades raise each player's allowed speed. Optional.</summary>
+        public LastGround.Gameplay.Upgrades.TeamBuilds Builds { get; set; }
+
         /// <summary>Movement corrections applied by the host (clamped teleports). For tests and diagnostics.</summary>
         public int Corrections { get; private set; }
 
@@ -127,7 +130,8 @@ namespace LastGround.Networking.Replication
             {
                 // Reject teleports: limit the step to what max speed allows since the last accepted update.
                 double elapsed = Math.Max(1.0 / 30.0, _localTime - _table.LastUpdate[i]);
-                float allowed = (float)(_maxSpeed * SpeedTolerance * elapsed) + DistanceSlack;
+                float speed = _maxSpeed * (Builds != null ? 1f + Builds.Of(i).Get(LastGround.Data.Upgrades.StatId.MoveSpeedPct) / 100f : 1f);
+                float allowed = (float)(speed * SpeedTolerance * elapsed) + DistanceSlack;
                 float dx = x - _table.X[i];
                 float dz = z - _table.Z[i];
                 float distance = Mathf.Sqrt(dx * dx + dz * dz);

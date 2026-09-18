@@ -24,6 +24,7 @@ namespace LastGround.Networking.Replication
         readonly PlayerStateTable _players;
         readonly NetRawHandler _onVitals;
         readonly ushort[] _sentHealth = new ushort[PlayerStateTable.Max];
+        readonly ushort[] _sentMax = new ushort[PlayerStateTable.Max];
         readonly byte[] _sentFlags = new byte[PlayerStateTable.Max];
         readonly byte[] _sentLife = new byte[PlayerStateTable.Max];
         readonly ushort[] _sentCountdown = new ushort[PlayerStateTable.Max];
@@ -52,7 +53,7 @@ namespace LastGround.Networking.Replication
                 bool active = _players.Active[p];
                 if (active) count++;
                 if (active != _sentActive[p] || (active && (Health(p) != _sentHealth[p] || Flags(p) != _sentFlags[p]
-                    || (byte)_players.Life[p] != _sentLife[p] || Countdown(p) != _sentCountdown[p] || Revive(p) != _sentRevive[p]))) changed = true;
+                    || MaxHealth(p) != _sentMax[p] || (byte)_players.Life[p] != _sentLife[p] || Countdown(p) != _sentCountdown[p] || Revive(p) != _sentRevive[p]))) changed = true;
             }
             if (!changed || count == 0) return;
 
@@ -63,12 +64,14 @@ namespace LastGround.Networking.Replication
                 _sentActive[p] = _players.Active[p];
                 if (!_players.Active[p]) continue;
                 _sentHealth[p] = Health(p);
+                _sentMax[p] = MaxHealth(p);
                 _sentFlags[p] = Flags(p);
                 _sentLife[p] = (byte)_players.Life[p];
                 _sentCountdown[p] = Countdown(p);
                 _sentRevive[p] = Revive(p);
                 w.WriteByte((byte)p);
                 w.WriteUShort(_sentHealth[p]);
+                w.WriteUShort(_sentMax[p]);
                 w.WriteByte(_sentLife[p]);
                 w.WriteByte(_sentFlags[p]);
                 w.WriteUShort(_sentCountdown[p]);
@@ -82,6 +85,8 @@ namespace LastGround.Networking.Replication
         {
             _session.Unsubscribe(NetMsgId.PlayerVitals, _onVitals);
         }
+
+        ushort MaxHealth(int p) => (ushort)Math.Min(ushort.MaxValue, Math.Max(1f, _players.MaxHealth[p]) * HealthScale + 0.5f);
 
         ushort Health(int p) => (ushort)Math.Min(ushort.MaxValue, Math.Max(0f, _players.Health[p]) * HealthScale + 0.5f);
 
@@ -103,6 +108,7 @@ namespace LastGround.Networking.Replication
             {
                 int p = r.ReadByte();
                 float health = r.ReadUShort() / HealthScale;
+                float max = r.ReadUShort() / HealthScale;
                 var life = (PlayerLife)r.ReadByte();
                 byte flags = r.ReadByte();
                 float countdown = r.ReadUShort() / 10f;
@@ -112,6 +118,7 @@ namespace LastGround.Networking.Replication
                 float lost = _players.Health[p] - health;
                 bool wentDown = life == PlayerLife.Downed && _players.Life[p] == PlayerLife.Alive;
                 _players.Health[p] = health;
+                _players.MaxHealth[p] = max;
                 _players.Life[p] = life;
                 _players.Invulnerable[p] = (flags & FlagInvulnerable) != 0;
                 _players.Countdown[p] = countdown;

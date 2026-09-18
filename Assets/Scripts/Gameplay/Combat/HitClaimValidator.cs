@@ -2,6 +2,7 @@ using LastGround.Data.Weapons;
 using LastGround.Gameplay.Crowd;
 using LastGround.Gameplay.Navigation;
 using LastGround.Gameplay.Players;
+using LastGround.Gameplay.Upgrades;
 using Unity.Mathematics;
 
 namespace LastGround.Gameplay.Combat
@@ -29,6 +30,8 @@ namespace LastGround.Gameplay.Combat
         readonly ushort[] _lastShot = new ushort[PlayerStateTable.Max];
         readonly bool[] _hasShot = new bool[PlayerStateTable.Max];
         readonly int[] _claimsThisShot = new int[PlayerStateTable.Max];
+        readonly WeaponStats[] _stats = new WeaponStats[PlayerStateTable.Max];
+        readonly int[] _statsVersion = { -1, -1, -1, -1 };
 
         public HitClaimValidator(PlayerStateTable players, CrowdState crowd, NavGrid nav, WeaponDefinition[] weaponsByNetIndex)
         {
@@ -41,16 +44,31 @@ namespace LastGround.Gameplay.Combat
 
         public WeaponDefinition WeaponOf(byte netIndex) => netIndex < _weapons.Length ? _weapons[netIndex] : null;
 
+        /// <summary>Team builds: fire rate, pierce and damage follow each shooter's upgrades. Null = base values.</summary>
+        public TeamBuilds Builds { get; set; }
+
+        /// <summary>The shooter's current weapon numbers (M4–M5: one weapon for everyone).</summary>
+        public ref readonly WeaponStats StatsOf(int player)
+        {
+            PlayerBuild build = Builds?.Of(player);
+            int version = build != null ? build.Version : 0;
+            if (_statsVersion[player] != version && _weapons.Length > 0 && _weapons[0] != null)
+            {
+                _statsVersion[player] = version;
+                _stats[player] = WeaponStats.From(_weapons[0], build);
+            }
+            return ref _stats[player];
+        }
+
         /// <summary>Refills each player's shot budget (call once per sim tick).</summary>
         public void Refill(float dt)
         {
             for (int p = 0; p < _tokens.Length; p++)
             {
                 // M4: one weapon for everyone; M6 tracks the equipped weapon per player.
-                WeaponDefinition weapon = _weapons.Length > 0 ? _weapons[0] : null;
-                if (weapon == null) continue;
-                float rate = weapon.FireRate * RateSlack;
-                _tokens[p] = math.min(Burst(weapon), _tokens[p] + rate * dt);
+                if (_weapons.Length == 0 || _weapons[0] == null) continue;
+                float fireRate = StatsOf(p).FireRate;
+                _tokens[p] = math.min(Burst(fireRate), _tokens[p] + fireRate * RateSlack * dt);
             }
         }
 
@@ -87,11 +105,11 @@ namespace LastGround.Gameplay.Combat
                 // Claims of an older shot arriving late (reordering cannot happen on the reliable channel).
                 return HitClaimVerdict.RateLimited;
             }
-            if (++_claimsThisShot[p] > weapon.MaxClaimsPerShot) return HitClaimVerdict.TooManyClaims;
+            if (++_claimsThisShot[p] > StatsOf(p).MaxClaimsPerShot) return HitClaimVerdict.TooManyClaims;
             return HitClaimVerdict.Accepted;
         }
 
         /// <summary>Burst allowance: network batching can deliver several shots at once.</summary>
-        static float Burst(WeaponDefinition weapon) => math.max(4f, weapon.FireRate * 0.75f);
+        static float Burst(float fireRate) => math.max(4f, fireRate * 0.75f);
     }
 }

@@ -12,6 +12,7 @@ using LastGround.Data.Map;
 using LastGround.Data.Players;
 using LastGround.Data.Presentation;
 using LastGround.Data.Quality;
+using LastGround.Data.Upgrades;
 using LastGround.Data.Weapons;
 using LastGround.Data.Zombies;
 using LastGround.Gameplay.Combat;
@@ -20,6 +21,7 @@ using LastGround.Gameplay.Director;
 using LastGround.Gameplay.Navigation;
 using LastGround.Gameplay.Players;
 using LastGround.Gameplay.Run;
+using LastGround.Gameplay.Upgrades;
 using LastGround.Gameplay.Zombies;
 using LastGround.Input;
 using LastGround.Networking.Replication;
@@ -55,6 +57,8 @@ namespace LastGround.App
         [SerializeField] DirectorProfile _directorProfile;
         [SerializeField] ThreatCurveDefinition _threatCurve;
         [SerializeField] PlayerCountScalingProfile _playerScaling;
+        [SerializeField] UpgradeCatalog _upgrades;
+        [SerializeField] LevelCurveDefinition _levelCurve;
         [SerializeField] Material _bloodParticleMaterial;
         [SerializeField] Material _bloodSplatMaterial;
         [SerializeField] Material _tracerMaterial;
@@ -67,12 +71,15 @@ namespace LastGround.App
         [SerializeField] TeamPanel _teamPanel;
         [SerializeField] TeammateIndicators _teammateIndicators;
         [SerializeField] ResultsScreen _results;
+        [SerializeField] LevelUpPanel _levelUp;
+        [SerializeField] XpBar _xpBar;
 
         readonly List<System.IDisposable> _disposables = new List<System.IDisposable>();
         SessionService _service;
         TickScheduler _scheduler;
         bool _started;
         readonly RunOutcome _outcome = new RunOutcome();
+        LevelUpPanel _pause;
 
         /// <summary>Everything the presentation half needs, collected while the simulation half is built.</summary>
         struct RunParts
@@ -94,6 +101,10 @@ namespace LastGround.App
             public RunStatus Status;
             public HordeDirector Director;
             public RunReferee Referee;
+            public TeamBuilds Builds;
+            public TeamXp Xp;
+            public LocalOffers Offers;
+            public TeamProgress Progress;
         }
 
         void Start()
@@ -115,12 +126,15 @@ namespace LastGround.App
                 Players = new PlayerStateTable { Local = session.LocalPlayer },
                 Shots = new EventChannel<ShotFired>(128),
                 Status = new RunStatus(),
+                Builds = new TeamBuilds(_upgrades),
+                Xp = new TeamXp(),
+                Offers = new LocalOffers(session.LocalPlayer.Value),
             };
             _disposables.Add(parts.Nav);
             float worldSize = parts.Nav.Width * parts.Nav.CellSize;
             PlayerStateTable players = parts.Players;
 
-            var sync = new PlayerSync(session, players, _playerDefinition.MoveSpeed);
+            var sync = new PlayerSync(session, players, _playerDefinition.MoveSpeed) { Builds = parts.Builds };
             _disposables.Add(sync);
             var vitals = new PlayerVitalsSync(session, players);
             _disposables.Add(vitals);
@@ -130,6 +144,18 @@ namespace LastGround.App
             _disposables.Add(runEnd);
 
             IHitClaimSink claims = session.IsAuthority ? BuildHost(ref parts, loop, benchmark, seed) : BuildClient(ref parts, loop);
+            var progression = new ProgressionSync(session, parts.Xp, parts.Builds, parts.Offers, parts.Progress);
+            _disposables.Add(progression);
+            loop.Register(TickPhase.NetSend, progression);
+            if (parts.Progress != null)
+            {
+                parts.Progress.Offers = progression;
+                parts.Offers.Choices = parts.Progress;
+            }
+            else
+            {
+                parts.Offers.Choices = progression;
+            }
 
             // Local player: raw sticks → aim resolver → motor + weapon (TDD_01 §3.1).
             ISaveService save = AppServices.Get<ISaveService>();
@@ -145,7 +171,7 @@ namespace LastGround.App
             loop.Register(TickPhase.Input, _input);
             loop.Register(TickPhase.Input, parts.Aim);
             parts.Weapon = new WeaponController(players, parts.Aim, _weapon, parts.Crowd, parts.Nav, seed, claims, parts.Shots,
-                session.IsAuthority ? null : parts.Crowd as CrowdReplica, _walker.MaxHealth);
+                session.IsAuthority ? null : parts.Crowd as CrowdReplica, _walker.MaxHealth) { Builds = parts.Builds };
             parts.Aim.Ignore = parts.Weapon.PresumedDeadMask;
             if (benchmark)
             {
@@ -156,7 +182,7 @@ namespace LastGround.App
             {
                 PlayerId me = session.LocalPlayer;
                 loop.Register(TickPhase.LocalPlayer, Gate(new PlayerMotor(players, parts.Aim, _playerDefinition, worldSize,
-                    me.Value * 3f - 4.5f, -3f, parts.Nav, parts.Crowd)));
+                    me.Value * 3f - 4.5f, -3f, parts.Nav, parts.Crowd) { Builds = parts.Builds }));
                 loop.Register(TickPhase.LocalPlayer, Gate(parts.Weapon));
             }
             loop.Register(TickPhase.NetSend, sync);
@@ -167,6 +193,10 @@ namespace LastGround.App
 
             BuildPresentation(parts, loop);
             _statusHud.Bind(parts.Status);
+            _xpBar.Bind(parts.Xp);
+            _levelUp.Bind(parts.Offers, _upgrades, () => CountActive(players) <= 1);
+            _pause = _levelUp;
+            _input.Blocker = () => _levelUp.BlockingRect;
             _teamPanel.Bind(players, session, _playerDefinition.MaxHealth);
             _teammateIndicators.Bind(players, _camera);
             _results.Bind(_outcome, _service);
@@ -181,6 +211,7 @@ namespace LastGround.App
             telemetry.Bind(session, parts.Crowd, parts.World);
             telemetry.BindCombat(players, parts.Weapon, parts.Authority, parts.Health);
             telemetry.BindDirector(parts.Status, parts.Director);
+            telemetry.BindProgress(parts.Xp, parts.Builds);
             if (parts.Director != null) gameObject.AddComponent<DirectorLog>().Bind(parts.Status, parts.Director, _service.CurrentRun.Seed);
             if (parts.Benchmark != null)
             {
@@ -201,7 +232,7 @@ namespace LastGround.App
             parts.Crowd = crowd;
             parts.Deaths = crowd.Deaths;
             parts.Hits = crowd.Hits;
-            parts.Health = new PlayerHealthSystem(parts.Players, _playerDefinition);
+            parts.Health = new PlayerHealthSystem(parts.Players, _playerDefinition) { Builds = parts.Builds };
             loop.Register(TickPhase.Combat, Gate(parts.Health));
             var referee = new RunReferee(parts.Health, parts.Status, _outcome);
             loop.Register(TickPhase.Combat, Gate(referee));
@@ -229,7 +260,11 @@ namespace LastGround.App
 
             parts.Authority = new CombatAuthority(world, parts.Players, parts.Nav, WeaponTable(), seed);
             CombatAuthority authority = parts.Authority;
+            authority.Builds = parts.Builds;
+            authority.Health = parts.Health;
             parts.Referee.Kills = () => authority.Kills;
+            parts.Progress = new TeamProgress(crowd, parts.Players, parts.Builds, _levelCurve, _walker.Xp, seed);
+            loop.Register(TickPhase.Combat, Gate(parts.Progress));
             loop.Register(TickPhase.Combat, Gate(parts.Authority));
             var claimSync = new HitClaimSync(parts.Session, parts.Authority);
             _disposables.Add(claimSync);
@@ -277,7 +312,8 @@ namespace LastGround.App
         /// <summary>Runs a system only between RunStart (every device loaded) and the end of the run.</summary>
         ITickable Gate(ITickable inner) => new TickAction(dt =>
         {
-            if (_started && !_outcome.Ended) inner.Tick(dt, _scheduler.Loop.SimTick);
+            // Solo only: an open level-up panel pauses the run (co-op never pauses, TDD_01 §7.5).
+            if (_started && !_outcome.Ended && (_pause == null || !_pause.WantsPause)) inner.Tick(dt, _scheduler.Loop.SimTick);
         });
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

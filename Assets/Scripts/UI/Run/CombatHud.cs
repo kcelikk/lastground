@@ -88,7 +88,7 @@ namespace LastGround.UI.Run
             if (health != _shownHealth)
             {
                 _shownHealth = health;
-                _healthFill.fillAmount = _players.Health[me] / _maxHealth;
+                _healthFill.fillAmount = _players.Health[me] / UnityEngine.Mathf.Max(1f, _players.MaxHealth[me]);
                 _healthLabel.SetText("{0}", health);
             }
 

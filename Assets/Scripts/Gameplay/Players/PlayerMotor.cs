@@ -39,6 +39,9 @@ namespace LastGround.Gameplay.Players
             _table.SetLocal(_x, _z, _yaw, 0f, 0f);
         }
 
+        /// <summary>Team builds (move speed upgrades). Optional.</summary>
+        public LastGround.Gameplay.Upgrades.TeamBuilds Builds { get; set; }
+
         /// <summary>Speed multiplier from touching zombies last frame (1 = free).</summary>
         public float ContactFactor { get; private set; } = 1f;
 
@@ -63,7 +66,8 @@ namespace LastGround.Gameplay.Players
             }
 
             ContactFactor = 1f - Mathf.Min(_definition.MaxContactSlow, CountContacts() * _definition.SlowPerContact);
-            float speed = _definition.MoveSpeed * ContactFactor * (downed ? _definition.DownedSpeedFactor : 1f);
+            float upgrade = me >= 0 && Builds != null ? 1f + Builds.Of(me).Get(LastGround.Data.Upgrades.StatId.MoveSpeedPct) / 100f : 1f;
+            float speed = _definition.MoveSpeed * upgrade * ContactFactor * (downed ? _definition.DownedSpeedFactor : 1f);
             float vx = mx * speed;
             float vz = mz * speed;
             float nx = Mathf.Clamp(_x + vx * dt, -_halfBounds, _halfBounds);
