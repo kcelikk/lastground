@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef877aa20615c5f0ebf1b499897631e6, type: 3}
+  m_Name: CrowdCatalog
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Crowd.CrowdVisualCatalog
+  Bodies:
+  - {fileID: 11400000, guid: f7517182102b4912cb50110e5cc983cf, type: 2}
+  - {fileID: 11400000, guid: a26ebba0094b53bb1875130f4d4f1d3b, type: 2}
+  - {fileID: 11400000, guid: f099a274aa52d21bbb98e34a08846363, type: 2}
+  - {fileID: 11400000, guid: cd1fc0ffc8d87c18b8368897ed4233af, type: 2}
+  Material: {fileID: 2100000, guid: 5c5b52e04ab10ba01b790d6ef8aeb593, type: 2}
+  TargetHeight: 1.8
+  ScaleVariation: 0.08

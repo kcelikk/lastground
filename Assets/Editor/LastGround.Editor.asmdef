@@ -14,7 +14,10 @@
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.TextMeshPro",
         "Unity.InputSystem",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "LastGround.Data",
+        "LastGround.Gameplay",
+        "Whinarn.UnityMeshSimplifier.Runtime"
     ],
     "includePlatforms": [
         "Editor"
