@@ -42,6 +42,9 @@ namespace LastGround.Gameplay.Players
         /// <summary>Team builds (move speed upgrades). Optional.</summary>
         public LastGround.Gameplay.Upgrades.TeamBuilds Builds { get; set; }
 
+        /// <summary>Heavy weapons slow the shooter while firing (Machine Gun −20 %). Optional.</summary>
+        public LastGround.Gameplay.Combat.IWeaponStatus Weapon { get; set; }
+
         /// <summary>Speed multiplier from touching zombies last frame (1 = free).</summary>
         public float ContactFactor { get; private set; } = 1f;
 
@@ -67,7 +70,7 @@ namespace LastGround.Gameplay.Players
 
             ContactFactor = 1f - Mathf.Min(_definition.MaxContactSlow, CountContacts() * _definition.SlowPerContact);
             float upgrade = me >= 0 && Builds != null ? 1f + Builds.Of(me).Get(LastGround.Data.Upgrades.StatId.MoveSpeedPct) / 100f : 1f;
-            float slow = me >= 0 ? _table.SlowMultiplier[me] : 1f;
+            float slow = (me >= 0 ? _table.SlowMultiplier[me] : 1f) * (Weapon != null ? Weapon.MoveMultiplier : 1f);
             float speed = _definition.MoveSpeed * upgrade * ContactFactor * slow * (downed ? _definition.DownedSpeedFactor : 1f);
             float vx = mx * speed;
             float vz = mz * speed;

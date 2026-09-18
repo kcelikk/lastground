@@ -9,7 +9,8 @@ namespace LastGround.Rendering
 {
     /// <summary>
     /// Top-down camera (TDD_01 §4): fixed pitch/yaw, critically damped follow of the local player, look-ahead in the
-    /// aim direction (or movement when not aiming), and trauma-based shake when the local player is hurt.
+    /// aim direction (or movement when not aiming), trauma-based shake when the local player is hurt or a blast goes
+    /// off nearby, and a slightly wider view with scoped weapons (Sniper +8 %).
     /// Presentation phase; no Update of its own. Shake can be scaled down in settings.
     /// </summary>
     public sealed class TopDownCameraRig : ITickable
@@ -26,6 +27,7 @@ namespace LastGround.Rendering
         Vector3 _lookAheadVelocity;
         float _trauma;
         float _time;
+        float _zoom = 1f;
         bool _snapped;
 
         public TopDownCameraRig(Camera camera, PlayerStateTable table, IPlayerInputSource input, CameraProfile profile)
@@ -42,6 +44,12 @@ namespace LastGround.Rendering
 
         /// <summary>0 = no shake, 1 = full (Settings).</summary>
         public float ShakeScale { get; set; } = 1f;
+
+        /// <summary>Weapon in the local player's hand (camera zoom per weapon). Optional.</summary>
+        public LastGround.Gameplay.Combat.IWeaponStatus Weapon { get; set; }
+
+        /// <summary>Adds shake (blasts); clamped to 1.</summary>
+        public void AddTrauma(float amount) => _trauma = Mathf.Min(1f, _trauma + Mathf.Max(0f, amount));
 
         public void Tick(float dt, uint tick)
         {
@@ -70,7 +78,9 @@ namespace LastGround.Rendering
                 _focus = Vector3.SmoothDamp(_focus, target, ref _velocity, _profile.FollowSmoothTime, Mathf.Infinity, dt);
             }
 
-            Vector3 position = _focus - _rotation * Vector3.forward * _profile.Distance;
+            float zoomTarget = 1f + (Weapon?.Active != null ? Weapon.Active.CameraZoomPct : 0f);
+            _zoom = Mathf.MoveTowards(_zoom, zoomTarget, dt * 0.25f);
+            Vector3 position = _focus - _rotation * Vector3.forward * (_profile.Distance * _zoom);
             Quaternion rotation = _rotation;
             if (_trauma > 0f)
             {

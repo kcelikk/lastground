@@ -20,3 +20,29 @@ MonoBehaviour:
   Material: {fileID: 2100000, guid: 5c5b52e04ab10ba01b790d6ef8aeb593, type: 2}
   TargetHeight: 1.8
   ScaleVariation: 0.08
+  TypeLooks:
+  - ZombieId: walker
+    Bodies: 000000000100000003000000
+    Scale: 1
+    Glow: {r: 0, g: 0, b: 0, a: 1}
+    GlowStrength: 0
+  - ZombieId: runner
+    Bodies: 03000000
+    Scale: 0.95
+    Glow: {r: 0, g: 0, b: 0, a: 1}
+    GlowStrength: 0
+  - ZombieId: tank
+    Bodies: 02000000
+    Scale: 1.45
+    Glow: {r: 0, g: 0, b: 0, a: 1}
+    GlowStrength: 0
+  - ZombieId: spitter
+    Bodies: 01000000
+    Scale: 1
+    Glow: {r: 0.45, g: 1, b: 0.2, a: 1}
+    GlowStrength: 0.25
+  - ZombieId: exploder
+    Bodies: 02000000
+    Scale: 1.1
+    Glow: {r: 1, g: 0.45, b: 0.1, a: 1}
+    GlowStrength: 0.3

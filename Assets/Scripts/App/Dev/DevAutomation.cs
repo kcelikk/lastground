@@ -20,6 +20,8 @@ namespace LastGround.App.Dev
     ///   -lg-wander            local player wanders in circles (soak tests)
     ///   -lg-autofire          auto aim + fire for this launch (combat soak tests)
     ///   -lg-autopick          pick the rarest upgrade automatically on level-up (soak tests)
+    ///   -lg-grenades          the bot throws a grenade at nearby zombies whenever it has one (every ~10 s)
+    ///   -lg-run-time SEC      host: start the run clock at SEC (unlocks later zombie types and elites at once)
     ///   -lg-bench [SEC]       crowd rendering benchmark, SEC per step (default 60), quits when done
     ///   -lg-quality N         force quality tier 0/1/2 for this launch (benchmarks)
     ///   -lg-gc-capture [SEC]  record 300 profiler frames with allocation call stacks after SEC s (default 8; GcAllocReport)
@@ -39,6 +41,12 @@ namespace LastGround.App.Dev
 
         /// <summary>-lg-autofire: this launch uses auto aim + fire regardless of settings (combat soak tests).</summary>
         public static bool ForceAutoFire { get; private set; }
+
+        /// <summary>-lg-grenades: the soak bot throws grenades.</summary>
+        public static bool AutoGrenades { get; private set; }
+
+        /// <summary>-lg-run-time: host run clock starts here (seconds; 0 = normal).</summary>
+        public static float RunTimeSkip { get; private set; }
 
         public static void Install(GameObject root, SessionService service)
         {
@@ -61,6 +69,11 @@ namespace LastGround.App.Dev
                     case "-lg-wander": LastGround.Input.TouchTwinStickInput.DevWander = true; break;
                     case "-lg-autofire": ForceAutoFire = true; break;
                     case "-lg-autopick": LastGround.UI.Run.LevelUpPanel.DevAutoPick = true; break;
+                    case "-lg-grenades": AutoGrenades = true; break;
+                    case "-lg-run-time" when i + 1 < args.Count:
+                        if (float.TryParse(args[++i], NumberStyles.Float, CultureInfo.InvariantCulture, out float runTime))
+                            RunTimeSkip = runTime;
+                        break;
                     case "-lg-gc-capture":
                         var capture = gameObject.AddComponent<GcProfileCapture>();
                         if (i + 1 < args.Count && float.TryParse(args[i + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out float delay))

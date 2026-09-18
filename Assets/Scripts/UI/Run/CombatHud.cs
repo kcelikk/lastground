@@ -13,7 +13,8 @@ using UnityEngine.UI;
 namespace LastGround.UI.Run
 {
     /// <summary>
-    /// Combat HUD (TDD_01 §0.9 panel 2): health bar top-left, ammo and reload ring, red hurt vignette, the life-state
+    /// Combat HUD (TDD_01 §0.9 panel 2): health bar top-left, magazine / reserve ammo (∞ for the sidearm) and reload
+    /// ring, red hurt vignette, the life-state
     /// overlay (downed: bleedout countdown + revive ring; solo adrenaline; dead: return countdown) and the auto-fire
     /// toggle. Numbers use allocation-free TMP SetText; localized formats are read once.
     /// </summary>
@@ -40,6 +41,8 @@ namespace LastGround.UI.Run
         float _maxHealth;
         float _vignette;
         string _ammoFormat;
+        string _ammoInfiniteFormat;
+        int _shownReserve = -1;
         string _reloadingText;
         string _downedFormat;
         string _deadFormat;
@@ -100,12 +103,15 @@ namespace LastGround.UI.Run
             }
 
             bool reloading = _weapon.Reloading;
-            if (_weapon.Ammo != _shownAmmo || reloading != _shownReloading)
+            int reserve = _weapon.InfiniteReserve ? -2 : _weapon.Reserve;
+            if (_weapon.Ammo != _shownAmmo || reloading != _shownReloading || reserve != _shownReserve)
             {
                 _shownAmmo = _weapon.Ammo;
                 _shownReloading = reloading;
+                _shownReserve = reserve;
                 if (reloading) _ammoLabel.SetText(_reloadingText);
-                else _ammoLabel.SetText(_ammoFormat, _weapon.Ammo, _weapon.MagazineSize);
+                else if (reserve == -2) _ammoLabel.SetText(_ammoInfiniteFormat, _weapon.Ammo);
+                else _ammoLabel.SetText(_ammoFormat, _weapon.Ammo, reserve);
             }
             _reloadRing.fillAmount = reloading ? _weapon.ReloadProgress : 0f;
 
@@ -160,6 +166,7 @@ namespace LastGround.UI.Run
         void LoadTexts()
         {
             _ammoFormat = _localization.Get("hud.ammo");
+            _ammoInfiniteFormat = _localization.Get("hud.ammo_infinite");
             _reloadingText = _localization.Get("hud.reloading");
             _downedFormat = _localization.Get("hud.downed");
             _deadFormat = _localization.Get("hud.dead");

@@ -18,6 +18,11 @@ namespace LastGround.Audio
             clips[(int)SfxId.ZombieHit] = Create("sfx_zombie_hit", 0.07f, 2u, Hit);
             clips[(int)SfxId.ZombieDeath] = Create("sfx_zombie_death", 0.4f, 3u, Death);
             clips[(int)SfxId.PlayerHurt] = Create("sfx_player_hurt", 0.22f, 4u, Hurt);
+            clips[(int)SfxId.HeavyShot] = Create("sfx_heavy_shot", 0.35f, 5u, HeavyShot);
+            clips[(int)SfxId.Explosion] = Create("sfx_explosion", 1.1f, 6u, Explosion);
+            clips[(int)SfxId.Spit] = Create("sfx_spit", 0.25f, 7u, Spit);
+            clips[(int)SfxId.FuseBeep] = Create("sfx_fuse_beep", 0.12f, 8u, Beep);
+            clips[(int)SfxId.Swap] = Create("sfx_swap", 0.12f, 9u, Swap);
             return clips;
         }
 
@@ -59,6 +64,38 @@ namespace LastGround.Audio
             float frequency = Mathf.Lerp(150f, 55f, t / 0.4f);
             float growl = Mathf.Sin(2f * Mathf.PI * frequency * t) * (0.6f + 0.4f * Mathf.Sin(2f * Mathf.PI * 23f * t));
             return (growl * 0.55f + lowPass * 1.6f) * Mathf.Exp(-t * 7f);
+        }
+
+        static float HeavyShot(float t, float noise, ref float lowPass)
+        {
+            lowPass += (noise - lowPass) * 0.3f;
+            float crack = lowPass * Mathf.Exp(-t * 18f);
+            float boom = Mathf.Sin(2f * Mathf.PI * 60f * t) * Mathf.Exp(-t * 9f);
+            return crack * 1.1f + boom * 0.8f;
+        }
+
+        static float Explosion(float t, float noise, ref float lowPass)
+        {
+            lowPass += (noise - lowPass) * 0.05f;
+            float rumble = Mathf.Sin(2f * Mathf.PI * Mathf.Lerp(55f, 30f, t) * t) * Mathf.Exp(-t * 3.5f);
+            return lowPass * 3.2f * Mathf.Exp(-t * 2.8f) + rumble * 0.8f + noise * 0.4f * Mathf.Exp(-t * 25f);
+        }
+
+        static float Spit(float t, float noise, ref float lowPass)
+        {
+            lowPass += (noise - lowPass) * 0.35f;
+            float gurgle = Mathf.Sin(2f * Mathf.PI * (180f + 60f * Mathf.Sin(2f * Mathf.PI * 30f * t)) * t);
+            return (lowPass * 0.9f + gurgle * 0.35f) * Mathf.Exp(-t * 12f);
+        }
+
+        static float Beep(float t, float noise, ref float state) =>
+            Mathf.Sin(2f * Mathf.PI * 1400f * t) * 0.5f * Mathf.Clamp01(t * 200f) * Mathf.Exp(-t * 18f);
+
+        static float Swap(float t, float noise, ref float lowPass)
+        {
+            lowPass += (noise - lowPass) * 0.6f;
+            float click = t < 0.02f || (t > 0.07f && t < 0.09f) ? 1f : 0f;
+            return lowPass * click * 0.8f;
         }
 
         static float Hurt(float t, float noise, ref float lowPass)

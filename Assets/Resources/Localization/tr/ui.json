@@ -135,5 +135,6 @@
   "hud.elite_spawned": "ELİT {0} {1}",
   "hud.new_zombie": "{0} görüldü",
   "hud.take_weapon": "AL",
-  "hud.no_ammo": "MERMİ YOK"
+  "hud.no_ammo": "MERMİ YOK",
+  "hud.grenade_short": "BOMBA"
 }

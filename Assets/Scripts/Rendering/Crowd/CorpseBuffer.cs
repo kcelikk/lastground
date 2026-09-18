@@ -15,6 +15,7 @@ namespace LastGround.Rendering.Crowd
             public float Z;
             public float Yaw;
             public float DiedAt;
+            public byte Type;
         }
 
         readonly RingBuffer<Corpse> _items;
@@ -28,9 +29,9 @@ namespace LastGround.Rendering.Crowd
         public bool Enabled { get; }
         public int Count => _items.Count;
 
-        public void Add(int slot, float x, float z, float yaw, float time)
+        public void Add(int slot, float x, float z, float yaw, float time, byte type = 0)
         {
-            if (Enabled) _items.PushOverwrite(new Corpse { Slot = slot, X = x, Z = z, Yaw = yaw, DiedAt = time });
+            if (Enabled) _items.PushOverwrite(new Corpse { Slot = slot, X = x, Z = z, Yaw = yaw, DiedAt = time, Type = type });
         }
 
         public ref Corpse this[int index] => ref _items[index];
