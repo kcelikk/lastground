@@ -125,7 +125,7 @@ namespace LastGround.Tests
 
             void BotShoots()
             {
-                if (Players.Dead[0]) return;
+                if (!Players.CanAct(0)) return;
                 _killTimer += Dt;
                 if (_killTimer < 0.33f) return;
                 _killTimer = 0f;
@@ -153,8 +153,11 @@ namespace LastGround.Tests
 
         SimRun Sim(uint seed)
         {
+            // The bot always gets back up (plenty of adrenaline) so a whole run can be observed.
+            var player = Asset<PlayerDefinition>();
+            player.SoloAdrenaline = 1000;
             return new SimRun(seed, Asset<DirectorProfile>(), Asset<ThreatCurveDefinition>(), Asset<PlayerCountScalingProfile>(),
-                Asset<ZombieDefinition>(), Asset<PlayerDefinition>(), Asset<CameraProfile>());
+                Asset<ZombieDefinition>(), player, Asset<CameraProfile>());
         }
 
         [Test]
@@ -164,7 +167,7 @@ namespace LastGround.Tests
             {
                 run.Run(360f);
                 Debug.Log($"[Test] director 6 min: spawned {run.Director.Spawned}, patterns {run.Director.Patterns}, max alive {run.MaxAlive}, " +
-                          $"threat {run.Status.Threat}, player deaths {run.Health.Deaths}, states {string.Join(",", run.StatesSeen)}");
+                          $"threat {run.Status.Threat}, downs {run.Health.Downs}, states {string.Join(",", run.StatesSeen)}");
                 Assert.IsTrue(run.StatesSeen.Contains(DirectorState.BuildUp));
                 Assert.IsTrue(run.StatesSeen.Contains(DirectorState.Peak));
                 Assert.IsTrue(run.StatesSeen.Contains(DirectorState.PeakHold));

@@ -28,14 +28,24 @@ namespace LastGround.Gameplay.Players
 
         /// <summary>Vitals: host-authoritative, replicated to clients on change (PlayerVitals).</summary>
         public readonly float[] Health = new float[Max];
-        public readonly bool[] Dead = new bool[Max];
+        public readonly PlayerLife[] Life = new PlayerLife[Max];
         public readonly bool[] Invulnerable = new bool[Max];
+        /// <summary>Downed: seconds until death. Dead: seconds until back in (0 = waiting for a standing teammate).</summary>
+        public readonly float[] Countdown = new float[Max];
+        /// <summary>Downed: revive progress 0..1.</summary>
+        public readonly float[] ReviveProgress = new float[Max];
 
         /// <summary>Damage taken, on every device (camera shake, haptics, sound).</summary>
         public readonly EventChannel<PlayerHurt> Hurt = new EventChannel<PlayerHurt>(64);
 
-        /// <summary>True for players zombies can target and hurt.</summary>
-        public bool IsTargetable(int index) => Active[index] && !Dead[index];
+        /// <summary>Standing and able to move at full speed and shoot.</summary>
+        public bool CanAct(int index) => Active[index] && Life[index] == PlayerLife.Alive;
+
+        /// <summary>Zombies chase alive and downed players (downed ones less eagerly), never dead ones.</summary>
+        public bool IsTargetable(int index) => Active[index] && Life[index] != PlayerLife.Dead;
+
+        public bool IsDowned(int index) => Active[index] && Life[index] == PlayerLife.Downed;
+        public bool IsDead(int index) => Active[index] && Life[index] == PlayerLife.Dead;
 
         readonly CrowdReplica _display = new CrowdReplica(Max);
 
@@ -80,7 +90,7 @@ namespace LastGround.Gameplay.Players
             if (!id.IsValid || id.Value >= Max) return;
             Active[id.Value] = false;
             Firing[id.Value] = false;
-            Dead[id.Value] = false;
+            Life[id.Value] = PlayerLife.Alive;
             _display.Exit(id.Value);
         }
 

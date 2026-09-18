@@ -182,9 +182,34 @@ namespace LastGround.Tests
 
                 rig.Health.Damage(me, 80f);
                 rig.Net.Step(0.3, perTick: rig.Tick);
-                Assert.IsTrue(rig.ClientPlayers.Dead[me]);
+                Assert.AreEqual(PlayerLife.Downed, rig.ClientPlayers.Life[me]);
                 Assert.IsTrue(rig.ClientPlayers.Hurt.TryRead(ref hurt, out h));
                 Assert.IsTrue(h.Died);
+            }
+        }
+
+        [Test]
+        public void RunEnd_ReachesTheClient_WithTheHostsResult()
+        {
+            using (Rig rig = Create())
+            {
+                var hostOutcome = new LastGround.Gameplay.Run.RunOutcome();
+                var clientOutcome = new LastGround.Gameplay.Run.RunOutcome();
+                var hostEnd = new RunEndSync(rig.Host, hostOutcome);
+                var clientEnd = new RunEndSync(rig.Client, clientOutcome);
+                rig.Net.Step(0.5, perTick: dt => { rig.Tick(dt); hostEnd.Tick(dt, 0); });
+                Assert.IsFalse(clientOutcome.Ended);
+
+                hostOutcome.End(new LastGround.Gameplay.Run.RunResult { SurvivalSeconds = 754.3f, MaxThreat = 4, Kills = 1234, Revives = 3, Coins = 250 });
+                rig.Net.Step(0.3, perTick: dt => { rig.Tick(dt); hostEnd.Tick(dt, 0); });
+                Assert.IsTrue(clientOutcome.Ended);
+                Assert.AreEqual(754.3f, clientOutcome.Result.SurvivalSeconds, 0.05f);
+                Assert.AreEqual(4, clientOutcome.Result.MaxThreat);
+                Assert.AreEqual(1234, clientOutcome.Result.Kills);
+                Assert.AreEqual(3, clientOutcome.Result.Revives);
+                Assert.AreEqual(250, clientOutcome.Result.Coins);
+                hostEnd.Dispose();
+                clientEnd.Dispose();
             }
         }
 

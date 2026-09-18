@@ -96,8 +96,8 @@ namespace LastGround.App.Dev
         {
             if (_weapon == null) return string.Empty;
             int me = _players.Local.IsValid ? _players.Local.Value : 0;
-            string line = string.Format(CultureInfo.InvariantCulture, " shots={0} claims={1} hp={2:0} dead={3}",
-                _weapon.ShotsFired, _weapon.ClaimsSent, _players.Health[me], _players.Dead[me] ? 1 : 0);
+            string line = string.Format(CultureInfo.InvariantCulture, " shots={0} claims={1} hp={2:0} life={3}",
+                _weapon.ShotsFired, _weapon.ClaimsSent, _players.Health[me], _players.Life[me]);
             if (_authority != null)
             {
                 line += string.Format(CultureInfo.InvariantCulture, " accepted={0} rejected={1} kills={2} gone={3} farTarget={4} noLos={5} rate={6} deadShooter={7}",
@@ -105,7 +105,7 @@ namespace LastGround.App.Dev
                     _authority.CountOf(HitClaimVerdict.FarFromTarget), _authority.CountOf(HitClaimVerdict.NoLineOfSight),
                     _authority.CountOf(HitClaimVerdict.RateLimited), _authority.CountOf(HitClaimVerdict.ShooterDead));
             }
-            if (_health != null) line += string.Format(CultureInfo.InvariantCulture, " playerDeaths={0}", _health.Deaths);
+            if (_health != null) line += string.Format(CultureInfo.InvariantCulture, " downs={0} playerDeaths={1} revives={2}", _health.Downs, _health.Deaths, _health.Revives);
             if (_world != null) line += string.Format(CultureInfo.InvariantCulture, " zAttacks={0} zDodged={1}", _world.AttacksLanded, _world.AttacksDodged);
             if (_status != null)
             {

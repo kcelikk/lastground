@@ -12,9 +12,9 @@ using UnityEngine.UI;
 namespace LastGround.UI.Run
 {
     /// <summary>
-    /// Combat HUD (TDD_01 §0.9 panel 2, M4 subset): health bar top-left, ammo and reload ring near the aim stick,
-    /// red hurt vignette, "down — back in N" overlay, and the auto-fire toggle. Numbers use allocation-free
-    /// TMP SetText; localized formats are read once.
+    /// Combat HUD (TDD_01 §0.9 panel 2): health bar top-left, ammo and reload ring, red hurt vignette, the life-state
+    /// overlay (downed: bleedout countdown + revive ring; solo adrenaline; dead: return countdown) and the auto-fire
+    /// toggle. Numbers use allocation-free TMP SetText; localized formats are read once.
     /// </summary>
     public sealed class CombatHud : MonoBehaviour
     {
@@ -25,6 +25,7 @@ namespace LastGround.UI.Run
         [SerializeField] Image _hurtVignette;
         [SerializeField] GameObject _deathOverlay;
         [SerializeField] TMP_Text _deathLabel;
+        [SerializeField] Image _reviveRing;
         [SerializeField] Button _autoFireButton;
         [SerializeField] TMP_Text _autoFireLabel;
 
@@ -35,25 +36,29 @@ namespace LastGround.UI.Run
         ILocalizationService _localization;
         EventReader<PlayerHurt> _hurtReader;
         float _maxHealth;
-        float _respawnDelay;
-        float _deadFor;
         float _vignette;
         string _ammoFormat;
         string _reloadingText;
-        string _deathFormat;
+        string _downedFormat;
+        string _deadFormat;
+        string _deadWaiting;
+        string _adrenaline;
+        PlayerLife _shownLife;
+        System.Func<bool> _isSolo;
         int _shownAmmo = -1;
         bool _shownReloading;
         int _shownHealth = -1;
         int _shownCountdown = -1;
 
-        public void Bind(PlayerStateTable players, IWeaponStatus weapon, AimResolver aim, float maxHealth, float respawnDelay,
-            Action<ControlMode> modeChanged)
+        /// <param name="isSolo">True while this is a one-player run (the downed overlay then shows adrenaline).</param>
+        public void Bind(PlayerStateTable players, IWeaponStatus weapon, AimResolver aim, float maxHealth,
+            System.Func<bool> isSolo, Action<ControlMode> modeChanged)
         {
             _players = players;
             _weapon = weapon;
             _aim = aim;
             _maxHealth = Mathf.Max(1f, maxHealth);
-            _respawnDelay = respawnDelay;
+            _isSolo = isSolo;
             _modeChanged = modeChanged;
             _hurtReader = players.Hurt.CreateReader();
             _localization = AppServices.Get<ILocalizationService>();
@@ -99,23 +104,31 @@ namespace LastGround.UI.Run
             c.a = _vignette * 0.6f;
             _hurtVignette.color = c;
 
-            UpdateDeathOverlay(_players.Dead[me], dt);
+            UpdateLifeOverlay(me);
         }
 
-        void UpdateDeathOverlay(bool dead, float dt)
+        void UpdateLifeOverlay(int me)
         {
-            if (_deathOverlay.activeSelf != dead)
+            PlayerLife life = _players.Life[me];
+            bool show = life != PlayerLife.Alive;
+            if (_deathOverlay.activeSelf != show) _deathOverlay.SetActive(show);
+            if (life != _shownLife)
             {
-                _deathOverlay.SetActive(dead);
-                _deadFor = 0f;
+                _shownLife = life;
                 _shownCountdown = -1;
             }
-            if (!dead) return;
-            _deadFor += dt;
-            int countdown = Mathf.Max(1, Mathf.CeilToInt(_respawnDelay - _deadFor));
-            if (countdown == _shownCountdown) return;
-            _shownCountdown = countdown;
-            _deathLabel.SetText(_deathFormat, countdown);
+            if (!show) return;
+
+            _reviveRing.fillAmount = life == PlayerLife.Downed ? _players.ReviveProgress[me] : 0f;
+            int countdown = Mathf.CeilToInt(_players.Countdown[me]);
+            bool adrenaline = life == PlayerLife.Downed && _isSolo() && _players.ReviveProgress[me] > 0f;
+            int key = adrenaline ? -2 : countdown;
+            if (key == _shownCountdown) return;
+            _shownCountdown = key;
+            if (adrenaline) _deathLabel.SetText(_adrenaline);
+            else if (life == PlayerLife.Downed) _deathLabel.SetText(_downedFormat, Mathf.Max(0, countdown));
+            else if (countdown > 0) _deathLabel.SetText(_deadFormat, countdown);
+            else _deathLabel.SetText(_deadWaiting);
         }
 
         void ToggleAutoFire()
@@ -131,7 +144,10 @@ namespace LastGround.UI.Run
         {
             _ammoFormat = _localization.Get("hud.ammo");
             _reloadingText = _localization.Get("hud.reloading");
-            _deathFormat = _localization.Get("hud.down");
+            _downedFormat = _localization.Get("hud.downed");
+            _deadFormat = _localization.Get("hud.dead");
+            _deadWaiting = _localization.Get("hud.dead_waiting");
+            _adrenaline = _localization.Get("hud.adrenaline");
             _autoFireLabel.text = _localization.Get(_aim.Mode == ControlMode.AutoAimAutoFire ? "hud.auto_fire_on" : "hud.auto_fire_off");
             _shownAmmo = -1;
             _shownCountdown = -1;

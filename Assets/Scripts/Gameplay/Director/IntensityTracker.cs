@@ -53,7 +53,7 @@ namespace LastGround.Gameplay.Director
                 }
                 float crowd = math.min(1f, _nearby[p] / (float)math.max(1, _profile.NearbySaturation)) * _profile.NearbyStress;
                 float lowHealth = (1f - math.saturate(_players.Health[p] / _maxHealth)) * _profile.LowHealthStress;
-                float value = _players.Dead[p] ? 1f : math.saturate(_stress[p] + crowd + lowHealth);
+                float value = _players.Life[p] != PlayerLife.Alive ? 1f : math.saturate(_stress[p] + crowd + lowHealth);
                 _intensity[p] = value;
                 max = math.max(max, value);
                 sum += value;

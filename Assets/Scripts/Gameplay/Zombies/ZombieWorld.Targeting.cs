@@ -17,7 +17,8 @@ namespace LastGround.Gameplay.Zombies
                 for (int k = 0; k < PlayerStateTable.Max; k++)
                 {
                     if (_playerActive[k] == 0) continue;
-                    float d = math.distancesq(p, _playerPosition[k]);
+                    // Downed players are chased less eagerly (TDD_01 §14.2): they count as ~1.4× further away.
+                    float d = math.distancesq(p, _playerPosition[k]) * (_players.IsDowned(k) ? 2f : 1f);
                     if (d < bestDistance)
                     {
                         bestDistance = d;
@@ -27,7 +28,7 @@ namespace LastGround.Gameplay.Zombies
                 byte current = _target[i];
                 if (current != ZombieSteeringJob.NoTarget && _playerActive[current] != 0 && best != current)
                 {
-                    float currentDistance = math.distancesq(p, _playerPosition[current]);
+                    float currentDistance = math.distancesq(p, _playerPosition[current]) * (_players.IsDowned(current) ? 2f : 1f);
                     if (bestDistance > currentDistance * 0.64f) best = current; // switch only when 20 % closer
                 }
                 _target[i] = (byte)best;

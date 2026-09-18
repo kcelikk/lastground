@@ -140,7 +140,7 @@ namespace LastGround.Networking.Replication
                 }
             }
             _table.PushRemote(sender, x, z, yaw, vx, vz, _session.Clock.HostTime, _localTime);
-            _table.Firing[i] = (flags & FlagFiring) != 0 && !_table.Dead[i];
+            _table.Firing[i] = (flags & FlagFiring) != 0 && _table.CanAct(i);
         }
 
         void OnStates(PlayerId sender, ref NetReader r)

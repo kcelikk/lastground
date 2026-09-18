@@ -92,9 +92,9 @@ namespace LastGround.Gameplay.Combat
         {
             int me = _players.Local.IsValid ? _players.Local.Value : -1;
             if (me < 0 || !_players.Active[me]) return;
-            if (_players.Dead[me])
+            if (!_players.CanAct(me))
             {
-                // Dying refills the magazine: the player gets back up ready to fight.
+                // Going down refills the magazine: the player gets back up ready to fight.
                 _reloadTimer = 0f;
                 Ammo = _weapon.MagazineSize;
                 _players.Firing[me] = false;

@@ -44,7 +44,7 @@ namespace LastGround.Networking.Replication
             if (_timer > 0f) return;
             _timer += SendInterval;
             NetWriter w = _session.Begin(NetMsgId.DirectorInfo);
-            w.WriteVarUInt((uint)(_status.RunSeconds * 10f));
+            w.WriteVarUInt((uint)(_status.RunSeconds * 10f + 0.5f));
             w.WriteByte((byte)_status.Horde);
             w.WriteByte((byte)Math.Min(255, _status.Threat));
             _session.SendToClients(NetChannel.Unreliable);

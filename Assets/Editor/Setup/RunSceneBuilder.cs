@@ -28,6 +28,9 @@ namespace LastGround.EditorTools.Setup
         const string MaterialDir = "Assets/Art/Materials";
         const float GroundSize = 140f;
         static RunStatusHud _statusHud;
+        static TeamPanel _teamPanel;
+        static TeammateIndicators _indicators;
+        static ResultsScreen _results;
 
         public static void Build(string path)
         {
@@ -95,6 +98,9 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_hud", hud);
             UiFactory.Assign(installer, "_combatHud", combatHud);
             UiFactory.Assign(installer, "_statusHud", _statusHud);
+            UiFactory.Assign(installer, "_teamPanel", _teamPanel);
+            UiFactory.Assign(installer, "_teammateIndicators", _indicators);
+            UiFactory.Assign(installer, "_results", _results);
             UiFactory.Assign(installer, "_directorProfile", AssetDatabase.LoadAssetAtPath<LastGround.Data.Director.DirectorProfile>(CombatContentBuilder.DirectorPath));
             UiFactory.Assign(installer, "_threatCurve", AssetDatabase.LoadAssetAtPath<LastGround.Data.Director.ThreatCurveDefinition>(CombatContentBuilder.ThreatPath));
             UiFactory.Assign(installer, "_playerScaling", AssetDatabase.LoadAssetAtPath<LastGround.Data.Director.PlayerCountScalingProfile>(CombatContentBuilder.ScalingPath));
@@ -152,7 +158,10 @@ namespace LastGround.EditorTools.Setup
             Button autoFire = UiFactory.Button("AutoFire", safe, null, new Vector2(300f, 70f), out TMP_Text autoFireLabel, 28f);
             UiFactory.Place((RectTransform)autoFire.transform, new Vector2(1f, 1f), new Vector2(-24f, -122f), new Vector2(300f, 70f));
 
-            (GameObject deathOverlay, TMP_Text deathLabel) = BuildDeathOverlay(canvasGo.transform);
+            (GameObject deathOverlay, TMP_Text deathLabel, Image reviveRing) = BuildDeathOverlay(canvasGo.transform);
+            _teamPanel = BuildTeamPanel(safe);
+            _indicators = BuildIndicators(canvasGo.transform);
+            _results = BuildResults(canvasGo.transform);
 
             var input = canvasGo.AddComponent<TouchTwinStickInput>();
             UiFactory.Assign(input, "_moveBase", moveBase);
@@ -179,6 +188,7 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(combat, "_hurtVignette", vignette);
             UiFactory.Assign(combat, "_deathOverlay", deathOverlay);
             UiFactory.Assign(combat, "_deathLabel", deathLabel);
+            UiFactory.Assign(combat, "_reviveRing", reviveRing);
             UiFactory.Assign(combat, "_autoFireButton", autoFire);
             UiFactory.Assign(combat, "_autoFireLabel", autoFireLabel);
             _statusHud = runStatus;

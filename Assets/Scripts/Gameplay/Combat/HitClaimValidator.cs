@@ -58,7 +58,7 @@ namespace LastGround.Gameplay.Combat
         {
             int p = claim.Shooter;
             if (p >= PlayerStateTable.Max || !_players.Active[p]) return HitClaimVerdict.UnknownShooter;
-            if (_players.Dead[p]) return HitClaimVerdict.ShooterDead;
+            if (!_players.CanAct(p)) return HitClaimVerdict.ShooterDead;
             WeaponDefinition weapon = WeaponOf(claim.Weapon);
             if (weapon == null) return HitClaimVerdict.UnknownWeapon;
 

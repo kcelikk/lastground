@@ -191,7 +191,7 @@ namespace LastGround.Tests
             wrongWeapon.Weapon = 9;
             Assert.AreEqual(HitClaimVerdict.UnknownWeapon, validator.Check(wrongWeapon));
 
-            players.Dead[0] = true;
+            players.Life[0] = PlayerLife.Dead;
             Assert.AreEqual(HitClaimVerdict.ShooterDead, validator.Check(ClaimOn(crowd, zombie, 6)));
         }
 
@@ -308,46 +308,6 @@ namespace LastGround.Tests
                 rig.Run(0.4f);
                 Assert.AreEqual(0, rig.Sink.Hits);
                 Assert.AreEqual(1, rig.World.AttacksDodged);
-            }
-        }
-
-        [Test]
-        public void PlayerHealth_DiesRespawnsWithInvulnerability_AndPushesZombies()
-        {
-            var definition = Asset<PlayerDefinition>();
-            var walker = Asset<ZombieDefinition>();
-            using (var rig = new WorldRig(Grid(false), walker))
-            {
-                var health = new PlayerHealthSystem(rig.Players, definition);
-                rig.World.DamageSink = health;
-                rig.World.Respawns = health.Respawns;
-                health.Tick(Dt, 0);
-                Assert.AreEqual(100f, rig.Players.Health[0]);
-
-                var hurt = rig.Players.Hurt.CreateReader();
-                health.Damage(0, 60f);
-                health.Damage(0, 50f);
-                Assert.IsTrue(rig.Players.Dead[0]);
-                Assert.AreEqual(1, health.Deaths);
-                Assert.IsTrue(rig.Players.Hurt.TryRead(ref hurt, out PlayerHurt first));
-                Assert.IsFalse(first.Died);
-                Assert.IsTrue(rig.Players.Hurt.TryRead(ref hurt, out PlayerHurt second));
-                Assert.IsTrue(second.Died);
-                Assert.IsFalse(rig.Players.IsTargetable(0), "zombies ignore dead players");
-
-                int slot = rig.World.Spawn(new float2(0f, 2f), 0f);
-                for (int t = 0; t < definition.RespawnDelay * 30f + 2; t++) health.Tick(Dt, (uint)t);
-                Assert.IsFalse(rig.Players.Dead[0]);
-                Assert.IsTrue(rig.Players.Invulnerable[0]);
-                Assert.AreEqual(definition.MaxHealth, rig.Players.Health[0]);
-
-                rig.Run(0.6f);
-                Assert.Greater(math.length(rig.World.PositionOf(slot)), 4f, "respawn pushes nearby zombies away");
-
-                health.Damage(0, 30f);
-                Assert.AreEqual(definition.MaxHealth, rig.Players.Health[0], "invulnerable right after getting up");
-                for (int t = 0; t < definition.RespawnInvulnerability * 30f + 2; t++) health.Tick(Dt, (uint)t);
-                Assert.IsFalse(rig.Players.Invulnerable[0]);
             }
         }
 
@@ -481,7 +441,7 @@ namespace LastGround.Tests
         {
             var rifle = Asset<WeaponDefinition>();
             PlayerStateTable players = PlayerAtOrigin();
-            players.Dead[0] = true;
+            players.Life[0] = PlayerLife.Dead;
             var input = new ScriptedInput();
             input.Aim(0f, 1f, true);
             WeaponController weapon = Weapon(players, input, rifle, new CrowdState(4), new RecordingSink());

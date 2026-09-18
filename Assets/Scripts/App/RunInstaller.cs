@@ -19,6 +19,7 @@ using LastGround.Gameplay.Crowd;
 using LastGround.Gameplay.Director;
 using LastGround.Gameplay.Navigation;
 using LastGround.Gameplay.Players;
+using LastGround.Gameplay.Run;
 using LastGround.Gameplay.Zombies;
 using LastGround.Input;
 using LastGround.Networking.Replication;
@@ -63,11 +64,15 @@ namespace LastGround.App
         [SerializeField] RunHud _hud;
         [SerializeField] CombatHud _combatHud;
         [SerializeField] RunStatusHud _statusHud;
+        [SerializeField] TeamPanel _teamPanel;
+        [SerializeField] TeammateIndicators _teammateIndicators;
+        [SerializeField] ResultsScreen _results;
 
         readonly List<System.IDisposable> _disposables = new List<System.IDisposable>();
         SessionService _service;
         TickScheduler _scheduler;
         bool _started;
+        readonly RunOutcome _outcome = new RunOutcome();
 
         /// <summary>Everything the presentation half needs, collected while the simulation half is built.</summary>
         struct RunParts
@@ -88,6 +93,7 @@ namespace LastGround.App
             public BenchmarkCrowdDriver Benchmark;
             public RunStatus Status;
             public HordeDirector Director;
+            public RunReferee Referee;
         }
 
         void Start()
@@ -120,6 +126,8 @@ namespace LastGround.App
             _disposables.Add(vitals);
             var directorInfo = new DirectorInfoSync(session, parts.Status);
             _disposables.Add(directorInfo);
+            var runEnd = new RunEndSync(session, _outcome);
+            _disposables.Add(runEnd);
 
             IHitClaimSink claims = session.IsAuthority ? BuildHost(ref parts, loop, benchmark, seed) : BuildClient(ref parts, loop);
 
@@ -150,11 +158,15 @@ namespace LastGround.App
             loop.Register(TickPhase.NetSend, sync);
             loop.Register(TickPhase.NetSend, vitals);
             loop.Register(session.IsAuthority ? TickPhase.NetSend : TickPhase.Presentation, Gate(directorInfo));
+            loop.Register(TickPhase.NetSend, runEnd);
             loop.Register(TickPhase.Presentation, new TickAction(_ => sync.Interpolate()));
 
             BuildPresentation(parts, loop);
             _statusHud.Bind(parts.Status);
-            _combatHud.Bind(players, parts.Weapon, parts.Aim, _playerDefinition.MaxHealth, _playerDefinition.RespawnDelay, mode =>
+            _teamPanel.Bind(players, session, _playerDefinition.MaxHealth);
+            _teammateIndicators.Bind(players, _camera);
+            _results.Bind(_outcome, _service);
+            _combatHud.Bind(players, parts.Weapon, parts.Aim, _playerDefinition.MaxHealth, () => CountActive(players) <= 1, mode =>
             {
                 save.Settings.ControlMode = (int)mode;
                 save.RequestSave();
@@ -186,6 +198,9 @@ namespace LastGround.App
             parts.Hits = crowd.Hits;
             parts.Health = new PlayerHealthSystem(parts.Players, _playerDefinition);
             loop.Register(TickPhase.Combat, Gate(parts.Health));
+            var referee = new RunReferee(parts.Health, parts.Status, _outcome);
+            loop.Register(TickPhase.Combat, Gate(referee));
+            parts.Referee = referee;
 
             if (benchmark)
             {
@@ -208,6 +223,8 @@ namespace LastGround.App
             loop.Register(TickPhase.ZombieSim, Gate(world));
 
             parts.Authority = new CombatAuthority(world, parts.Players, parts.Nav, WeaponTable(), seed);
+            CombatAuthority authority = parts.Authority;
+            parts.Referee.Kills = () => authority.Kills;
             loop.Register(TickPhase.Combat, Gate(parts.Authority));
             var claimSync = new HitClaimSync(parts.Session, parts.Authority);
             _disposables.Add(claimSync);
@@ -252,11 +269,18 @@ namespace LastGround.App
 
         void OnRunStarted() => _started = true;
 
-        /// <summary>Holds a system until every device has loaded the run (RunStart).</summary>
+        /// <summary>Runs a system only between RunStart (every device loaded) and the end of the run.</summary>
         ITickable Gate(ITickable inner) => new TickAction(dt =>
         {
-            if (_started) inner.Tick(dt, _scheduler.Loop.SimTick);
+            if (_started && !_outcome.Ended) inner.Tick(dt, _scheduler.Loop.SimTick);
         });
+
+        static int CountActive(PlayerStateTable players)
+        {
+            int count = 0;
+            for (int p = 0; p < PlayerStateTable.Max; p++) if (players.Active[p]) count++;
+            return count;
+        }
 
         /// <summary>Benchmark runs have no combat authority; the idle weapon's claims go nowhere.</summary>
         sealed class DiscardClaims : IHitClaimSink

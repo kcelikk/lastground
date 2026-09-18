@@ -18,6 +18,7 @@ namespace LastGround.Core.Net.Protocol
         public const byte LoadRun = 10;
         public const byte RunReady = 11;
         public const byte RunStart = 12;
+        public const byte RunEnd = 13;
 
         // Players (20–29)
         public const byte PlayerInput = 20;
