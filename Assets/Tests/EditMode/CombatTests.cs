@@ -387,6 +387,43 @@ namespace LastGround.Tests
         }
 
         [Test]
+        public void Weapon_DoesNotBurstAfterReloadingWithTheTriggerHeld()
+        {
+            var rifle = Asset<WeaponDefinition>();
+            PlayerStateTable players = PlayerAtOrigin();
+            var input = new ScriptedInput();
+            WeaponController weapon = Weapon(players, input, rifle, new CrowdState(4), new RecordingSink());
+
+            input.Aim(0f, 1f, true);
+            // Empty the magazine and reload, trigger held throughout (auto fire does exactly this).
+            for (int f = 0; f < 60 * 6; f++) weapon.Tick(1f / 60f, 0);
+            int afterFiveSeconds = weapon.ShotsFired;
+            Assert.Greater(afterFiveSeconds, rifle.MagazineSize, "the second magazine has started");
+
+            // Over any 0.5 s window the rate stays at the weapon's 8 shots/s (≤ 5 shots), never a volley.
+            int max = 0;
+            for (int window = 0; window < 8; window++)
+            {
+                int before = weapon.ShotsFired;
+                for (int f = 0; f < 30; f++) weapon.Tick(1f / 60f, 0);
+                max = System.Math.Max(max, weapon.ShotsFired - before);
+            }
+            Assert.LessOrEqual(max, 5);
+
+            // And the first frame after a reload fires one bullet, not the reload time's worth.
+            var fresh = Weapon(players, input, rifle, new CrowdState(4), new RecordingSink());
+            int shotsBeforeReloadEnds = 0;
+            for (int f = 0; f < 60 * 10; f++)
+            {
+                bool wasReloading = fresh.Reloading;
+                int before = fresh.ShotsFired;
+                fresh.Tick(1f / 60f, 0);
+                if (wasReloading && !fresh.Reloading) shotsBeforeReloadEnds = System.Math.Max(shotsBeforeReloadEnds, fresh.ShotsFired - before);
+            }
+            Assert.LessOrEqual(shotsBeforeReloadEnds, 1);
+        }
+
+        [Test]
         public void Weapon_OnClient_PredictsHitsImmediately()
         {
             var rifle = Asset<WeaponDefinition>();

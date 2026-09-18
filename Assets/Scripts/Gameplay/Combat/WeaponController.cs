@@ -126,6 +126,9 @@ namespace LastGround.Gameplay.Combat
                 Ammo--;
                 _sinceFired = 0f;
             }
+            // Time spent unable to fire (reloading, empty) must not bank shots: that fired ~14 bullets in one frame
+            // after every reload. Carry-over below zero only matters inside the loop above.
+            if (_cooldown < 0f) _cooldown = 0f;
 
             if (_reloadTimer <= 0f && Ammo < _weapon.MagazineSize && (Ammo == 0 || _sinceFired > IdleReloadDelay))
                 _reloadTimer = _weapon.ReloadTime;
