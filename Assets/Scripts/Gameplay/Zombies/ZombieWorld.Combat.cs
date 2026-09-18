@@ -1,5 +1,6 @@
 using LastGround.Core.Events;
 using LastGround.Core.Net;
+using LastGround.Data.Zombies;
 using LastGround.Gameplay.Crowd;
 using LastGround.Gameplay.Players;
 using Unity.Collections;
@@ -8,9 +9,10 @@ using Unity.Mathematics;
 namespace LastGround.Gameplay.Zombies
 {
     /// <summary>
-    /// Zombie health, attacks and knockback (TDD_01 §5.5–5.6). Attacks are telegraphed: a zombie that reaches
+    /// Zombie health, melee attacks and knockback (TDD_01 §5.5–5.6). Attacks are telegraphed: a zombie that reaches
     /// attack range winds up for <c>AttackWindup</c> seconds and only lands the hit if the player is still within
-    /// reach, so moving away dodges it. Main-thread loops over ≤ 512 slots; no allocation.
+    /// reach, so moving away dodges it. Exploders never melee (their fuse is in <c>.Types</c>). Main-thread loops over
+    /// ≤ 512 slots; no allocation.
     /// </summary>
     public sealed partial class ZombieWorld
     {
@@ -33,6 +35,9 @@ namespace LastGround.Gameplay.Zombies
 
         /// <summary>Receives zombie attack damage (the host's PlayerHealthSystem).</summary>
         public IPlayerDamageSink DamageSink { get; set; }
+
+        /// <summary>Kills caused by a player (bullets, burn, grenades): heal-on-kill upgrades.</summary>
+        public IKillCreditSink KillSink { get; set; }
 
         /// <summary>Players getting back up push nearby zombies away.</summary>
         public IGameEventStream<PlayerRespawn> Respawns
@@ -58,9 +63,9 @@ namespace LastGround.Gameplay.Zombies
             _stagger = new NativeArray<float>(_capacity, Allocator.Persistent);
         }
 
-        void ResetCombat(int slot)
+        void ResetCombat(int slot, ZombieDefinition definition)
         {
-            _health[slot] = _walker.MaxHealth;
+            _health[slot] = definition.MaxHealth;
             _attackPhase[slot] = PhaseReady;
             _attackTimer[slot] = 0f;
             _hitFlagTimer[slot] = 0f;
@@ -68,12 +73,14 @@ namespace LastGround.Gameplay.Zombies
         }
 
         /// <summary>
-        /// Applies validated damage. Returns true when it killed the zombie (corpse + death replication follow
-        /// through the crowd's Deaths channel).
+        /// Applies validated damage (after the elite's damage-taken multiplier). Returns true when it killed the zombie
+        /// (corpse + death replication follow through the crowd's Deaths channel; the source player gets kill credit).
         /// </summary>
-        public bool ApplyDamage(int slot, float amount, float2 direction, float knockback, bool crit, bool local)
+        /// <param name="sourcePlayer">Player credited with a kill, -1 for none.</param>
+        public bool ApplyDamage(int slot, float amount, float2 direction, float knockback, bool crit, bool local, int sourcePlayer = -1)
         {
             if ((uint)slot >= (uint)_capacity || _alive[slot] == 0) return false;
+            amount *= _damageTaken[slot];
             float2 p = _position[slot];
             _crowd.Hits.Publish(new CrowdHit
             {
@@ -83,9 +90,10 @@ namespace LastGround.Gameplay.Zombies
             if (_health[slot] <= 0f)
             {
                 Remove(slot, true);
+                if (sourcePlayer >= 0) KillSink?.OnKill(sourcePlayer);
                 return true;
             }
-            float push = knockback * _walker.KnockbackScale;
+            float push = knockback * _knockbackScale[slot];
             if (push > 0f)
             {
                 _velocity[slot] += direction * push;
@@ -108,10 +116,10 @@ namespace LastGround.Gameplay.Zombies
                 if (d2 > r2) continue;
                 float d = math.sqrt(d2);
                 float2 dir = d > 1e-3f ? away / d : new float2(math.cos(i), math.sin(i));
-                _velocity[i] = dir * speed * (1f - d / radius * 0.5f) * _walker.KnockbackScale;
+                _velocity[i] = dir * speed * (1f - d / radius * 0.5f) * _knockbackScale[i];
                 _stagger[i] = PushStagger;
                 _attackPhase[i] = PhaseCooldown;
-                _attackTimer[i] = _walker.AttackCooldown;
+                _attackTimer[i] = _types[_type[i]].AttackCooldown;
             }
         }
 
@@ -124,7 +132,6 @@ namespace LastGround.Gameplay.Zombies
 
         void TickCombat(float dt)
         {
-            float reach = _tuning.AttackRange + _walker.AttackReachGrace;
             for (int i = 0; i < _capacity; i++)
             {
                 if (_alive[i] == 0) continue;
@@ -136,13 +143,15 @@ namespace LastGround.Gameplay.Zombies
                     if (_hitFlagTimer[i] <= 0f) _crowd.Flags[i] &= unchecked((byte)~CrowdFlags.Hit);
                 }
 
+                ZombieDefinition definition = _types[_type[i]];
+                if (definition.Behaviour == ZombieBehaviour.Exploder) continue;
                 switch (_attackPhase[i])
                 {
                     case PhaseReady:
-                        if (_outState[i] == ZombieSteeringJob.StateAttack && _stagger[i] <= 0f)
+                        if (_outState[i] == ZombieSteeringJob.StateAttack && _stagger[i] <= 0f && _lunge[i] <= 0f)
                         {
                             _attackPhase[i] = PhaseWindup;
-                            _attackTimer[i] = _walker.AttackWindup;
+                            _attackTimer[i] = definition.AttackWindup;
                             _crowd.Anim[i] = ZombieSteeringJob.StateAttack;
                         }
                         break;
@@ -150,9 +159,9 @@ namespace LastGround.Gameplay.Zombies
                         _crowd.Anim[i] = ZombieSteeringJob.StateAttack;
                         _attackTimer[i] -= dt;
                         if (_attackTimer[i] > 0f) break;
-                        LandAttack(i, reach);
+                        LandAttack(i, _typeParams[_type[i]].AttackRange + definition.AttackReachGrace, definition);
                         _attackPhase[i] = PhaseCooldown;
-                        _attackTimer[i] = _walker.AttackCooldown;
+                        _attackTimer[i] = definition.AttackCooldown;
                         break;
                     default:
                         _attackTimer[i] -= dt;
@@ -162,7 +171,7 @@ namespace LastGround.Gameplay.Zombies
             }
         }
 
-        void LandAttack(int i, float reach)
+        void LandAttack(int i, float reach, ZombieDefinition definition)
         {
             byte t = _target[i];
             if (t == ZombieSteeringJob.NoTarget || _playerActive[t] == 0 || math.distance(_position[i], _playerPosition[t]) > reach)
@@ -171,7 +180,16 @@ namespace LastGround.Gameplay.Zombies
                 return;
             }
             AttacksLanded++;
-            DamageSink?.Damage(t, _walker.AttackDamage);
+            DamageSink?.Damage(t, definition.AttackDamage * _attackDamageScale[i]);
+            if (_attackSlowSeconds[i] > 0f) DamageSink?.Slow(t, _attackSlow[i], _attackSlowSeconds[i]);
+        }
+
+        /// <summary>Cancels a melee windup (stun).</summary>
+        void InterruptAttack(int slot)
+        {
+            if (_attackPhase[slot] != PhaseWindup) return;
+            _attackPhase[slot] = PhaseCooldown;
+            _attackTimer[slot] = 0.3f;
         }
     }
 }

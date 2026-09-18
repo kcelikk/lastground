@@ -36,6 +36,8 @@ namespace LastGround.Gameplay.Players
         public readonly float[] Countdown = new float[Max];
         /// <summary>Downed: revive progress 0..1.</summary>
         public readonly float[] ReviveProgress = new float[Max];
+        /// <summary>Move speed multiplier from spit / toxic hits (1 = not slowed). Host-authoritative, replicated in vitals.</summary>
+        public readonly float[] SlowMultiplier = { 1f, 1f, 1f, 1f };
 
         /// <summary>Damage taken, on every device (camera shake, haptics, sound).</summary>
         public readonly EventChannel<PlayerHurt> Hurt = new EventChannel<PlayerHurt>(64);

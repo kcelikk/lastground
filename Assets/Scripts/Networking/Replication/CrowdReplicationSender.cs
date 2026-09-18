@@ -189,7 +189,8 @@ namespace LastGround.Networking.Replication
                     int i = view.Enter[start + k];
                     w.WriteUShort((ushort)i);
                     w.WriteByte(_crowd.Generation[i]);
-                    w.WriteByte(_crowd.Type[i]);
+                    // Type in the low nibble, elite modifier in the high nibble (both < 16).
+                    w.WriteByte((byte)((_crowd.Type[i] & 0x0F) | (_crowd.Elite[i] << 4)));
                     w.WriteUShort(Quantize.Position(_crowd.PosX[i]));
                     w.WriteUShort(Quantize.Position(_crowd.PosZ[i]));
                     w.WriteByte((byte)Quantize.Yaw(_crowd.Heading[i], 8));

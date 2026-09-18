@@ -41,9 +41,6 @@ namespace LastGround.Gameplay.Combat
             set => _validator.Builds = value;
         }
 
-        /// <summary>Kill rewards that depend on the shooter's build (heal on kill).</summary>
-        public PlayerHealthSystem Health { get; set; }
-
         public int Accepted => _verdicts[(int)HitClaimVerdict.Accepted];
         public int Kills { get; private set; }
         public int Dropped { get; private set; }
@@ -90,9 +87,8 @@ namespace LastGround.Gameplay.Combat
             var shooter = new float2(_players.X[claim.Shooter], _players.Z[claim.Shooter]);
             float2 dir = math.normalizesafe(new float2(claim.HitX, claim.HitZ) - shooter);
             bool local = _players.Local.IsValid && claim.Shooter == _players.Local.Value;
-            if (!_world.ApplyDamage(claim.Slot, damage, dir, stats.Knockback, crit, local)) return;
+            if (!_world.ApplyDamage(claim.Slot, damage, dir, stats.Knockback, crit, local, claim.Shooter)) return;
             Kills++;
-            Health?.OnKill(claim.Shooter);
         }
     }
 }

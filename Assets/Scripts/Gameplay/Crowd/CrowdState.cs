@@ -14,6 +14,8 @@ namespace LastGround.Gameplay.Crowd
         public readonly float[] Heading;
         public readonly byte[] Generation;
         public readonly byte[] Type;
+        /// <summary>Elite modifier id (0 = none).</summary>
+        public readonly byte[] Elite;
         public readonly byte[] Anim;
         public readonly byte[] Flags;
 
@@ -29,6 +31,7 @@ namespace LastGround.Gameplay.Crowd
             Heading = new float[capacity];
             Generation = new byte[capacity];
             Type = new byte[capacity];
+            Elite = new byte[capacity];
             Anim = new byte[capacity];
             Flags = new byte[capacity];
         }
@@ -41,13 +44,15 @@ namespace LastGround.Gameplay.Crowd
         public float[] Yaw => Heading;
         public byte[] AnimState => Anim;
         public byte[] FlagBits => Flags;
+        public byte[] Types => Type;
+        public byte[] Elites => Elite;
         public byte GenerationOf(int slot) => Generation[slot];
 
         /// <summary>Authoritative hits (host): blood, hit flash, damage numbers, sound.</summary>
         public readonly EventChannel<CrowdHit> Hits = new EventChannel<CrowdHit>(256);
 
         /// <summary>Activates a free slot; returns -1 when full.</summary>
-        public int Spawn(byte type, float x, float z, float heading)
+        public int Spawn(byte type, float x, float z, float heading, byte elite = 0)
         {
             for (int i = 0; i < Capacity; i++)
             {
@@ -55,11 +60,12 @@ namespace LastGround.Gameplay.Crowd
                 AliveSlots[i] = true;
                 Generation[i]++;
                 Type[i] = type;
+                Elite[i] = elite;
                 PosX[i] = x;
                 PosZ[i] = z;
                 Heading[i] = heading;
                 Anim[i] = 0;
-                Flags[i] = 0;
+                Flags[i] = elite != 0 ? CrowdFlags.Elite : (byte)0;
                 ActiveCount++;
                 return i;
             }
@@ -72,7 +78,7 @@ namespace LastGround.Gameplay.Crowd
             if (!AliveSlots[slot]) return;
             AliveSlots[slot] = false;
             ActiveCount--;
-            if (died) Deaths.Publish(new CrowdDeath { Slot = slot, X = PosX[slot], Z = PosZ[slot], Yaw = Heading[slot] });
+            if (died) Deaths.Publish(new CrowdDeath { Slot = slot, X = PosX[slot], Z = PosZ[slot], Yaw = Heading[slot], Type = Type[slot] });
         }
     }
 }

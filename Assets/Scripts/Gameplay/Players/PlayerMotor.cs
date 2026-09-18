@@ -67,7 +67,8 @@ namespace LastGround.Gameplay.Players
 
             ContactFactor = 1f - Mathf.Min(_definition.MaxContactSlow, CountContacts() * _definition.SlowPerContact);
             float upgrade = me >= 0 && Builds != null ? 1f + Builds.Of(me).Get(LastGround.Data.Upgrades.StatId.MoveSpeedPct) / 100f : 1f;
-            float speed = _definition.MoveSpeed * upgrade * ContactFactor * (downed ? _definition.DownedSpeedFactor : 1f);
+            float slow = me >= 0 ? _table.SlowMultiplier[me] : 1f;
+            float speed = _definition.MoveSpeed * upgrade * ContactFactor * slow * (downed ? _definition.DownedSpeedFactor : 1f);
             float vx = mx * speed;
             float vz = mz * speed;
             float nx = Mathf.Clamp(_x + vx * dt, -_halfBounds, _halfBounds);

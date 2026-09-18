@@ -58,16 +58,23 @@ namespace LastGround.Gameplay.Zombies
     /// Staggered zombies (knockback, respawn push) do not steer; their velocity decays by friction instead.
     /// Zombies without a target idle but still separate and slide. Writes into separate output arrays so
     /// parallel iterations never race.
+    /// Types (M6): Runners lunge (a velocity the job keeps without steering), Tanks shove lighter bodies through
+    /// mass-weighted separation, Spitters hold a distance band and strafe instead of taking a surround slot,
+    /// Exploders sprint straight at their target once close.
     /// </summary>
     [BurstCompile]
     public struct ZombieSteeringJob : IJobParallelFor
     {
         public const byte StateIdle = 0;
         public const byte StateWalk = 1;
+        public const byte StateRun = 2;
         public const byte StateAttack = 3;
         public const byte NoTarget = 255;
         const int MaxNeighbours = 8;
-        const float MinPlayerDistance = 0.7f;
+        public const float MinPlayerDistance = 0.7f;
+        /// <summary>Soft keep-out beyond the hard minimum.</summary>
+        const float SoftKeepOutExtra = 0.2f;
+        const float MaxShove = 4f;
         const float StaggerFriction = 2f;
 
         [ReadOnly] public NativeArray<float2> Position;
@@ -79,6 +86,11 @@ namespace LastGround.Gameplay.Zombies
         [ReadOnly] public NativeArray<byte> Target;
         [ReadOnly] public NativeArray<byte> Alive;
         [ReadOnly] public NativeArray<float> Stagger;
+        [ReadOnly] public NativeArray<float> Lunge;
+        /// <summary>Slows and holds (Spitter windup): multiplies Speed.</summary>
+        [ReadOnly] public NativeArray<float> SpeedScale;
+        [ReadOnly] public NativeArray<byte> Type;
+        [ReadOnly] public NativeArray<ZombieTypeParams> TypeParams;
 
         [ReadOnly] public NativeArray<float2> PlayerPosition;
         [ReadOnly] public NativeArray<byte> PlayerActive;
@@ -100,9 +112,7 @@ namespace LastGround.Gameplay.Zombies
         public float Dt;
         public uint Tick;
         public float Acceleration;
-        public float Radius;
         public float SeparationStrength;
-        public float AttackRange;
         public float SurroundRange;
         public float TierA;
         public float TierB;
@@ -123,8 +133,10 @@ namespace LastGround.Gameplay.Zombies
             if (Alive[i] == 0) return;
 
             byte t = Target[i];
+            ZombieTypeParams type = TypeParams[Type[i]];
             bool hasTarget = t != NoTarget && PlayerActive[t] != 0;
             bool staggered = Stagger[i] > 0f;
+            bool lunging = Lunge[i] > 0f && !staggered;
             if (!hasTarget && !staggered && math.lengthsq(v) < 1e-4f) return;
 
             float2 tp = hasTarget ? PlayerPosition[t] : p;
@@ -132,7 +144,7 @@ namespace LastGround.Gameplay.Zombies
             float distance = math.length(toTarget);
 
             // AI LOD (TDD_01 §8.2): near every tick, mid every 2nd, far every 6th with a larger step.
-            int step = staggered ? 1 : !hasTarget ? 6 : distance < TierA ? 1 : distance < TierB ? 2 : 6;
+            int step = staggered || lunging ? 1 : !hasTarget ? 6 : distance < TierA ? 1 : distance < TierB ? 2 : 6;
             if (((uint)i + Tick) % (uint)step != 0)
             {
                 OutState[i] = hasTarget ? StateWalk : StateIdle;
@@ -140,23 +152,48 @@ namespace LastGround.Gameplay.Zombies
             }
             float dt = Dt * step;
 
+            float speed = Speed[i] * SpeedScale[i];
             float2 desired;
             byte state = StateWalk;
             if (staggered)
             {
                 desired = float2.zero;
             }
+            else if (lunging)
+            {
+                desired = v;
+                state = StateRun;
+            }
             else if (!hasTarget)
             {
                 desired = float2.zero;
                 state = StateIdle;
             }
-            else if (distance < AttackRange)
+            else if (distance < type.AttackRange && type.Behaviour != (byte)Data.Zombies.ZombieBehaviour.Exploder)
             {
                 desired = float2.zero;
                 state = StateAttack;
             }
-            else if (distance < SurroundRange)
+            else if (type.Behaviour == (byte)Data.Zombies.ZombieBehaviour.Spitter && distance < type.PreferredMax)
+            {
+                // Hold the band: back off when too close, strafe inside it (direction flips every ~4 s per zombie).
+                float2 dir = toTarget / math.max(distance, 1e-3f);
+                if (distance < type.PreferredMin)
+                {
+                    desired = -dir * speed;
+                }
+                else
+                {
+                    float side = (((uint)i * 2654435761u + Tick / 120u) & 1u) == 0u ? 1f : -1f;
+                    desired = new float2(-dir.y, dir.x) * side * type.StrafeSpeed * SpeedScale[i];
+                }
+            }
+            else if (type.Behaviour == (byte)Data.Zombies.ZombieBehaviour.Exploder && distance < type.SprintRange)
+            {
+                desired = toTarget / math.max(distance, 1e-3f) * speed * type.SprintMultiplier;
+                state = StateRun;
+            }
+            else if (distance < SurroundRange && type.Behaviour != (byte)Data.Zombies.ZombieBehaviour.Spitter)
             {
                 // Layered surround slot from SurroundSlotSolver: inner ring attacks, outer rings queue (TDD_01 §8.4).
                 float ring = SlotRing[i];
@@ -165,15 +202,15 @@ namespace LastGround.Gameplay.Zombies
                 float2 toSlot = slot - p;
                 float slotDistance = math.length(toSlot);
                 // Arrive: slow down near the slot and hold it; never keep pushing towards the player.
-                desired = slotDistance > 0.15f ? toSlot / slotDistance * Speed[i] * math.min(1f, slotDistance / 0.6f) : float2.zero;
+                desired = slotDistance > 0.15f ? toSlot / slotDistance * speed * math.min(1f, slotDistance / 0.6f) : float2.zero;
             }
             else
             {
                 float2 flow = SampleFlow(t, p);
-                desired = (math.lengthsq(flow) > 0f ? flow : math.normalizesafe(toTarget)) * Speed[i];
+                desired = (math.lengthsq(flow) > 0f ? flow : math.normalizesafe(toTarget)) * speed;
             }
 
-            desired += Separation(i, p) * SeparationStrength;
+            if (!lunging) desired += Separation(i, p, type) * SeparationStrength;
 
             // Never stand inside a player; players are not blocked by zombies (TDD_01 §8.4).
             for (int k = 0; k < PlayerPosition.Length; k++)
@@ -181,10 +218,11 @@ namespace LastGround.Gameplay.Zombies
                 if (PlayerActive[k] == 0) continue;
                 float2 away = p - PlayerPosition[k];
                 float d = math.length(away);
-                if (d < 0.9f && d > 1e-4f) desired += away / d * (0.9f - d) * 8f;
+                float soft = type.KeepOut + SoftKeepOutExtra;
+                if (d < soft && d > 1e-4f) desired += away / d * (soft - d) * 8f;
             }
 
-            v = math.lerp(v, desired, math.saturate((staggered ? StaggerFriction : Acceleration) * dt));
+            if (!lunging) v = math.lerp(v, desired, math.saturate((staggered ? StaggerFriction : Acceleration) * dt));
             float2 next = p + v * dt;
 
             // Hard constraint: crowd pressure must never push a zombie into a player.
@@ -193,8 +231,8 @@ namespace LastGround.Gameplay.Zombies
                 if (PlayerActive[k] == 0) continue;
                 float2 away = next - PlayerPosition[k];
                 float d = math.length(away);
-                if (d < MinPlayerDistance)
-                    next = PlayerPosition[k] + (d > 1e-4f ? away / d : new float2(1f, 0f)) * MinPlayerDistance;
+                if (d < type.KeepOut)
+                    next = PlayerPosition[k] + (d > 1e-4f ? away / d : new float2(1f, 0f)) * type.KeepOut;
             }
             if (!IsWalkable(next))
             {
@@ -220,14 +258,14 @@ namespace LastGround.Gameplay.Zombies
             OutState[i] = state;
         }
 
-        float2 Separation(int self, float2 p)
+        /// <summary>Mass-weighted push away from overlapping neighbours: light bodies yield to heavy ones.</summary>
+        float2 Separation(int self, float2 p, in ZombieTypeParams mine)
         {
             int cell = CellOf[self];
             if (cell < 0) return float2.zero;
             int cx = cell % GridWidth, cy = cell / GridWidth;
             float2 push = float2.zero;
             int found = 0;
-            float range = Radius * 2f;
             for (int dy = -1; dy <= 1 && found < MaxNeighbours; dy++)
             {
                 int y = cy + dy;
@@ -242,11 +280,14 @@ namespace LastGround.Gameplay.Zombies
                     {
                         int other = Sorted[s];
                         if (other == self) continue;
+                        ZombieTypeParams theirs = TypeParams[Type[other]];
+                        float range = mine.Radius + theirs.Radius;
                         float2 away = p - Position[other];
                         float d = math.length(away);
                         if (d >= range) continue;
                         found++;
-                        push += d > 1e-4f ? away / d * (range - d) / range : new float2(((self * 7919) & 1) * 2 - 1, 0.5f);
+                        float weight = math.clamp(theirs.Mass / mine.Mass, 1f / MaxShove, MaxShove);
+                        push += (d > 1e-4f ? away / d * (range - d) / range : new float2(((self * 7919) & 1) * 2 - 1, 0.5f)) * weight;
                     }
                 }
             }

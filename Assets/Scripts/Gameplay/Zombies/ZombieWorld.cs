@@ -16,7 +16,8 @@ namespace LastGround.Gameplay.Zombies
     /// spatial grid and steering, flow fields per player, surround slots, AI LOD and anti-stuck. Results are
     /// mirrored into <see cref="CrowdState"/>, which replication and rendering already consume.
     /// No GameObject, NavMeshAgent, Rigidbody or Collider per zombie.
-    /// Partials: <c>.Targeting</c> (target selection, anti-stuck), <c>.Combat</c> (health, attacks, knockback).
+    /// Partials: <c>.Targeting</c> (target selection, anti-stuck), <c>.Combat</c> (health, attacks, knockback),
+    /// <c>.Types</c> (Runner lunge, Spitter spit, Exploder fuse), <c>.Status</c> (burn, slow, stun, elites).
     /// </summary>
     public sealed partial class ZombieWorld : ITickable, IDisposable
     {
@@ -26,7 +27,7 @@ namespace LastGround.Gameplay.Zombies
         readonly PlayerStateTable _players;
         readonly NavGrid _nav;
         readonly ZombieTuning _tuning;
-        readonly ZombieDefinition _walker;
+        readonly ZombieDefinition[] _types;
         readonly FlowFieldSet _flow;
         readonly SurroundSlotSolver _surround;
         readonly int _capacity;
@@ -35,7 +36,9 @@ namespace LastGround.Gameplay.Zombies
 
         NativeArray<float2> _position, _velocity, _outPosition, _outVelocity;
         NativeArray<float> _heading, _outHeading, _speed, _slotAngle, _slotRing;
-        NativeArray<byte> _alive, _target, _outState;
+        NativeArray<byte> _alive, _target, _outState, _type;
+        NativeArray<float> _lunge, _speedScale;
+        NativeArray<ZombieTypeParams> _typeParams;
         NativeArray<int> _cellStart, _cellCount, _sorted, _cellOf;
         NativeArray<float2> _playerPosition;
         NativeArray<byte> _playerActive;
@@ -46,13 +49,20 @@ namespace LastGround.Gameplay.Zombies
         float _surroundTimer;
         float _stuckTimer;
 
+        /// <summary>Walkers only (M3–M5 tests and benchmarks).</summary>
         public ZombieWorld(CrowdState crowd, PlayerStateTable players, NavGrid nav, ZombieTuning tuning, ZombieDefinition walker, uint seed)
+            : this(crowd, players, nav, tuning, new[] { walker }, seed)
+        {
+        }
+
+        /// <param name="types">Zombie definitions indexed by TypeIndex (CombatCatalog.Zombies).</param>
+        public ZombieWorld(CrowdState crowd, PlayerStateTable players, NavGrid nav, ZombieTuning tuning, ZombieDefinition[] types, uint seed)
         {
             _crowd = crowd;
             _players = players;
             _nav = nav;
             _tuning = tuning;
-            _walker = walker;
+            _types = types;
             _capacity = crowd.Capacity;
             _flow = new FlowFieldSet(nav);
             _surround = new SurroundSlotSolver(tuning.Sectors, _capacity, tuning.RingMin, tuning.RingSpacing);
@@ -60,10 +70,14 @@ namespace LastGround.Gameplay.Zombies
 
             _position = Alloc<float2>(); _velocity = Alloc<float2>(); _outPosition = Alloc<float2>(); _outVelocity = Alloc<float2>();
             _heading = Alloc<float>(); _outHeading = Alloc<float>(); _speed = Alloc<float>(); _slotAngle = Alloc<float>(); _slotRing = Alloc<float>();
-            _alive = Alloc<byte>(); _target = Alloc<byte>(); _outState = Alloc<byte>();
+            _alive = Alloc<byte>(); _target = Alloc<byte>(); _outState = Alloc<byte>(); _type = Alloc<byte>();
+            _lunge = Alloc<float>(); _speedScale = Alloc<float>();
+            _typeParams = new NativeArray<ZombieTypeParams>(types.Length, Allocator.Persistent);
+            for (int t = 0; t < types.Length; t++) _typeParams[t] = ZombieTypeParams.From(types[t], tuning);
             _cellOf = Alloc<int>(); _sorted = Alloc<int>();
             _stuckAnchor = new float2[_capacity];
             AllocateCombat();
+            AllocateStatus();
 
             _gridWidth = math.max(1, (int)math.ceil(nav.Width * nav.CellSize / GridCellSize));
             _gridHeight = math.max(1, (int)math.ceil(nav.Height * nav.CellSize / GridCellSize));
@@ -84,32 +98,44 @@ namespace LastGround.Gameplay.Zombies
 
         NativeArray<T> Alloc<T>() where T : struct => new NativeArray<T>(_capacity, Allocator.Persistent);
 
-        /// <summary>Spawns a walker at a walkable position. Returns the slot or -1.</summary>
-        public int Spawn(float2 position, float heading)
+        /// <summary>Zombie definitions indexed by type.</summary>
+        public ZombieDefinition[] Types => _types;
+
+        /// <summary>Spawns a zombie (walker by default) at a walkable position. Returns the slot or -1.</summary>
+        /// <param name="elite">Elite modifier id (EliteModifierDefinition.NetIndex), 0 = ordinary.</param>
+        public int Spawn(float2 position, float heading, byte type = 0, byte elite = 0)
         {
-            int slot = _crowd.Spawn(0, position.x, position.y, heading);
+            if (type >= _types.Length) type = 0;
+            if (elite != 0 && EliteOf(elite) == null) elite = 0;
+            int slot = _crowd.Spawn(type, position.x, position.y, heading, elite);
             if (slot < 0) return -1;
+            ZombieDefinition definition = _types[type];
+            _type[slot] = type;
             _position[slot] = position;
             _velocity[slot] = float2.zero;
             _heading[slot] = heading;
-            _speed[slot] = _rng.Range(_walker.MinSpeed, _walker.MaxSpeed);
+            _speed[slot] = _rng.Range(definition.MinSpeed, definition.MaxSpeed);
             _slotAngle[slot] = _rng.Range(-math.PI, math.PI);
             _slotRing[slot] = _tuning.SurroundRange;
             _target[slot] = ZombieSteeringJob.NoTarget;
             _alive[slot] = 1;
             _stuckAnchor[slot] = position;
             _crowd.Anim[slot] = ZombieSteeringJob.StateWalk;
-            ResetCombat(slot);
+            ResetCombat(slot, definition);
+            ResetStatus(slot, definition, elite);
             return slot;
         }
 
-        /// <summary>Removes a zombie; <paramref name="died"/> produces a corpse/blood event.</summary>
+        /// <summary>Removes a zombie; <paramref name="died"/> produces a corpse/blood event and its death blast, if any.</summary>
         public void Remove(int slot, bool died)
         {
             if (_alive[slot] == 0) return;
             _alive[slot] = 0;
+            if (died) OnDied(slot);
             _crowd.Despawn(slot, died);
         }
+
+        public byte TypeOf(int slot) => _type[slot];
 
         /// <summary>Moves a live zombie elsewhere (recycling far or stuck zombies, TDD_01 §8.4).</summary>
         public void Teleport(int slot, float2 position)
@@ -117,8 +143,9 @@ namespace LastGround.Gameplay.Zombies
             if (_alive[slot] == 0) return;
             // Recycling is a despawn + spawn so clients see a new generation instead of a 60 m slide.
             float heading = _heading[slot];
+            byte type = _type[slot], elite = _crowd.Elite[slot];
             Remove(slot, false);
-            Spawn(position, heading);
+            Spawn(position, heading, type, elite);
         }
 
         public float2 PositionOf(int slot) => _position[slot];
@@ -129,6 +156,7 @@ namespace LastGround.Gameplay.Zombies
             long started = System.Diagnostics.Stopwatch.GetTimestamp();
             SyncPlayers();
             ApplyRespawnPushes();
+            TickStatus(dt);
 
             _targetTimer -= dt;
             if (_targetTimer <= 0f)
@@ -172,6 +200,10 @@ namespace LastGround.Gameplay.Zombies
                 Target = _target,
                 Alive = _alive,
                 Stagger = _stagger,
+                Lunge = _lunge,
+                SpeedScale = _speedScale,
+                Type = _type,
+                TypeParams = _typeParams,
                 PlayerPosition = _playerPosition,
                 PlayerActive = _playerActive,
                 CellStart = _cellStart,
@@ -189,9 +221,7 @@ namespace LastGround.Gameplay.Zombies
                 Dt = dt,
                 Tick = tick,
                 Acceleration = _tuning.Acceleration,
-                Radius = _tuning.Radius,
                 SeparationStrength = _tuning.SeparationStrength,
-                AttackRange = _tuning.AttackRange,
                 SurroundRange = _tuning.SurroundRange,
                 TierA = _tuning.TierADistance,
                 TierB = _tuning.TierBDistance,
@@ -206,6 +236,7 @@ namespace LastGround.Gameplay.Zombies
             Swap(ref _heading, ref _outHeading);
             WriteBack();
             TickCombat(dt);
+            TickTypes(dt);
 
             _stuckTimer -= dt;
             if (_stuckTimer <= 0f)
@@ -221,7 +252,8 @@ namespace LastGround.Gameplay.Zombies
             _flow.Dispose();
             _position.Dispose(); _velocity.Dispose(); _outPosition.Dispose(); _outVelocity.Dispose();
             _heading.Dispose(); _outHeading.Dispose(); _speed.Dispose(); _slotAngle.Dispose(); _slotRing.Dispose();
-            _alive.Dispose(); _target.Dispose(); _outState.Dispose(); _stagger.Dispose();
+            _alive.Dispose(); _target.Dispose(); _outState.Dispose(); _stagger.Dispose(); _type.Dispose();
+            _lunge.Dispose(); _speedScale.Dispose(); _typeParams.Dispose();
             _cellStart.Dispose(); _cellCount.Dispose(); _sorted.Dispose(); _cellOf.Dispose();
             _playerPosition.Dispose(); _playerActive.Dispose();
         }

@@ -14,7 +14,7 @@ namespace LastGround.Gameplay.Players
     /// any teammate is still standing. Solo: a limited self-revive ("Adrenaline"), then going down ends the run.
     /// Team wipe (nobody standing) raises <see cref="TeamWiped"/>. Writes the vitals in <see cref="PlayerStateTable"/>.
     /// </summary>
-    public sealed partial class PlayerHealthSystem : ITickable, IPlayerDamageSink
+    public sealed partial class PlayerHealthSystem : ITickable, IPlayerDamageSink, IKillCreditSink
     {
         /// <summary>A reviver hit within this many seconds counts as "under fire".</summary>
         const float RecentHurtWindow = 1f;
@@ -24,6 +24,7 @@ namespace LastGround.Gameplay.Players
         readonly float[] _invulnerableTimer = new float[PlayerStateTable.Max];
         readonly float[] _sinceHurt = new float[PlayerStateTable.Max];
         readonly int[] _downsThisLife = new int[PlayerStateTable.Max];
+        readonly float[] _slowTimer = new float[PlayerStateTable.Max];
         readonly bool[] _known = new bool[PlayerStateTable.Max];
         int _adrenaline;
         bool _wipeReported;
@@ -74,6 +75,14 @@ namespace LastGround.Gameplay.Players
             _players.Hurt.Publish(new PlayerHurt { Player = player, Amount = amount, Died = down });
         }
 
+        /// <summary>Slows a standing player; the strongest slow and the longest duration win.</summary>
+        public void Slow(int player, float multiplier, float seconds)
+        {
+            if ((uint)player >= PlayerStateTable.Max || !_players.CanAct(player) || _players.Invulnerable[player] || multiplier >= 1f) return;
+            _players.SlowMultiplier[player] = _slowTimer[player] > 0f ? UnityEngine.Mathf.Min(_players.SlowMultiplier[player], multiplier) : multiplier;
+            _slowTimer[player] = UnityEngine.Mathf.Max(_slowTimer[player], seconds);
+        }
+
         /// <summary>Heals a standing player (medkit). False when they are down or already at full health.</summary>
         public bool Heal(int player, float amount)
         {
@@ -116,6 +125,7 @@ namespace LastGround.Gameplay.Players
                 {
                     case PlayerLife.Alive:
                         TickInvulnerability(p, dt);
+                        TickSlow(p, dt);
                         break;
                     case PlayerLife.Downed:
                         TickDowned(p, dt, active);
@@ -164,6 +174,8 @@ namespace LastGround.Gameplay.Players
 
         void GoDown(int p)
         {
+            _slowTimer[p] = 0f;
+            _players.SlowMultiplier[p] = 1f;
             _downsThisLife[p]++;
             Downs++;
             _players.Life[p] = PlayerLife.Downed;
@@ -171,6 +183,13 @@ namespace LastGround.Gameplay.Players
             float bleedout = _definition.BleedoutTime;
             if (_downsThisLife[p] >= _definition.FastBleedoutFromDown) bleedout *= _definition.FastBleedoutScale;
             _players.Countdown[p] = bleedout;
+        }
+
+        void TickSlow(int p, float dt)
+        {
+            if (_slowTimer[p] <= 0f) return;
+            _slowTimer[p] -= dt;
+            if (_slowTimer[p] <= 0f) _players.SlowMultiplier[p] = 1f;
         }
 
         void TickInvulnerability(int p, float dt)

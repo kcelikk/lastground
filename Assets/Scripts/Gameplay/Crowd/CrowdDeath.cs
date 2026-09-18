@@ -7,5 +7,7 @@ namespace LastGround.Gameplay.Crowd
         public float X;
         public float Z;
         public float Yaw;
+        /// <summary>Zombie type (corpse body).</summary>
+        public byte Type;
     }
 }

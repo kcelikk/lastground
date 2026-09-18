@@ -291,7 +291,7 @@ namespace LastGround.App
             parts.Authority = new CombatAuthority(world, parts.Players, parts.Nav, WeaponTable(), seed);
             CombatAuthority authority = parts.Authority;
             authority.Builds = parts.Builds;
-            authority.Health = parts.Health;
+            world.KillSink = parts.Health;
             parts.Referee.Kills = () => authority.Kills;
             parts.Progress = new TeamProgress(crowd, parts.Players, parts.Builds, _levelCurve, _walker.Xp, seed);
             loop.Register(TickPhase.Combat, Gate(parts.Progress));

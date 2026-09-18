@@ -54,11 +54,11 @@ namespace LastGround.Networking.Replication
             {
                 int slot = r.ReadUShort();
                 byte generation = r.ReadByte();
-                byte type = r.ReadByte();
+                byte typeAndElite = r.ReadByte();
                 float x = Quantize.Position(r.ReadUShort());
                 float z = Quantize.Position(r.ReadUShort());
                 float yaw = Quantize.Yaw(r.ReadByte(), 8);
-                if (!r.Failed) _replica.Enter(slot, generation, type, x, z, yaw, time);
+                if (!r.Failed) _replica.Enter(slot, generation, (byte)(typeAndElite & 0x0F), x, z, yaw, time, (byte)(typeAndElite >> 4));
             }
         }
 
