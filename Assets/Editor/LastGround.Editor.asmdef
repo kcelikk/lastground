@@ -1,0 +1,29 @@
+{
+    "name": "LastGround.Editor",
+    "rootNamespace": "LastGround.EditorTools",
+    "references": [
+        "LastGround.Core",
+        "LastGround.Localization",
+        "LastGround.Save",
+        "LastGround.UI",
+        "LastGround.App",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

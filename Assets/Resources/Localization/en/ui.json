@@ -1,0 +1,11 @@
+{
+  "menu.title": "LAST GROUND",
+  "menu.tagline": "SURVIVE. UPGRADE. REPEAT.",
+  "menu.solo": "PLAY SOLO",
+  "menu.local_coop": "LOCAL CO-OP",
+  "menu.settings": "SETTINGS",
+  "menu.quit": "QUIT",
+  "menu.language": "LANGUAGE: {0}",
+  "menu.not_available": "Coming in a later milestone.",
+  "menu.version": "v{0}"
+}

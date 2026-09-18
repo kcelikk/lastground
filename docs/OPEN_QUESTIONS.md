@@ -8,10 +8,7 @@
 > A1 (işletim sistemi) cevaplandı → **Ubuntu 26.04 LTS**, Unity 6.3 LTS ≥ 6000.3.13f1 şartıyla. Bkz. `DECISIONS.md` D-012.
 > A2 (kurulum listesi), A3 (git kimliği), A4 (SSH key) cevaplandı → `DECISIONS.md` D-015.
 > A5 (repo düzeni), A6 (branch düzeni) cevaplandı → `DECISIONS.md` D-016.
-
-| # | Soru | Neden gerekli | Durum |
-|---|---|---|---|
-| A7 | **M0'a başlama onayı** | Kod yazımı bununla başlar | ⏳ Bekliyor |
+> A7 (M0 başlama onayı) verildi (2026-09-18). M0 raporu: `docs/reports/M0_REPORT.md`. **A bölümünde açık soru kalmadı.**
 
 ## B. Donanım / test
 
@@ -20,7 +17,7 @@
 | B1 | T14'te boş SO-DIMM yuvası var mı (16 → 24/32 GB)? Cihaz geldiğinde `sudo dmidecode -t memory` ile birlikte bakabiliriz. Şart değil | Build ve editör konforu | ⏳ Bilgi |
 | B2 | HIGH sınıf (Snapdragon 8 serisi vb.) bir cihaza erişim var mı? Test grubundan ödünç alınabilir mi? | Üst segment FPS doğrulaması (M10'a kadar gerekmez) | ⏳ Bilgi |
 | B3 | 21 kişilik test grubundaki kaç kişi **aynı ortamda ikişerli** test yapabilir? LAN co-op yalnızca aynı Wi-Fi'da çalışır | Co-op test planı | ⏳ Bilgi |
-| B4 | **OnePlus 5T USB'de algılanmıyor** (2026-09-18: `lsusb`'de yok → kablo/port/USB modu). Ertelendi; veri kablosu, diğer port ve "Dosya aktarımı" modu denenecek. Redmi Pad Pro henüz bağlanmadı | M0 sonu APK kurulumu ve profiler bağlantısı | ⏳ Ertelendi |
+| B4 | OnePlus 5T bağlantısı — **çözüldü** (2026-09-18: telefon recovery/sideload modundaydı, sonra USB debugging kapalıydı; TalkBack geliştirici menüsü Developer options ile karıştırılmıştı). Redmi Pad Pro henüz bağlanmadı | M1 iki cihaz testi | ⏳ Redmi bekliyor |
 
 ## C. Yayın / altyapı (M14'e kadar gerekmiyor)
 
@@ -29,7 +26,7 @@
 | C1 | Google Play geliştirici hesabın var mı? (Yeni kişisel hesaplarda: production'a çıkmadan önce ≥12 testçi, 14 gün kapalı test) | Yayın takvimi | ⏳ Bilgi |
 | C2 | Test dağıtımı **Play Internal Testing** üzerinden olsun mu (önerim), yoksa VPS'ten APK indirme sayfası mı? | Dağıtım akışı | ⏳ Bekliyor |
 | C3 | VPS'in donanımı (CPU/RAM) nedir? Yalnızca gizlilik politikası + tanıtım sayfası mı olacak, ileride CI de mi? | VPS rolü | ⏳ Bilgi |
-| C4 | Oyun adı "Last Ground" ile Play'de yayınlanacak mı? (İsim çakışması kontrolü M14'te yapılır) | Mağaza | ⏳ Bilgi |
+| C4 | Oyun adı "Last Ground" ile Play'de yayınlanacak mı? (İsim çakışması kontrolü M14'te yapılır). **Paket adı** şu an geçici: `com.asgardgame.lastground`, şirket adı `AsgardGame` — ilk Play yüklemesinden sonra paket adı değiştirilemez | Mağaza | ⏳ Bilgi |
 
 ## D. İçerik / tasarım (ilgili milestone'dan önce)
 

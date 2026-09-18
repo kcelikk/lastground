@@ -3,7 +3,8 @@
 | Dosya | İçerik |
 |---|---|
 | [DECISIONS.md](DECISIONS.md) | **Onaylı kararlar (D-001…) — çelişkide geçerli olan kaynak** |
-| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Cevap bekleyen sorular ve onaylar (M0 bloklayıcıları dahil) |
+| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Cevap bekleyen sorular ve onaylar |
+| [reports/](reports/) | Milestone raporları (M0_REPORT.md …) |
 | [SETUP_NEW_MACHINE.md](SETUP_NEW_MACHINE.md) | Yeni geliştirme makinesi (Lenovo T14): OS seçimi, kurulum listesi, taşıma ve doğrulama adımları |
 | [TDD_01_Reference_Vision_Gameplay.md](TDD_01_Reference_Vision_Gameplay.md) | §0 Referans görsel analizi, §1–§14 vizyon, loop, kontroller, kamera, combat, silah, build, zombi AI, director, boss, harita, event, loot, co-op |
 | [TDD_02_Network_Tech_Budgets.md](TDD_02_Network_Tech_Budgets.md) | §15–§33 network mimarisi, otorite, zombi replikasyonu, LAN discovery, host/join, pooling, rendering, optimizasyon, ses, save, SO modeli, proje yapısı, sınıflar, sahneler, prefab'lar, Android izinleri, performans/bant genişliği/bellek bütçeleri |

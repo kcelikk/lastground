@@ -1,0 +1,11 @@
+{
+  "menu.title": "LAST GROUND",
+  "menu.tagline": "HAYATTA KAL. GÜÇLEN. TEKRARLA.",
+  "menu.solo": "TEK OYUNCU",
+  "menu.local_coop": "YEREL CO-OP",
+  "menu.settings": "AYARLAR",
+  "menu.quit": "ÇIKIŞ",
+  "menu.language": "DİL: {0}",
+  "menu.not_available": "Sonraki aşamada gelecek.",
+  "menu.version": "v{0}"
+}

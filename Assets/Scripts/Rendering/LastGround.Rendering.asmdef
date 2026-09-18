@@ -1,0 +1,23 @@
+{
+    "name": "LastGround.Rendering",
+    "rootNamespace": "LastGround.Rendering",
+    "references": [
+        "LastGround.Core",
+        "LastGround.Data",
+        "LastGround.Gameplay",
+        "Unity.Mathematics",
+        "Unity.Collections",
+        "Unity.Burst",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

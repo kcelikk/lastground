@@ -1,0 +1,19 @@
+{
+    "name": "LastGround.Networking",
+    "rootNamespace": "LastGround.Networking",
+    "references": [
+        "LastGround.Core",
+        "LastGround.Data",
+        "LastGround.Gameplay",
+        "LastGround.Platform"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

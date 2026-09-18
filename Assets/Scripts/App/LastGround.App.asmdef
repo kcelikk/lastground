@@ -1,0 +1,19 @@
+{
+    "name": "LastGround.App",
+    "rootNamespace": "LastGround.App",
+    "references": [
+        "LastGround.Core",
+        "LastGround.Localization",
+        "LastGround.Save",
+        "LastGround.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
