@@ -21,7 +21,7 @@ namespace LastGround.Data.Loot
         public float MedkitLifetime = 45f;
 
         [Header("Ammo, grenades, weapons (instanced per player, M6)")]
-        [Range(0f, 1f)] public float AmmoChance = 0.03f;
+        [Range(0f, 1f)] public float AmmoChance = 0.05f;
         public float AmmoLifetime = 45f;
         [Range(0f, 1f)] public float GrenadeChance = 0.008f;
         public float GrenadeLifetime = 45f;

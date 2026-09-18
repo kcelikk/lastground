@@ -116,6 +116,8 @@ namespace LastGround.App
             public ProjectileTable Projectiles;
             public EventChannel<ExplosionFx> Blasts;
             public PickupCollector Collector;
+            public ExplosionSystem Explosions;
+            public ProjectileSystem ProjectileSim;
             public ZombieWorld World;
             public CombatAuthority Authority;
             public PlayerHealthSystem Health;
@@ -276,6 +278,7 @@ namespace LastGround.App
             telemetry.BindDirector(parts.Status, parts.Director);
             telemetry.BindProgress(parts.Xp, parts.Builds);
             telemetry.BindLoot(parts.Wallet, parts.Registry);
+            telemetry.BindContent(parts.LoadoutAuthority, parts.Explosions, parts.ProjectileSim);
             if (parts.Director != null) gameObject.AddComponent<DirectorLog>().Bind(parts.Status, parts.Director, _service.CurrentRun.Seed);
             if (parts.Benchmark != null)
             {
@@ -316,8 +319,9 @@ namespace LastGround.App
             _disposables.Add(world);
             world.DamageSink = parts.Health;
             world.Respawns = parts.Health.Respawns;
-            var explosions = new ExplosionSystem(world, parts.Players, parts.Health, parts.Blasts);
-            var projectiles = new ProjectileSystem(parts.Projectiles, _combat.Projectiles, parts.Players, parts.Nav, parts.Health, explosions);
+            var explosions = parts.Explosions = new ExplosionSystem(world, parts.Players, parts.Health, parts.Blasts);
+            var projectiles = parts.ProjectileSim = new ProjectileSystem(parts.Projectiles, _combat.Projectiles, parts.Players, parts.Nav,
+                parts.Health, explosions);
             world.ExplosionSink = explosions;
             world.ProjectileLauncher = projectiles;
             parts.LoadoutAuthority = new LoadoutAuthority(parts.Loadouts, parts.Players, _combat, projectiles);
