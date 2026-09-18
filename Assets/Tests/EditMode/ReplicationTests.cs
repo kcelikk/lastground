@@ -105,6 +105,31 @@ namespace LastGround.Tests
         }
 
         [Test]
+        public void Deaths_ReachTheClient_AsCorpses()
+        {
+            var rig = Create(entities: 0);
+            rig.Net.Step(1.0, perTick: rig.Tick);
+            // Place ten zombies right next to the client player, let them replicate, then kill them.
+            var slots = new int[10];
+            for (int i = 0; i < slots.Length; i++) slots[i] = rig.Crowd.Spawn(0, 2f + i * 0.5f, 1f, 0f);
+            rig.Net.Step(0.5, perTick: rig.Tick);
+            foreach (int slot in slots) Assert.IsTrue(rig.Replica.Alive[slot]);
+
+            var reader = rig.Replica.Deaths.CreateReader();
+            foreach (int slot in slots) rig.Crowd.Despawn(slot, died: true);
+            rig.Net.Step(0.3, perTick: rig.Tick);
+
+            int deaths = 0;
+            while (rig.Replica.Deaths.TryRead(ref reader, out CrowdDeath death))
+            {
+                deaths++;
+                Assert.AreEqual(1f, death.Z, 0.05f);
+            }
+            Assert.AreEqual(slots.Length, deaths);
+            foreach (int slot in slots) Assert.IsFalse(rig.Replica.Alive[slot]);
+        }
+
+        [Test]
         public void Players_SeeEachOther()
         {
             var rig = Create(entities: 0);

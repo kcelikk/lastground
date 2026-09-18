@@ -1,4 +1,5 @@
 using System;
+using LastGround.Core.Events;
 using LastGround.Core.Ids;
 using LastGround.Core.Net.Protocol;
 using LastGround.Core.Net.Session;
@@ -26,6 +27,8 @@ namespace LastGround.Networking.Replication
             public readonly float[] DueKey;
             public readonly int[] Enter;
             public readonly int[] Exit;
+            public readonly int[] Death;
+            public int DeathCount;
 
             public ClientView(int capacity)
             {
@@ -36,6 +39,7 @@ namespace LastGround.Networking.Replication
                 DueKey = new float[capacity];
                 Enter = new int[capacity];
                 Exit = new int[capacity];
+                Death = new int[capacity];
             }
 
             public void Reset()
@@ -51,6 +55,10 @@ namespace LastGround.Networking.Replication
         readonly ReplicationTuning _tuning;
         readonly ClientView[] _views = new ClientView[PlayerStateTable.Max];
         readonly int _entriesPerTick;
+        readonly float[] _deathX;
+        readonly float[] _deathZ;
+        readonly float[] _deathYaw;
+        EventReader<CrowdDeath> _deathReader;
 
         public CrowdReplicationSender(ISession session, CrowdState crowd, PlayerStateTable players, ReplicationTuning tuning)
         {
@@ -61,6 +69,10 @@ namespace LastGround.Networking.Replication
             _players = players;
             _tuning = tuning;
             _entriesPerTick = Math.Max(1, (tuning.SnapshotBytesPerTick - 8) * 8 / ReplicationTuning.SnapshotEntryBits);
+            _deathX = new float[crowd.Capacity];
+            _deathZ = new float[crowd.Capacity];
+            _deathYaw = new float[crowd.Capacity];
+            _deathReader = crowd.Deaths.CreateReader();
             _session.PlayerLeft += OnPlayerLeft;
         }
 
@@ -83,6 +95,7 @@ namespace LastGround.Networking.Replication
         public void Tick(float dt, uint tick)
         {
             uint stamp = NetTime.ToTick(_session.Clock.HostTime);
+            CollectDeaths();
             var players = _session.Players;
             for (int p = 0; p < players.Count; p++)
             {
@@ -157,6 +170,7 @@ namespace LastGround.Networking.Replication
                 }
             }
 
+            if (view.DeathCount > 0) SendDeaths(client, view);
             if (enterCount > 0) SendEnters(client, view, enterCount, stamp);
             if (exitCount > 0) SendExits(client, view, exitCount);
             if (dueCount > 0) SendSnapshot(client, view, dueCount, stamp);
@@ -182,6 +196,47 @@ namespace LastGround.Networking.Replication
                 }
                 _session.SendTo(client, NetChannel.Reliable);
             }
+        }
+
+        /// <summary>
+        /// Deaths are taken from the crowd's event channel before relevance is evaluated: a client that knew the
+        /// zombie gets a death (corpse + blood) instead of an exit, and a slot reused in the same tick enters fresh.
+        /// </summary>
+        void CollectDeaths()
+        {
+            while (_crowd.Deaths.TryRead(ref _deathReader, out CrowdDeath death))
+            {
+                _deathX[death.Slot] = death.X;
+                _deathZ[death.Slot] = death.Z;
+                _deathYaw[death.Slot] = death.Yaw;
+                for (int v = 0; v < _views.Length; v++)
+                {
+                    ClientView view = _views[v];
+                    if (view == null || !view.Relevant[death.Slot]) continue;
+                    view.Relevant[death.Slot] = false;
+                    view.Death[view.DeathCount++] = death.Slot;
+                }
+            }
+        }
+
+        void SendDeaths(PlayerId client, ClientView view)
+        {
+            for (int start = 0; start < view.DeathCount; start += ReplicationTuning.MaxEntriesPerReliableMessage)
+            {
+                int n = Math.Min(ReplicationTuning.MaxEntriesPerReliableMessage, view.DeathCount - start);
+                NetWriter w = _session.Begin(NetMsgId.ZombieDeath);
+                w.WriteVarUInt((uint)n);
+                for (int k = 0; k < n; k++)
+                {
+                    int i = view.Death[start + k];
+                    w.WriteUShort((ushort)i);
+                    w.WriteUShort(Quantize.Position(_deathX[i]));
+                    w.WriteUShort(Quantize.Position(_deathZ[i]));
+                    w.WriteByte((byte)Quantize.Yaw(_deathYaw[i], 8));
+                }
+                _session.SendTo(client, NetChannel.Reliable);
+            }
+            view.DeathCount = 0;
         }
 
         void SendExits(PlayerId client, ClientView view, int count)

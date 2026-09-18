@@ -1,5 +1,6 @@
 using LastGround.App;
 using LastGround.Data.Crowd;
+using LastGround.EditorTools.Map;
 using LastGround.Input;
 using LastGround.UI.Common;
 using LastGround.UI.Run;
@@ -45,6 +46,10 @@ namespace LastGround.EditorTools.Setup
             if (catalog == null) Debug.LogWarning("[Setup] Crowd catalog missing; run LastGround/Crowd/Bake Bodies first.");
             Material ground = CreateMaterial("M1_Ground", new Color(0.16f, 0.17f, 0.18f));
 
+            GameObject map = GreyboxMapBuilder.Build(CreateMaterial("M1_Wall", new Color(0.24f, 0.25f, 0.27f)),
+                CreateMaterial("M1_Prop", new Color(0.3f, 0.27f, 0.22f)));
+            var navGrid = NavGridBaker.Bake(map, GreyboxMapBuilder.Size, "Assets/Art/Maps/Greybox_NavGrid.asset");
+
             var groundGo = GameObject.CreatePrimitive(PrimitiveType.Plane);
             groundGo.name = "Ground (greybox)";
             groundGo.transform.localScale = new Vector3(GroundSize / 10f, 1f, GroundSize / 10f);
@@ -69,6 +74,7 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_camera", camera);
             UiFactory.Assign(installer, "_worldRoot", world.transform);
             UiFactory.Assign(installer, "_crowdCatalog", catalog);
+            UiFactory.Assign(installer, "_navGrid", navGrid);
             UiFactory.Assign(installer, "_bloodParticleMaterial", bloodParticle);
             UiFactory.Assign(installer, "_bloodSplatMaterial", bloodSplat);
             UiFactory.Assign(installer, "_playerMesh", capsule);

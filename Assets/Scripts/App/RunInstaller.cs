@@ -6,8 +6,11 @@ using LastGround.Core.Net.Session;
 using LastGround.Core.Services;
 using LastGround.Core.Tick;
 using LastGround.Data.Crowd;
+using LastGround.Data.Map;
 using LastGround.Data.Quality;
 using LastGround.Gameplay.Crowd;
+using LastGround.Gameplay.Navigation;
+using LastGround.Gameplay.Zombies;
 using LastGround.Gameplay.Players;
 using LastGround.Input;
 using LastGround.Networking.Replication;
@@ -24,18 +27,20 @@ namespace LastGround.App
     /// <summary>
     /// Run scene composition root (TDD_02 §15.3): builds the system set for the session role and registers it on
     /// the tick scheduler. Role checks live here, not in gameplay code.
-    /// Host/offline: crowd simulation (dummy or benchmark driver) + replication sender. Client: replica + receiver.
+    /// Host/offline: horde simulation (ZombieWorld + test spawner, or the benchmark driver) + replication sender.
+    /// Client: replica + receiver (deaths → corpses/blood).
     /// Everyone: local motor, player sync, crowd/corpse/blood rendering, camera, HUD.
     /// </summary>
     public sealed class RunInstaller : MonoBehaviour
     {
         const int CrowdCapacity = 512;
-        const int DummyCount = 300;
-        const float WorldSize = 140f;
+        const int HordePopulation = 300;
+        const float BenchmarkWorldSize = 140f;
 
         [SerializeField] Camera _camera;
         [SerializeField] Transform _worldRoot;
         [SerializeField] CrowdVisualCatalog _crowdCatalog;
+        [SerializeField] NavGridAsset _navGrid;
         [SerializeField] Material _bloodParticleMaterial;
         [SerializeField] Material _bloodSplatMaterial;
         [SerializeField] Mesh _playerMesh;
@@ -59,6 +64,10 @@ namespace LastGround.App
             _scheduler = gameObject.AddComponent<TickScheduler>();
             TickLoop loop = _scheduler.Loop;
 
+            NavGrid nav = benchmark || _navGrid == null ? NavGrid.Open((int)BenchmarkWorldSize) : NavGrid.FromAsset(_navGrid);
+            _disposables.Add(nav);
+            float worldSize = nav.Width * nav.CellSize;
+
             var players = new PlayerStateTable { Local = session.LocalPlayer };
             PlayerId me = session.LocalPlayer;
             var sync = new PlayerSync(session, players, PlayerMotor.MoveSpeed);
@@ -67,6 +76,7 @@ namespace LastGround.App
             ICrowdRenderSource crowdSource;
             IGameEventStream<CrowdDeath> deaths = null;
             BenchmarkCrowdDriver benchmarkDriver = null;
+            ZombieWorld zombieWorld = null;
             if (session.IsAuthority)
             {
                 var crowd = new CrowdState(CrowdCapacity);
@@ -78,7 +88,11 @@ namespace LastGround.App
                 }
                 else
                 {
-                    loop.Register(TickPhase.ZombieSim, Gate(new DummyCrowdSim(crowd, DummyCount, WorldSize, _service.CurrentRun.Seed)));
+                    var world = zombieWorld = new ZombieWorld(crowd, players, nav, new ZombieTuning(), _service.CurrentRun.Seed);
+                    _disposables.Add(world);
+                    var spawner = new TestHordeSpawner(world, players, _service.CurrentRun.Seed) { Population = HordePopulation };
+                    loop.Register(TickPhase.Director, Gate(spawner));
+                    loop.Register(TickPhase.ZombieSim, Gate(world));
                     var sender = new CrowdReplicationSender(session, crowd, players, new ReplicationTuning());
                     _disposables.Add(sender);
                     loop.Register(TickPhase.NetSend, sender);
@@ -92,7 +106,7 @@ namespace LastGround.App
                 _disposables.Add(receiver);
                 loop.Register(TickPhase.Presentation, receiver);
                 crowdSource = replica;
-                // Client corpses/blood arrive with death replication in M3.
+                deaths = replica.Deaths;
             }
 
             loop.Register(TickPhase.Input, _input);
@@ -103,17 +117,16 @@ namespace LastGround.App
             }
             else
             {
-                loop.Register(TickPhase.LocalPlayer, Gate(new PlayerMotor(players, _input, WorldSize, me.Value * 3f - 4.5f, -3f)));
+                loop.Register(TickPhase.LocalPlayer, Gate(new PlayerMotor(players, _input, worldSize, me.Value * 3f - 4.5f, -3f, nav)));
             }
             loop.Register(TickPhase.NetSend, sync);
             loop.Register(TickPhase.Presentation, new TickAction(_ => sync.Interpolate()));
             loop.Register(TickPhase.Presentation, new FollowCamera(_camera, players));
 
-            _disposables.Add(new LightingGrid(new Vector2(-WorldSize * 0.5f, -WorldSize * 0.5f), WorldSize, 256, LightingGrid.GreyboxLamps()));
+            _disposables.Add(new LightingGrid(new Vector2(nav.Origin.x, nav.Origin.y), worldSize, 256, LightingGrid.GreyboxLamps()));
             var crowdRenderer = new ZombieRenderSystem(crowdSource, _crowdCatalog, _camera, preset, deaths);
             _disposables.Add(crowdRenderer);
             loop.Register(TickPhase.Presentation, crowdRenderer);
-            if (deaths != null)
             {
                 var blood = new BloodSystem(deaths, preset, _worldRoot, _bloodParticleMaterial, _bloodSplatMaterial);
                 _disposables.Add(blood);
@@ -123,7 +136,7 @@ namespace LastGround.App
 
             _hud.Bind(_service, crowdSource);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            gameObject.AddComponent<RunTelemetry>().Bind(session, crowdSource);
+            gameObject.AddComponent<RunTelemetry>().Bind(session, crowdSource, zombieWorld);
             if (benchmarkDriver != null)
             {
                 gameObject.AddComponent<PerfBenchmarkRunner>().Bind(benchmarkDriver, crowdRenderer, AppServices.Get<QualityService>(),

@@ -1,3 +1,4 @@
+using LastGround.Core.Events;
 using UnityEngine;
 
 namespace LastGround.Gameplay.Crowd
@@ -27,6 +28,9 @@ namespace LastGround.Gameplay.Crowd
         readonly float[] _sampleYaw;
         readonly byte[] _sampleCount;
         readonly byte[] _newest;
+
+        /// <summary>Replicated deaths (corpses and blood on clients).</summary>
+        public readonly EventChannel<CrowdDeath> Deaths = new EventChannel<CrowdDeath>(256);
 
         public CrowdReplica(int capacity)
         {
@@ -95,6 +99,13 @@ namespace LastGround.Gameplay.Crowd
             if ((uint)slot >= (uint)Capacity || !_alive[slot]) return;
             _alive[slot] = false;
             ActiveCount--;
+        }
+
+        /// <summary>The host reports a death: remove the replica and publish a corpse at the death position.</summary>
+        public void Die(int slot, float x, float z, float yaw)
+        {
+            Exit(slot);
+            if ((uint)slot < (uint)Capacity) Deaths.Publish(new CrowdDeath { Slot = slot, X = x, Z = z, Yaw = yaw });
         }
 
         public void Clear()

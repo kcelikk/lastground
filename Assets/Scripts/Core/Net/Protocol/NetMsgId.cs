@@ -27,6 +27,7 @@ namespace LastGround.Core.Net.Protocol
         public const byte ZombieEnter = 30;
         public const byte ZombieSnapshot = 31;
         public const byte ZombieExit = 32;
+        public const byte ZombieDeath = 33;
 
         public const int Count = 256;
     }

@@ -74,6 +74,9 @@ namespace LastGround.Gameplay.Zombies
         public FlowFieldSet Flow => _flow;
         public int Unstuck { get; private set; }
 
+        /// <summary>Duration of the last Tick in milliseconds (jobs included), for telemetry.</summary>
+        public float LastTickMs { get; private set; }
+
         NativeArray<T> Alloc<T>() where T : struct => new NativeArray<T>(_capacity, Allocator.Persistent);
 
         /// <summary>Spawns a walker at a walkable position. Returns the slot or -1.</summary>
@@ -116,6 +119,7 @@ namespace LastGround.Gameplay.Zombies
 
         public void Tick(float dt, uint tick)
         {
+            long started = System.Diagnostics.Stopwatch.GetTimestamp();
             SyncPlayers();
 
             _targetTimer -= dt;
@@ -200,6 +204,7 @@ namespace LastGround.Gameplay.Zombies
                 _stuckTimer = _tuning.StuckCheckInterval;
                 ResolveStuck();
             }
+            LastTickMs = (float)((System.Diagnostics.Stopwatch.GetTimestamp() - started) * 1000.0 / System.Diagnostics.Stopwatch.Frequency);
         }
 
         public void Dispose()

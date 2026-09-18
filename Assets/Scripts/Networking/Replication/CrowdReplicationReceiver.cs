@@ -16,6 +16,7 @@ namespace LastGround.Networking.Replication
         readonly NetRawHandler _onEnter;
         readonly NetRawHandler _onSnapshot;
         readonly NetRawHandler _onExit;
+        readonly NetRawHandler _onDeath;
 
         public CrowdReplicationReceiver(ISession session, CrowdReplica replica)
         {
@@ -24,9 +25,11 @@ namespace LastGround.Networking.Replication
             _onEnter = OnEnter;
             _onSnapshot = OnSnapshot;
             _onExit = OnExit;
+            _onDeath = OnDeath;
             _session.Subscribe(NetMsgId.ZombieEnter, _onEnter);
             _session.Subscribe(NetMsgId.ZombieSnapshot, _onSnapshot);
             _session.Subscribe(NetMsgId.ZombieExit, _onExit);
+            _session.Subscribe(NetMsgId.ZombieDeath, _onDeath);
         }
 
         /// <summary>Presentation phase: move replicas to the render time.</summary>
@@ -40,6 +43,7 @@ namespace LastGround.Networking.Replication
             _session.Unsubscribe(NetMsgId.ZombieEnter, _onEnter);
             _session.Unsubscribe(NetMsgId.ZombieSnapshot, _onSnapshot);
             _session.Unsubscribe(NetMsgId.ZombieExit, _onExit);
+            _session.Unsubscribe(NetMsgId.ZombieDeath, _onDeath);
         }
 
         void OnEnter(PlayerId sender, ref NetReader r)
@@ -71,6 +75,19 @@ namespace LastGround.Networking.Replication
                 byte anim = (byte)r.ReadBits(ReplicationTuning.AnimBits);
                 r.ReadBits(ReplicationTuning.FlagBits);
                 if (!r.Failed) _replica.Update(slot, x, z, yaw, time, anim);
+            }
+        }
+
+        void OnDeath(PlayerId sender, ref NetReader r)
+        {
+            uint count = r.ReadVarUInt();
+            for (uint k = 0; k < count && !r.Failed; k++)
+            {
+                int slot = r.ReadUShort();
+                float x = Quantize.Position(r.ReadUShort());
+                float z = Quantize.Position(r.ReadUShort());
+                float yaw = Quantize.Yaw(r.ReadByte(), 8);
+                if (!r.Failed) _replica.Die(slot, x, z, yaw);
             }
         }
 
