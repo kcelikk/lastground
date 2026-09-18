@@ -1,6 +1,6 @@
 # M4 Raporu — Shooting & Combat (MVP KAPISI)
 
-- **Tarih:** 2026-09-18 · **Branch:** `m4-combat` · **Unity:** 6000.3.24f1 · **Durum:** ⏳ Onay bekliyor (kullanıcı kontrol testi dahil)
+- **Tarih:** 2026-09-18 · **Branch:** `m4-combat` · **Unity:** 6000.3.24f1 · **Durum:** ✅ Onaylandı (2026-09-18), `main`e merge edildi
 - **Cihazlar:** OnePlus 5T = LOW (USB) · Redmi Pad Pro = MID (kablosuz ADB, 192.168.1.14) · Linux PC (yalnızca ağ karşı tarafı, performans referansı değil)
 
 ## Kapı kriterleri (TDD_03 §36 M4)
@@ -10,7 +10,7 @@
 | Crash / desync yok | ✅ iki cihazda **0 exception**, kopma yok; client ort. 298 zombi görüyor; **"hedeften uzak" red = 0** (client'ın gördüğü zombi konumu host'la uyumlu) |
 | LOW ≥ 30, MID 45–60 FPS | ✅ Redmi (MID host) **60.0 ort., min 59.6**, en kötü kare 43.8 ms · OnePlus (LOW client) **30.6 sabit**, en kötü kare 34.5 ms |
 | 0 GC/frame | ✅ **oyun kodu 0 B**: EditMode testi (host sim + savaş + replikasyon + client silahı, 90 tick) ve cihazda 300 kare call-stack kaydı. Kalan: Mirror `KcpTransport.OnGUI` ~365 B/f (yalnızca dev build) ve Mirror/kcp2k client döngüsünde ~27 B/f (üçüncü taraf, aşağıda) |
-| Yeni oyuncu kontrolleri 1 dk'da kullanabiliyor | ⏳ Kullanıcı testi bekleniyor. Dokunmatik nişan/ateş cihazda `adb input swipe` ile doğrulandı |
+| Yeni oyuncu kontrolleri 1 dk'da kullanabiliyor | ✅ Kullanıcı cihazda denedi ve onayladı (2026-09-18). Dokunmatik nişan/ateş ayrıca `adb input swipe` ile doğrulandı |
 
 ## Uygulanan
 - **Kontroller:** `TouchTwinStickInput` — sol yarı yüzen hareket stick'i, sağ yarı yüzen nişan stick'i (0.25 nişan, 0.55 ateş, 0.15 s flick tutma; ateşte düğme kırmızı), üst %25 butonlara ayrılmış. Editör/masaüstü: WASD + IJKL / fare.
