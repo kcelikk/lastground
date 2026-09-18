@@ -90,9 +90,10 @@ namespace LastGround.App.Dev
                 _weapon.ShotsFired, _weapon.ClaimsSent, _players.Health[me], _players.Dead[me] ? 1 : 0);
             if (_authority != null)
             {
-                line += string.Format(CultureInfo.InvariantCulture, " accepted={0} rejected={1} kills={2} farTarget={3} noLos={4} rate={5}",
-                    _authority.Accepted, _authority.Rejected, _authority.Kills, _authority.CountOf(HitClaimVerdict.FarFromTarget),
-                    _authority.CountOf(HitClaimVerdict.NoLineOfSight), _authority.CountOf(HitClaimVerdict.RateLimited));
+                line += string.Format(CultureInfo.InvariantCulture, " accepted={0} rejected={1} kills={2} gone={3} farTarget={4} noLos={5} rate={6} deadShooter={7}",
+                    _authority.Accepted, _authority.Rejected, _authority.Kills, _authority.CountOf(HitClaimVerdict.TargetGone),
+                    _authority.CountOf(HitClaimVerdict.FarFromTarget), _authority.CountOf(HitClaimVerdict.NoLineOfSight),
+                    _authority.CountOf(HitClaimVerdict.RateLimited), _authority.CountOf(HitClaimVerdict.ShooterDead));
             }
             if (_health != null) line += string.Format(CultureInfo.InvariantCulture, " playerDeaths={0}", _health.Deaths);
             if (_world != null) line += string.Format(CultureInfo.InvariantCulture, " zAttacks={0} zDodged={1}", _world.AttacksLanded, _world.AttacksDodged);

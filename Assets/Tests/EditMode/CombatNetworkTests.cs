@@ -146,6 +146,24 @@ namespace LastGround.Tests
         }
 
         [Test]
+        public void CombatLoop_DoesNotAllocate_AfterWarmup()
+        {
+            using (Rig rig = Create())
+            {
+                for (int i = 0; i < 40; i++) rig.World.Spawn(new float2(-15f + i * 0.75f, 12f + (i % 3)), 180f);
+                rig.ClientInput.Aim(0f, 1f, true);
+                rig.Net.Step(3.0, perTick: rig.Tick);
+
+                long before = System.GC.GetAllocatedBytesForCurrentThread();
+                rig.Net.Step(3.0, perTick: rig.Tick);
+                long allocated = System.GC.GetAllocatedBytesForCurrentThread() - before;
+                Debug.Log($"[Test] combat loop allocated {allocated} B in 90 ticks, kills {rig.Authority.Kills}");
+                Assert.Greater(rig.Authority.Accepted, 10, "the measured window must contain combat");
+                Assert.AreEqual(0, allocated, "host sim + combat + replication + client weapon: 0 B per tick (TDD_03 §34)");
+            }
+        }
+
+        [Test]
         public void Vitals_ReachTheClient_WithHurtEvents()
         {
             using (Rig rig = Create())
