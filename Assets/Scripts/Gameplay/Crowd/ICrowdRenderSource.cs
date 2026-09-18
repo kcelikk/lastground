@@ -14,5 +14,8 @@ namespace LastGround.Gameplay.Crowd
 
         /// <summary>Yaw in degrees around +Y.</summary>
         float[] Yaw { get; }
+
+        /// <summary>Animation state per slot (values of Data.Crowd.CrowdClipId / snapshot animState).</summary>
+        byte[] AnimState { get; }
     }
 }

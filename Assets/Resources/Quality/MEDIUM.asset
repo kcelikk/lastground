@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1614bedceacdebf9ca9cfb68685475eb, type: 3}
+  m_Name: MEDIUM
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Quality.QualityPresetDefinition
+  Id: MEDIUM
+  QualityLevel: 1
+  TargetFps: 60
+  Lod0Distance: 12
+  Lod1Distance: 24
+  MaxVisibleCrowd: 250
+  RimLight: 1
+  CorpseCap: 50
+  CorpseLifetime: 12
+  BloodSplatCap: 96
+  ParticleMultiplier: 0.8

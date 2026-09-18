@@ -1,4 +1,5 @@
 using LastGround.App;
+using LastGround.Data.Crowd;
 using LastGround.Input;
 using LastGround.UI.Common;
 using LastGround.UI.Run;
@@ -37,8 +38,11 @@ namespace LastGround.EditorTools.Setup
             RenderSettings.ambientMode = AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.25f, 0.25f, 0.3f);
 
-            Material crowd = CreateMaterial("M1_Crowd", new Color(0.55f, 0.12f, 0.1f));
             Material player = CreateMaterial("M1_Player", Color.white);
+            Material bloodParticle = CreateFxMaterial("M_BloodParticle", "LG/FX_AlphaBlend");
+            Material bloodSplat = CreateFxMaterial("M_BloodSplat", "LG/GroundDecal");
+            var catalog = AssetDatabase.LoadAssetAtPath<CrowdVisualCatalog>("Assets/Art/Crowd/CrowdCatalog.asset");
+            if (catalog == null) Debug.LogWarning("[Setup] Crowd catalog missing; run LastGround/Crowd/Bake Bodies first.");
             Material ground = CreateMaterial("M1_Ground", new Color(0.16f, 0.17f, 0.18f));
 
             var groundGo = GameObject.CreatePrimitive(PrimitiveType.Plane);
@@ -56,8 +60,9 @@ namespace LastGround.EditorTools.Setup
             var installer = systems.AddComponent<RunInstaller>();
             UiFactory.Assign(installer, "_camera", camera);
             UiFactory.Assign(installer, "_worldRoot", world.transform);
-            UiFactory.Assign(installer, "_crowdMesh", capsule);
-            UiFactory.Assign(installer, "_crowdMaterial", crowd);
+            UiFactory.Assign(installer, "_crowdCatalog", catalog);
+            UiFactory.Assign(installer, "_bloodParticleMaterial", bloodParticle);
+            UiFactory.Assign(installer, "_bloodSplatMaterial", bloodSplat);
             UiFactory.Assign(installer, "_playerMesh", capsule);
             UiFactory.Assign(installer, "_playerMaterial", player);
             UiFactory.Assign(installer, "_input", input);
@@ -115,6 +120,21 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(hud, "_crowdLabel", crowd);
             UiFactory.Assign(hud, "_leaveButton", leave);
             return (input, hud);
+        }
+
+        static Material CreateFxMaterial(string name, string shader)
+        {
+            ProjectSetup.EnsureFolder(MaterialDir);
+            string path = MaterialDir + "/" + name + ".mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(Shader.Find(shader));
+                AssetDatabase.CreateAsset(material, path);
+            }
+            material.enableInstancing = true;
+            EditorUtility.SetDirty(material);
+            return material;
         }
 
         static Material CreateMaterial(string name, Color color)

@@ -11,7 +11,9 @@
         "LastGround.Editor",
         "LastGround.Gameplay",
         "LastGround.Networking",
-        "LastGround.Platform"
+        "LastGround.Platform",
+        "LastGround.Data",
+        "LastGround.Rendering"
     ],
     "includePlatforms": [
         "Editor"

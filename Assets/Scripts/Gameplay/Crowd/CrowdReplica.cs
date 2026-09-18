@@ -19,6 +19,7 @@ namespace LastGround.Gameplay.Crowd
         readonly float[] _x;
         readonly float[] _z;
         readonly float[] _yaw;
+        readonly byte[] _anim;
 
         readonly double[] _sampleTime;
         readonly float[] _sampleX;
@@ -36,6 +37,7 @@ namespace LastGround.Gameplay.Crowd
             _x = new float[capacity];
             _z = new float[capacity];
             _yaw = new float[capacity];
+            _anim = new byte[capacity];
             _sampleTime = new double[capacity * SamplesPerSlot];
             _sampleX = new float[capacity * SamplesPerSlot];
             _sampleZ = new float[capacity * SamplesPerSlot];
@@ -50,6 +52,7 @@ namespace LastGround.Gameplay.Crowd
         public float[] X => _x;
         public float[] Z => _z;
         public float[] Yaw => _yaw;
+        public byte[] AnimState => _anim;
 
         public byte GenerationOf(int slot) => _generation[slot];
 
@@ -60,6 +63,7 @@ namespace LastGround.Gameplay.Crowd
             _alive[slot] = true;
             _generation[slot] = generation;
             _type[slot] = type;
+            _anim[slot] = 1; // walk until the first snapshot says otherwise
             _sampleCount[slot] = 0;
             PushSample(slot, x, z, yaw, time);
             _x[slot] = x;
@@ -68,9 +72,10 @@ namespace LastGround.Gameplay.Crowd
         }
 
         /// <summary>Applies a snapshot sample. Ignored for unknown slots and for samples older than the newest.</summary>
-        public void Update(int slot, float x, float z, float yaw, double time)
+        public void Update(int slot, float x, float z, float yaw, double time, byte anim = 1)
         {
             if ((uint)slot >= (uint)Capacity || !_alive[slot]) return;
+            _anim[slot] = anim;
             int newest = slot * SamplesPerSlot + _newest[slot];
             if (_sampleCount[slot] > 0 && time <= _sampleTime[newest]) return;
 

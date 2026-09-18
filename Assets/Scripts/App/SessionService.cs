@@ -97,6 +97,23 @@ namespace LastGround.App
             StartRun();
         }
 
+        /// <summary>Dev: local rendering benchmark run (offline, no network traffic).</summary>
+        public void StartBenchmark(float stepSeconds, bool quitWhenDone)
+        {
+            ClearLastDisconnect();
+            _session.StartOffline();
+            ResetRun();
+            CurrentRun = new RunLaunch
+            {
+                Seed = 12345,
+                MapId = DefaultMap,
+                Benchmark = true,
+                BenchmarkStepSeconds = stepSeconds,
+                QuitAfterBenchmark = quitWhenDone,
+            };
+            SceneManager.LoadScene(SceneNames.Run);
+        }
+
         public void StartRun()
         {
             Log.Info(LogCategory.App, "StartRun: role " + _session.Role + ", state " + _session.State + ", players " + _session.Players.Count);

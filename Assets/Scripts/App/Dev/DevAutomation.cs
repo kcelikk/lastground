@@ -18,12 +18,17 @@ namespace LastGround.App.Dev
     ///   -lg-solo              start a solo run
     ///   -lg-quit-after SEC    quit after SEC seconds (soak tests)
     ///   -lg-wander            local player wanders in circles (soak tests)
+    ///   -lg-bench [SEC]       crowd rendering benchmark, SEC per step (default 60), quits when done
+    ///   -lg-quality N         force quality tier 0/1/2 for this launch (benchmarks)
+    ///   -lg-gc-capture        record 120 profiler frames with allocation call stacks after 8 s (GcAllocReport)
     /// </summary>
     public sealed class DevAutomation : MonoBehaviour
     {
         SessionService _service;
         bool _host;
         bool _solo;
+        float _benchSeconds = -1f;
+        int _forceQuality = -1;
         string _joinAddress;
         int _startAt = 2;
         float _quitAfter = -1f;
@@ -49,6 +54,19 @@ namespace LastGround.App.Dev
                     case "-lg-host": _host = true; break;
                     case "-lg-solo": _solo = true; break;
                     case "-lg-wander": LastGround.Input.TouchMoveInput.DevWander = true; break;
+                    case "-lg-gc-capture": gameObject.AddComponent<GcProfileCapture>(); break;
+                    case "-lg-bench":
+                        _benchSeconds = 60f;
+                        if (i + 1 < args.Count && float.TryParse(args[i + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out float seconds))
+                        {
+                            _benchSeconds = seconds;
+                            i++;
+                        }
+                        break;
+                    case "-lg-quality" when i + 1 < args.Count:
+                        if (int.TryParse(args[++i], NumberStyles.Integer, CultureInfo.InvariantCulture, out int quality))
+                            _forceQuality = quality;
+                        break;
                     case "-lg-join" when i + 1 < args.Count: _joinAddress = args[++i]; break;
                     case "-lg-start-at" when i + 1 < args.Count:
                         if (int.TryParse(args[++i], NumberStyles.Integer, CultureInfo.InvariantCulture, out int startAt))
@@ -75,7 +93,10 @@ namespace LastGround.App.Dev
             if (!_acted && SceneManager.GetActiveScene().name == SceneNames.Menu)
             {
                 _acted = true;
-                if (_solo) _service.StartSolo();
+                if (_forceQuality >= 0)
+                    LastGround.Core.Services.AppServices.Get<LastGround.Rendering.Quality.QualityService>().Apply(_forceQuality, 60);
+                if (_benchSeconds > 0f) _service.StartBenchmark(_benchSeconds, true);
+                else if (_solo) _service.StartSolo();
                 else if (_host) _service.HostGame();
                 else if (!string.IsNullOrEmpty(_joinAddress)) _service.Join(_joinAddress, NetProtocol.DefaultGamePort);
             }

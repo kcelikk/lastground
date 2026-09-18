@@ -1,3 +1,5 @@
+using LastGround.Core.Events;
+
 namespace LastGround.Gameplay.Crowd
 {
     /// <summary>
@@ -14,6 +16,9 @@ namespace LastGround.Gameplay.Crowd
         public readonly byte[] Type;
         public readonly byte[] Anim;
         public readonly byte[] Flags;
+
+        /// <summary>Deaths in order; presentation reads them with its own cursor.</summary>
+        public readonly EventChannel<CrowdDeath> Deaths = new EventChannel<CrowdDeath>(256);
 
         public CrowdState(int capacity)
         {
@@ -34,6 +39,7 @@ namespace LastGround.Gameplay.Crowd
         public float[] X => PosX;
         public float[] Z => PosZ;
         public float[] Yaw => Heading;
+        public byte[] AnimState => Anim;
 
         /// <summary>Activates a free slot; returns -1 when full.</summary>
         public int Spawn(byte type, float x, float z, float heading)
@@ -55,11 +61,13 @@ namespace LastGround.Gameplay.Crowd
             return -1;
         }
 
-        public void Despawn(int slot)
+        /// <summary>Removes a slot. <paramref name="died"/> publishes a death for corpses and blood.</summary>
+        public void Despawn(int slot, bool died = false)
         {
             if (!AliveSlots[slot]) return;
             AliveSlots[slot] = false;
             ActiveCount--;
+            if (died) Deaths.Publish(new CrowdDeath { Slot = slot, X = PosX[slot], Z = PosZ[slot], Yaw = Heading[slot] });
         }
     }
 }
