@@ -13,6 +13,8 @@ namespace LastGround.Data.Crowd
         public string Id;
         public Mesh[] Lods;
         public Texture2D BoneTexture;
+        /// <summary>Body albedo (Mixamo bodies); null = the catalog material's shared atlas.</summary>
+        public Texture2D Albedo;
         public int BoneCount;
         public int TotalFrames;
         public float FrameRate = 30f;

@@ -28,6 +28,7 @@ namespace LastGround.Rendering.Crowd
         static readonly int AnimId = Shader.PropertyToID("_Anim");
         static readonly int GlowId = Shader.PropertyToID("_Glow");
         static readonly int BoneTexId = Shader.PropertyToID("_BoneTex");
+        static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
         static readonly int TintsId = Shader.PropertyToID("_LGCrowdTints");
 
         struct Batch
@@ -84,6 +85,7 @@ namespace LastGround.Rendering.Crowd
                     CrowdAnimationSet set = catalog.Bodies[body];
                     var props = new MaterialPropertyBlock();
                     props.SetTexture(BoneTexId, set.BoneTexture);
+                    if (set.Albedo != null) props.SetTexture(BaseMapId, set.Albedo);
                     var anim = new Vector4[perBatch];
                     var glow = new Vector4[perBatch];
                     props.SetVectorArray(AnimId, anim);

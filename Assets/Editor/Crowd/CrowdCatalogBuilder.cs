@@ -32,7 +32,32 @@ namespace LastGround.EditorTools.Crowd
             }
             catalog.Bodies = bodies;
             catalog.Material = material;
+            catalog.TypeLooks = TypeLooks(bodies);
             EditorUtility.SetDirty(catalog);
+        }
+
+        /// <summary>
+        /// Zombie type → bodies by body id (walker_*, runner, tank, spitter, exploder; TypeIndex order), with size and a
+        /// faint constant glow for the Spitter (bile) and Exploder (pustules). Elite and status glows come on top at runtime.
+        /// </summary>
+        static CrowdTypeLook[] TypeLooks(CrowdAnimationSet[] bodies)
+        {
+            return new[]
+            {
+                Look("walker", bodies, "walker_", 1f, Color.black, 0f),
+                Look("runner", bodies, "runner", 1f, Color.black, 0f),
+                Look("tank", bodies, "tank", 1.25f, Color.black, 0f),
+                Look("spitter", bodies, "spitter", 1f, new Color(0.45f, 1f, 0.2f), 0.08f),
+                Look("exploder", bodies, "exploder", 1.1f, new Color(1f, 0.45f, 0.1f), 0.12f),
+            };
+        }
+
+        static CrowdTypeLook Look(string zombie, CrowdAnimationSet[] bodies, string prefix, float scale, Color glow, float strength)
+        {
+            var indices = new System.Collections.Generic.List<int>();
+            for (int i = 0; i < bodies.Length; i++)
+                if (bodies[i].Id.StartsWith(prefix, System.StringComparison.Ordinal)) indices.Add(i);
+            return new CrowdTypeLook { ZombieId = zombie, Bodies = indices.ToArray(), Scale = scale, Glow = glow, GlowStrength = strength };
         }
 
         /// <summary>Palette atlas: no mipmaps or compression artefacts between colour cells.</summary>

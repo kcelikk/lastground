@@ -103,7 +103,7 @@ namespace LastGround.UI.Run
             {
                 var elite = _catalog.Elite(a.Elite);
                 string modifier = elite != null ? _localization.Get(elite.DisplayNameKey) : string.Empty;
-                text = string.Format(System.Globalization.CultureInfo.InvariantCulture, _eliteSpawned, modifier.ToUpperInvariant(), name.ToUpperInvariant());
+                text = string.Format(System.Globalization.CultureInfo.InvariantCulture, _eliteSpawned, modifier, name);
             }
             else
             {

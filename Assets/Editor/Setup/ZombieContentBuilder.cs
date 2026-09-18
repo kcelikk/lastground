@@ -1,5 +1,4 @@
 using LastGround.Data.Combat;
-using LastGround.Data.Crowd;
 using LastGround.Data.Director;
 using LastGround.Data.Zombies;
 using UnityEditor;
@@ -83,32 +82,8 @@ namespace LastGround.EditorTools.Setup
                 };
                 d.EliteModifiers = elites;
             });
-            var zombies = new[] { walker, runner, tank, spitter, exploder };
-            EnsureTypeLooks(zombies);
-            return zombies;
+            return new[] { walker, runner, tank, spitter, exploder };
         }
-
-        /// <summary>
-        /// Placeholder looks per type on the Quaternius bodies (0 basic, 1 arm, 2 chubby, 3 ribcage) until the realistic
-        /// bodies are baked (docs/MIXAMO_DOWNLOAD.md). Written only when the catalog has no looks for every type yet.
-        /// </summary>
-        static void EnsureTypeLooks(ZombieDefinition[] zombies)
-        {
-            var catalog = AssetDatabase.LoadAssetAtPath<CrowdVisualCatalog>("Assets/Art/Crowd/CrowdCatalog.asset");
-            if (catalog == null || (catalog.TypeLooks != null && catalog.TypeLooks.Length >= zombies.Length)) return;
-            catalog.TypeLooks = new[]
-            {
-                Look(zombies[0], new[] { 0, 1, 3 }, 1f, Color.black, 0f),
-                Look(zombies[1], new[] { 3 }, 0.95f, Color.black, 0f),
-                Look(zombies[2], new[] { 2 }, 1.45f, Color.black, 0f),
-                Look(zombies[3], new[] { 1 }, 1f, new Color(0.45f, 1f, 0.2f), 0.25f),
-                Look(zombies[4], new[] { 2 }, 1.1f, new Color(1f, 0.45f, 0.1f), 0.3f),
-            };
-            EditorUtility.SetDirty(catalog);
-        }
-
-        static CrowdTypeLook Look(ZombieDefinition zombie, int[] bodies, float scale, Color glow, float strength) =>
-            new CrowdTypeLook { ZombieId = zombie.Id, Bodies = bodies, Scale = scale, Glow = glow, GlowStrength = strength };
 
         static ZombieDefinition Zombie(string id, byte typeIndex, ZombieBehaviour behaviour, System.Action<ZombieDefinition> init)
         {

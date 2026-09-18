@@ -132,7 +132,7 @@ Shader "LG/CrowdInstanced"
                 {
                     float3 toCamera = normalize(GetWorldSpaceViewDir(input.positionWS));
                     float edge = pow(1.0 - saturate(dot(normal, toCamera)), 2.0);
-                    color += input.glow.rgb * input.glow.a * (0.35 + edge * 1.5);
+                    color += input.glow.rgb * input.glow.a * (0.2 + edge * 0.9);
                 }
                 // Hit flash (TDD_01 §5.7): tint.a carries the per-instance flash amount.
                 color = lerp(color, half3(1.2, 1.0, 0.9), input.tint.a * 0.8);
