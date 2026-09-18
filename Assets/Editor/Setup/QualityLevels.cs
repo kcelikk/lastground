@@ -45,6 +45,8 @@ namespace LastGround.EditorTools.Setup
                 element.FindPropertyRelative("softParticles").boolValue = false;
                 element.FindPropertyRelative("lodBias").floatValue = 1f;
                 element.FindPropertyRelative("globalTextureMipmapLimit").intValue = 0;
+                // Only players and bosses use SkinnedMeshRenderer (crowds skin on the GPU); 4 bones keeps them clean.
+                element.FindPropertyRelative("skinWeights").intValue = (int)SkinWeights.FourBones;
             }
 
             settings.FindProperty("m_CurrentQuality").intValue = defaultIndex;

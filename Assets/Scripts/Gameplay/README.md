@@ -5,7 +5,7 @@ Player, Weapons, Combat, Zombies, AI, Horde, Boss, Map, Environment, Loot, Upgra
 
 | Klasör | İçerik |
 |---|---|
-| `Crowd/` | `CrowdState` (host SoA verisi), `CrowdReplica` (client interpolasyonu), `DummyCrowdSim` (M1 test sürüsü — M3'te ZombieWorld ile değişir), `ICrowdRenderSource` |
+| `Crowd/` | `CrowdState` (host SoA verisi + `Deaths` event kanalı), `CrowdReplica` (client interpolasyonu + anim durumu), `DummyCrowdSim` (M1 test sürüsü — M3'te ZombieWorld ile değişir), `BenchmarkCrowdDriver` (M2 render benchmark yükü), `ICrowdRenderSource`, `CrowdDeath` |
 | `Players/` | `PlayerStateTable` (4 oyuncu, uzaklar interpolasyonlu), `PlayerMotor` (yerel kinematik hareket) |
 
 **Değiştirirsen etkilenenler:** `CrowdState` alanları Networking replikasyonu ve Rendering tarafından okunur.

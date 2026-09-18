@@ -10,7 +10,10 @@ using LastGround.Core.Services;
 using LastGround.Localization;
 using LastGround.Networking.Discovery;
 using LastGround.Networking.MirrorLink;
+using LastGround.Data.Quality;
+using LastGround.Platform;
 using LastGround.Platform.Net;
+using LastGround.Rendering.Quality;
 using LastGround.Save;
 using LastGround.UI.Diagnostics;
 using UnityEngine;
@@ -133,15 +136,19 @@ namespace LastGround.App
 
         void ApplyQuality(SettingsData settings)
         {
-            if (settings.QualityLevel < 0 || settings.QualityLevel >= QualitySettings.names.Length)
+            QualityPresetDefinition[] presets = Resources.LoadAll<QualityPresetDefinition>("Quality");
+            System.Array.Sort(presets, (a, b) => a.QualityLevel.CompareTo(b.QualityLevel));
+            var quality = new QualityService(presets);
+            AppServices.Register(quality);
+
+            if (settings.QualityLevel < 0 || settings.QualityLevel >= quality.LevelCount)
             {
-                settings.QualityLevel = QualityDefaults.FromSystemMemory(SystemInfo.systemMemorySize);
+                settings.QualityLevel = DeviceTierDetector.Detect();
+                Log.Info(LogCategory.App, "Detected tier " + settings.QualityLevel + " (" + SystemInfo.graphicsDeviceName +
+                    ", " + SystemInfo.systemMemorySize + " MB)");
                 _save.RequestSave();
             }
-
-            QualitySettings.SetQualityLevel(settings.QualityLevel, true);
-            QualitySettings.vSyncCount = 0;
-            Application.targetFrameRate = QualityDefaults.TargetFps(settings.QualityLevel, settings.TargetFps);
+            quality.Apply(settings.QualityLevel, settings.TargetFps);
         }
     }
 }

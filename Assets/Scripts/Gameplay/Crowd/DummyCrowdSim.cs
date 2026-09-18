@@ -65,7 +65,7 @@ namespace LastGround.Gameplay.Crowd
                 int slot = _rng.Range(0, _state.Capacity);
                 if (_state.AliveSlots[slot])
                 {
-                    _state.Despawn(slot);
+                    _state.Despawn(slot, died: true);
                     SpawnRandom();
                 }
             }
