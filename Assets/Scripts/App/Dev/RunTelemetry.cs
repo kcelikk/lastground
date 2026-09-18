@@ -4,6 +4,7 @@ using LastGround.Core.Net.Protocol;
 using LastGround.Core.Net.Session;
 using LastGround.Gameplay.Combat;
 using LastGround.Gameplay.Crowd;
+using LastGround.Gameplay.Director;
 using LastGround.Gameplay.Players;
 using LastGround.Gameplay.Zombies;
 using UnityEngine;
@@ -25,6 +26,8 @@ namespace LastGround.App.Dev
         CombatAuthority _authority;
         PlayerHealthSystem _health;
         PlayerStateTable _players;
+        RunStatus _status;
+        HordeDirector _director;
         float _simMsSum;
         float _simMsMax;
         int _simSamples;
@@ -47,6 +50,13 @@ namespace LastGround.App.Dev
             _weapon = weapon;
             _authority = authority;
             _health = health;
+        }
+
+        /// <summary>Adds run status (all devices) and director internals (host) to the log line.</summary>
+        public void BindDirector(RunStatus status, HordeDirector director)
+        {
+            _status = status;
+            _director = director;
         }
 
         void Update()
@@ -97,6 +107,17 @@ namespace LastGround.App.Dev
             }
             if (_health != null) line += string.Format(CultureInfo.InvariantCulture, " playerDeaths={0}", _health.Deaths);
             if (_world != null) line += string.Format(CultureInfo.InvariantCulture, " zAttacks={0} zDodged={1}", _world.AttacksLanded, _world.AttacksDodged);
+            if (_status != null)
+            {
+                line += string.Format(CultureInfo.InvariantCulture, " run={0:0} horde={1} threat={2}", _status.RunSeconds, _status.Horde, _status.Threat);
+                if (_director != null)
+                {
+                    line += string.Format(CultureInfo.InvariantCulture,
+                        " intensity={0:0.00} state={1} alive={2} maxAlive={3} rate={4:0.0} spawned={5} patterns={6} governor={7:0.00} spawnMiss={8}",
+                        _status.Intensity, _status.State, _status.Alive, _status.MaxAlive, _status.SpawnRate, _director.Spawned,
+                        _director.Patterns, _director.Governor.Multiplier, _director.SpawnFailures);
+                }
+            }
             return line;
         }
     }

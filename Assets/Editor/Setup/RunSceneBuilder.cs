@@ -27,6 +27,7 @@ namespace LastGround.EditorTools.Setup
     {
         const string MaterialDir = "Assets/Art/Materials";
         const float GroundSize = 140f;
+        static RunStatusHud _statusHud;
 
         public static void Build(string path)
         {
@@ -93,6 +94,10 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_input", input);
             UiFactory.Assign(installer, "_hud", hud);
             UiFactory.Assign(installer, "_combatHud", combatHud);
+            UiFactory.Assign(installer, "_statusHud", _statusHud);
+            UiFactory.Assign(installer, "_directorProfile", AssetDatabase.LoadAssetAtPath<LastGround.Data.Director.DirectorProfile>(CombatContentBuilder.DirectorPath));
+            UiFactory.Assign(installer, "_threatCurve", AssetDatabase.LoadAssetAtPath<LastGround.Data.Director.ThreatCurveDefinition>(CombatContentBuilder.ThreatPath));
+            UiFactory.Assign(installer, "_playerScaling", AssetDatabase.LoadAssetAtPath<LastGround.Data.Director.PlayerCountScalingProfile>(CombatContentBuilder.ScalingPath));
 
             EditorSceneManager.SaveScene(scene, path);
         }
@@ -116,8 +121,17 @@ namespace LastGround.EditorTools.Setup
             RectTransform safe = UiFactory.Panel("SafeArea", canvasGo.transform);
             safe.gameObject.AddComponent<SafeAreaFitter>();
 
-            TMP_Text status = UiFactory.Label("Status", safe, null, 34, FontStyles.Bold, Color.white);
-            UiFactory.Place(status.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(1000f, 50f));
+            // SURVIVAL · HORDE · THREAT line on top, role/player count small below it.
+            TMP_Text runLine = UiFactory.Label("RunStatus", safe, null, 34, FontStyles.Bold, Color.white);
+            UiFactory.Place(runLine.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -22f), new Vector2(1100f, 50f));
+            runLine.alignment = TextAlignmentOptions.Top;
+            runLine.richText = true;
+            TMP_Text threatBanner = UiFactory.Label("ThreatBanner", safe, null, 64, FontStyles.Bold, new Color(1f, 0.35f, 0.25f));
+            UiFactory.Place(threatBanner.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -170f), new Vector2(1200f, 140f));
+            threatBanner.alignment = TextAlignmentOptions.Top;
+            threatBanner.richText = true;
+            TMP_Text status = UiFactory.Label("Status", safe, null, 22, FontStyles.Normal, UiFactory.Muted);
+            UiFactory.Place(status.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -70f), new Vector2(1000f, 30f));
             status.alignment = TextAlignmentOptions.Top;
 
             (Image healthFill, TMP_Text healthLabel) = BuildHealthBar(safe);
@@ -153,6 +167,10 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(hud, "_crowdLabel", crowd);
             UiFactory.Assign(hud, "_leaveButton", leave);
 
+            var runStatus = canvasGo.AddComponent<RunStatusHud>();
+            UiFactory.Assign(runStatus, "_line", runLine);
+            UiFactory.Assign(runStatus, "_banner", threatBanner);
+
             var combat = canvasGo.AddComponent<CombatHud>();
             UiFactory.Assign(combat, "_healthFill", healthFill);
             UiFactory.Assign(combat, "_healthLabel", healthLabel);
@@ -163,6 +181,7 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(combat, "_deathLabel", deathLabel);
             UiFactory.Assign(combat, "_autoFireButton", autoFire);
             UiFactory.Assign(combat, "_autoFireLabel", autoFireLabel);
+            _statusHud = runStatus;
             return (input, hud, combat);
         }
 

@@ -7,6 +7,7 @@ using LastGround.Core.Net.Session;
 using LastGround.Core.Services;
 using LastGround.Core.Tick;
 using LastGround.Data.Crowd;
+using LastGround.Data.Director;
 using LastGround.Data.Map;
 using LastGround.Data.Players;
 using LastGround.Data.Presentation;
@@ -15,6 +16,7 @@ using LastGround.Data.Weapons;
 using LastGround.Data.Zombies;
 using LastGround.Gameplay.Combat;
 using LastGround.Gameplay.Crowd;
+using LastGround.Gameplay.Director;
 using LastGround.Gameplay.Navigation;
 using LastGround.Gameplay.Players;
 using LastGround.Gameplay.Zombies;
@@ -39,7 +41,6 @@ namespace LastGround.App
     public sealed partial class RunInstaller : MonoBehaviour
     {
         const int CrowdCapacity = 512;
-        const int HordePopulation = 300;
         const float BenchmarkWorldSize = 140f;
 
         [SerializeField] Camera _camera;
@@ -50,6 +51,9 @@ namespace LastGround.App
         [SerializeField] ZombieDefinition _walker;
         [SerializeField] PlayerDefinition _playerDefinition;
         [SerializeField] CameraProfile _cameraProfile;
+        [SerializeField] DirectorProfile _directorProfile;
+        [SerializeField] ThreatCurveDefinition _threatCurve;
+        [SerializeField] PlayerCountScalingProfile _playerScaling;
         [SerializeField] Material _bloodParticleMaterial;
         [SerializeField] Material _bloodSplatMaterial;
         [SerializeField] Material _tracerMaterial;
@@ -58,6 +62,7 @@ namespace LastGround.App
         [SerializeField] TouchTwinStickInput _input;
         [SerializeField] RunHud _hud;
         [SerializeField] CombatHud _combatHud;
+        [SerializeField] RunStatusHud _statusHud;
 
         readonly List<System.IDisposable> _disposables = new List<System.IDisposable>();
         SessionService _service;
@@ -81,6 +86,8 @@ namespace LastGround.App
             public CombatAuthority Authority;
             public PlayerHealthSystem Health;
             public BenchmarkCrowdDriver Benchmark;
+            public RunStatus Status;
+            public HordeDirector Director;
         }
 
         void Start()
@@ -101,6 +108,7 @@ namespace LastGround.App
                 Nav = benchmark || _navGrid == null ? NavGrid.Open((int)BenchmarkWorldSize) : NavGrid.FromAsset(_navGrid),
                 Players = new PlayerStateTable { Local = session.LocalPlayer },
                 Shots = new EventChannel<ShotFired>(128),
+                Status = new RunStatus(),
             };
             _disposables.Add(parts.Nav);
             float worldSize = parts.Nav.Width * parts.Nav.CellSize;
@@ -110,6 +118,8 @@ namespace LastGround.App
             _disposables.Add(sync);
             var vitals = new PlayerVitalsSync(session, players);
             _disposables.Add(vitals);
+            var directorInfo = new DirectorInfoSync(session, parts.Status);
+            _disposables.Add(directorInfo);
 
             IHitClaimSink claims = session.IsAuthority ? BuildHost(ref parts, loop, benchmark, seed) : BuildClient(ref parts, loop);
 
@@ -139,9 +149,11 @@ namespace LastGround.App
             }
             loop.Register(TickPhase.NetSend, sync);
             loop.Register(TickPhase.NetSend, vitals);
+            loop.Register(session.IsAuthority ? TickPhase.NetSend : TickPhase.Presentation, Gate(directorInfo));
             loop.Register(TickPhase.Presentation, new TickAction(_ => sync.Interpolate()));
 
             BuildPresentation(parts, loop);
+            _statusHud.Bind(parts.Status);
             _combatHud.Bind(players, parts.Weapon, parts.Aim, _playerDefinition.MaxHealth, _playerDefinition.RespawnDelay, mode =>
             {
                 save.Settings.ControlMode = (int)mode;
@@ -151,6 +163,8 @@ namespace LastGround.App
             var telemetry = gameObject.AddComponent<RunTelemetry>();
             telemetry.Bind(session, parts.Crowd, parts.World);
             telemetry.BindCombat(players, parts.Weapon, parts.Authority, parts.Health);
+            telemetry.BindDirector(parts.Status, parts.Director);
+            if (parts.Director != null) gameObject.AddComponent<DirectorLog>().Bind(parts.Status, parts.Director, _service.CurrentRun.Seed);
             if (parts.Benchmark != null)
             {
                 gameObject.AddComponent<PerfBenchmarkRunner>().Bind(parts.Benchmark, _crowdRenderer, AppServices.Get<QualityService>(),
@@ -184,8 +198,13 @@ namespace LastGround.App
             _disposables.Add(world);
             world.DamageSink = parts.Health;
             world.Respawns = parts.Health.Respawns;
-            var spawner = new TestHordeSpawner(world, parts.Players, seed) { Population = HordePopulation, KillsPerSecond = 0f };
-            loop.Register(TickPhase.Director, Gate(spawner));
+            var footprint = new CameraFootprint(_cameraProfile, 3f);
+            parts.Director = new HordeDirector(world, parts.Players, _directorProfile, _threatCurve, _playerScaling, footprint,
+                _playerDefinition.MaxHealth, parts.Status, seed);
+            parts.Director.Governor.TargetFrameSeconds = 1f / Mathf.Max(30, parts.Preset.TargetFps);
+            HordeDirector director = parts.Director;
+            loop.Register(TickPhase.Director, Gate(director));
+            loop.Register(TickPhase.Presentation, new TickAction(_ => director.Governor.Report(Time.unscaledDeltaTime)));
             loop.Register(TickPhase.ZombieSim, Gate(world));
 
             parts.Authority = new CombatAuthority(world, parts.Players, parts.Nav, WeaponTable(), seed);

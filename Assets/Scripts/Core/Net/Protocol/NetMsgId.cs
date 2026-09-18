@@ -33,6 +33,9 @@ namespace LastGround.Core.Net.Protocol
         public const byte HitClaimBatch = 40;
         public const byte PlayerVitals = 41;
 
+        // Director / run status (50–59)
+        public const byte DirectorInfo = 50;
+
         public const int Count = 256;
     }
 }

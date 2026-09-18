@@ -1,3 +1,4 @@
+using LastGround.Data.Director;
 using LastGround.Data.Players;
 using LastGround.Data.Presentation;
 using LastGround.Data.Weapons;
@@ -8,8 +9,8 @@ using UnityEngine;
 namespace LastGround.EditorTools.Setup
 {
     /// <summary>
-    /// Creates the M4 combat data assets under Assets/ScriptableObjects (TDD_02 §26): assault rifle (TDD_01 §6.4),
-    /// walker, base player, top-down camera. Only missing assets are created; existing ones keep hand-tuned values.
+    /// Creates the combat and director data assets under Assets/ScriptableObjects (TDD_02 §26): assault rifle
+    /// (TDD_01 §6.4), walker, base player, top-down camera, director profile, threat curve, player-count scaling. Only missing assets are created; existing ones keep hand-tuned values.
     /// </summary>
     static class CombatContentBuilder
     {
@@ -18,6 +19,9 @@ namespace LastGround.EditorTools.Setup
         public const string WalkerPath = Root + "/Zombies/ZMB_Walker.asset";
         public const string PlayerPath = Root + "/Players/PLR_Base.asset";
         public const string CameraPath = Root + "/Presentation/CAM_TopDown.asset";
+        public const string DirectorPath = Root + "/Director/DIR_Default.asset";
+        public const string ThreatPath = Root + "/Director/DIR_ThreatCurve.asset";
+        public const string ScalingPath = Root + "/Director/DIR_PlayerCountScaling.asset";
 
         public static void Build()
         {
@@ -30,6 +34,9 @@ namespace LastGround.EditorTools.Setup
             Ensure<ZombieDefinition>(WalkerPath, z => z.Id = "walker");
             Ensure<PlayerDefinition>(PlayerPath, null);
             Ensure<CameraProfile>(CameraPath, null);
+            Ensure<DirectorProfile>(DirectorPath, null);
+            Ensure<ThreatCurveDefinition>(ThreatPath, null);
+            Ensure<PlayerCountScalingProfile>(ScalingPath, null);
         }
 
         static void Ensure<T>(string path, System.Action<T> init) where T : ScriptableObject

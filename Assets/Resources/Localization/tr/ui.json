@@ -45,5 +45,14 @@
   "hud.down": "YERE DÜŞTÜN — {0} SN SONRA KALKIYORSUN",
   "hud.auto_fire_on": "OTOMATİK ATEŞ: AÇIK",
   "hud.auto_fire_off": "OTOMATİK ATEŞ: KAPALI",
-  "weapon.assault_rifle": "PİYADE TÜFEĞİ"
+  "weapon.assault_rifle": "PİYADE TÜFEĞİ",
+  "hud.survival": "HAYATTA KALMA",
+  "hud.horde": "SÜRÜ",
+  "hud.threat": "TEHDİT",
+  "hud.horde.calm": "SAKİN",
+  "hud.horde.low": "DÜŞÜK",
+  "hud.horde.medium": "ORTA",
+  "hud.horde.high": "YÜKSEK",
+  "hud.horde.extreme": "AŞIRI",
+  "hud.threat_up": "Sürü güçleniyor"
 }

@@ -45,5 +45,14 @@
   "hud.down": "DOWN — BACK IN {0}",
   "hud.auto_fire_on": "AUTO FIRE: ON",
   "hud.auto_fire_off": "AUTO FIRE: OFF",
-  "weapon.assault_rifle": "ASSAULT RIFLE"
+  "weapon.assault_rifle": "ASSAULT RIFLE",
+  "hud.survival": "SURVIVAL",
+  "hud.horde": "HORDE",
+  "hud.threat": "THREAT",
+  "hud.horde.calm": "CALM",
+  "hud.horde.low": "LOW",
+  "hud.horde.medium": "MEDIUM",
+  "hud.horde.high": "HIGH",
+  "hud.horde.extreme": "EXTREME",
+  "hud.threat_up": "The horde grows stronger"
 }
