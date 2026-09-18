@@ -8,10 +8,7 @@
 > A1 (işletim sistemi) cevaplandı → **Ubuntu 26.04 LTS**, Unity 6.3 LTS ≥ 6000.3.13f1 şartıyla. Bkz. `DECISIONS.md` D-012.
 > A2 (kurulum listesi), A3 (git kimliği), A4 (SSH key) cevaplandı → `DECISIONS.md` D-015.
 > A5 (repo düzeni), A6 (branch düzeni) cevaplandı → `DECISIONS.md` D-016.
-
-| # | Soru | Neden gerekli | Durum |
-|---|---|---|---|
-| A7 | **M0'a başlama onayı** | Kod yazımı bununla başlar | ⏳ Bekliyor |
+> A7 (M0 başlama onayı) verildi (2026-09-18). M0 raporu: `docs/reports/M0_REPORT.md`. **A bölümünde açık soru kalmadı.**
 
 ## B. Donanım / test
 
@@ -29,7 +26,7 @@
 | C1 | Google Play geliştirici hesabın var mı? (Yeni kişisel hesaplarda: production'a çıkmadan önce ≥12 testçi, 14 gün kapalı test) | Yayın takvimi | ⏳ Bilgi |
 | C2 | Test dağıtımı **Play Internal Testing** üzerinden olsun mu (önerim), yoksa VPS'ten APK indirme sayfası mı? | Dağıtım akışı | ⏳ Bekliyor |
 | C3 | VPS'in donanımı (CPU/RAM) nedir? Yalnızca gizlilik politikası + tanıtım sayfası mı olacak, ileride CI de mi? | VPS rolü | ⏳ Bilgi |
-| C4 | Oyun adı "Last Ground" ile Play'de yayınlanacak mı? (İsim çakışması kontrolü M14'te yapılır) | Mağaza | ⏳ Bilgi |
+| C4 | Oyun adı "Last Ground" ile Play'de yayınlanacak mı? (İsim çakışması kontrolü M14'te yapılır). **Paket adı** şu an geçici: `com.asgardgame.lastground`, şirket adı `AsgardGame` — ilk Play yüklemesinden sonra paket adı değiştirilemez | Mağaza | ⏳ Bilgi |
 
 ## D. İçerik / tasarım (ilgili milestone'dan önce)
 
