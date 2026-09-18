@@ -12,6 +12,8 @@
 İncelenen dosyalar:
 - `docs/reference/lastground-img-1.png` — tek kare, "massive horde" tepe anı (1536×1024).
 - `docs/reference/lastground-img.png` — 10 panelli akış board'u: Ana Menü, Oyun İçi, Lobby, Level Up, Envanter, Harita, Boss, Revive, Extraction, Ayarlar.
+- `docs/reference/lastground-board-2.png` — 10 panel (EN): ana menü, oyun içi, 4 kişilik co-op, level up, envanter/karakter (loadout), harita (Industrial Zone), silah seçimi, boss (The Brute), revive (downed), extraction. *(2026-09-18, §0.12)*
+- `docs/reference/lastground-board-3.png` — 10 panel (TR): ana menü, karakter/silah seçimi, local co-op lobi, erken oyun, yoğun horde, level up, boss (Mutant Behemoth), harita/görevler, envanter, extraction. *(2026-09-18, §0.12)*
 
 ### 0.1 Kamera
 
@@ -94,6 +96,7 @@ Genel: askeri/endüstriyel, koyu yarı saydam paneller, ince kenarlıklar, dar (
 Board'daki UI **Türkçe** → lokalizasyon (TR/EN) ilk günden string key tabanlı olmalı. Font Türkçe glifleri (ş, ğ, ı, İ) desteklemeli (örn. OFL lisanslı condensed bir font).
 
 ### 0.10 Referans ↔ Brief Çelişkileri (karar önerileri)
+> 2026-09-18: board-2 ve board-3'te de "WAVE / ZOMBIES REMAINING" ve envanterde "YÜKSELT" görünüyor. Karar değişmedi: **D-003 ve D-005 geçerli.** Görev sayaçları eklendi (**D-019**, §0.12, §12.4).
 
 | Referansta | Brief | Öneri |
 |---|---|---|
@@ -127,6 +130,26 @@ Board'daki UI **Türkçe** → lokalizasyon (TR/EN) ilk günden string key taban
 | Boss detayı | ✔ tek skinned mesh, poly bütçesi ona ayrılır | | |
 | Helikopter extraction | ✔ scripted animasyon | | Rotor blur kartı |
 | Zemin çatlak/çizgileri | | ✔ Trim sheet + detail texture + vertex color | Decal yerine mesh'e bake |
+
+### 0.12 Ek board'lardan (board-2, board-3) öğrenilenler
+| Konu | Referans | Uygulama |
+|---|---|---|
+| Takım renkleri | P1 mavi, P2 yeşil, P3 sarı, P4 mor halka + isim + isim etiketi | `PlayerViews` slot renkleri aynı sırada (M1'den beri) |
+| Takım listesi | Sol üstte P1–P4 satırları: isim + HP çubuğu | §14.3 takım listesi, M5 |
+| HUD düzeni | Sol üst portre + HP + LV, sağ üst radar, sol alt joystick, sağ alt nişan/ateş + bomba + yetenek, alt sağ mermi `22/120` | §3, M4 |
+| **Görev paneli** | "Bölgeyi temizle — Zombileri öldür: 12/50", "Aktif görev: Jeneratörü çalıştır 0/1" | **D-019**, §12.4 (M5/M7) |
+| Harita işaretleri | Main objective, side mission, supply drop, safe house, boss area, extraction; bölge adı ("Region 1 — Industrial Zone") | §11, §12, M7 |
+| Loadout | Primary / Secondary / Grenade / **Special (Combat Drone)** | §7.6 yetenekler, §14.7 loadout (M9) |
+| Karakter ekranı | Health, Armor, Move Speed, Crit Chance/Damage, Pickup Radius | Yalnızca **gösterim**: tüm karakterler aynı taban stat (D-005); perk takasları (±%10) gösterilir |
+| Revive | "DOWNED — Waiting for revive 18.4s" + halka | §14.2 (bleedout 25 s) |
+| Extraction | "EXTRACTION 02:17 — Get to the helicopter!" | §2.2, §12.2 |
+| Co-op lobi | Oyun Oluştur / Oyun Ara / IP ile Katıl + bulunan oyunlar (isim, x/4, ping, KATIL) | M1 `LocalCoopScreen` ile aynı yapı (görsel cila M11) |
+| Çelişkiler | WAVE/ZOMBIES REMAINING, "YÜKSELT" | Uygulanmaz (D-003, D-005) |
+
+### 0.13 Nihai sanat yönü (tüm referanslar)
+- **Zombiler:** insan oranlarında, gerçekçi, soluk/çürümüş ten, yırtık kirli kıyafet, kanlı; siluetler birbirine yakın — sürü tek bir koyu kütle olarak okunur. Renkli/karikatür stil **hedef değildir**; M2'deki Quaternius modelleri yalnızca pipeline/benchmark placeholder'ıdır (D-009, D-018).
+- **Palet:** koyu kahve-kırmızı-siyah zemin, sodyum turuncusu lamba havuzları ve ateş, soğuk mavi vurgular (loot, extraction ışığı). Kan zemini kaplar.
+- **Kahramanlar:** taktik asker siluetleri (kask, yelek, maske); takım halkası rengi ile ayrışır.
 
 ---
 
@@ -550,7 +573,8 @@ SURVIVAL 08:42  ·  HORDE: HIGH  ·  THREAT III
 - THREAT seviyesi atladığında 2 s'lik kısa banner: "THREAT IV — Tanks detected" (yeni zombi tipini haber verir).
 - Mini-map'in etrafındaki 12 sektörlük halka, sürünün **yönünü** gösterir; HORDE metni **şiddetini**.
 - Extraction penceresi açıkken satırın altında ikinci satır: `EXTRACTION 01:12 → GAS STATION`.
-- Kasıtlı olarak **sayı yok**: ne "kalan zombi" ne "dalga no". Oyuncu tehlikeyi sayıyla değil, hisle ve seviye adıyla okur.
+- Kasıtlı olarak **global sayı yok**: ne "kalan zombi" ne "dalga no". Oyuncu tehlikeyi sayıyla değil, hisle ve seviye adıyla okur.
+- **Görev paneli (D-019):** sol üstte, portrenin altında aktif görevler: `Bölgeyi temizle — Zombileri öldür: 12/50`, `Jeneratörü çalıştır: 0/1`. Sayaçlar yalnızca **görev kapsamlıdır** (bölge/event hedefi); sürü büyüklüğünü veya "kalan zombi"yi göstermez. Detay §12.4.
 
 ---
 
@@ -635,6 +659,22 @@ Brief'teki sıra korunur ama döngüler eklenir: geri dönmek zorunda kalmadan e
 | Elite Hunt | İşaretli elite haritada dolaşır | Legendary upgrade teklifi |
 | Boss Event | Arenaya çağrı (Threat IV'te ilk, sonra modifier'larla tekrar) | Boss loot + extraction penceresi açılır |
 | Extraction Window | Periyodik: rastgele bölgede LZ 90 s açık; 45–60 s savun → extract. Kaçırılırsa run devam eder (§2.2) | Ödüller kasaya + Threat bonusu |
+
+### 12.4 Görevler ve görev sayaçları (D-019)
+Görevler event sisteminin oyuncuya görünen yüzüdür; hareket ve risk/ödül kararı üretir, dalga hissi üretmez.
+- **Tipler (başlangıç):**
+  | Görev | Sayaç | Tamamlanınca |
+  |---|---|---|
+  | Bölgeyi temizle | Bölge içindeki takım kill'i `12/50` (hedef, oyuncu sayısı ve Threat ile ölçeklenir) | Bölge güvenli: kısa nefes (director Relax), loot sandığı |
+  | Jeneratörü çalıştır | Etkileşim/yakıt `0/1` veya `0/3` | Işıklar + turret'ler (§12.2 Power Generator) |
+  | Hayatta kal / savun | Süre `01:12` | Rescue Signal / Extraction |
+  | Elite avı | `0/1` | Legendary teklif |
+  | Supply topla | Sandık `0/2` | Instanced loot |
+- **Kural:** sayaç hedefi sabit ve görev başında bellidir; director spawn'ı sayaçtan bağımsız sürer (görev bitince zombiler durmaz). Aynı anda en fazla 1 ana + 1 yan görev.
+- **Veri:** `ObjectiveDefinition` SO (id, titleKey, formatKey, tip, hedef eğrisi, bölge tag'leri, ödül tablosu); `MapEventDefinition` 0..n objective içerir.
+- **Replikasyon:** `ObjectiveState{instanceId, defId, current(ushort), target(ushort), state}` değişince reliable (sayaç değişimi ≤ 4 Hz birleştirilir). Kill sayacı host'ta `ZombieKilledEvent` + bölge testiyle artar (kill sahipliği önemsiz, D-002).
+- **UI:** `HudObjectivePanel` — en fazla 2 satır, ikon + lokalize başlık + `SetText("{0}/{1}")`; tamamlanınca 2 s vurgu. Harita ekranında görev işaretleri (§11).
+- **Milestone:** altyapı + "Bölgeyi temizle" M5; diğer görevler event'lerle M7.
 
 ### 12.3 Çevresel etkileşimler (brief §23)
 Sahneye yerleştirilen etkileşimliler NetworkObject **değildir**; `InteractableRegistry` editörde hiyerarşi yolundan kararlı `ushort` id'ler üretir. Durum değişimleri küçük reliable mesajlarla gider. Sadece runtime'da doğan deployable'lar (turret) NetworkObject olabilir.

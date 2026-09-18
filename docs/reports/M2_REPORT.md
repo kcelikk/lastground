@@ -1,6 +1,6 @@
 # M2 Raporu — Zombie Rendering Benchmark
 
-- **Tarih:** 2026-09-18 · **Branch:** `m2-rendering` · **Unity:** 6000.3.24f1 · **Durum:** APPROVE bekliyor
+- **Tarih:** 2026-09-18 · **Branch:** `m2-rendering` · **Unity:** 6000.3.24f1 · **Durum:** ✅ Onaylandı (2026-09-18, "devam et"), `main`e merge edildi
 - **Cihazlar:** OnePlus 5T (SD835 / Adreno 540, 5.7 GB, 2160×1080, Android 10) = LOW · Redmi Pad Pro (SD 7s Gen 2 / Adreno 710, 7.7 GB, 2560×1600, Android 16) = MID. HIGH cihaz yok.
 
 ## Çıkış kriterleri (TDD_03 §36 M2)
