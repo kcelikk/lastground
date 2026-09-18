@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0473e62ded2303b9a3b1ec5b7ca98d8, type: 3}
+  m_Name: ZMB_Runner
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Zombies.ZombieDefinition
+  Id: runner
+  DisplayNameKey: zombie.runner
+  TypeIndex: 1
+  Behaviour: 1
+  MaxHealth: 30
+  Xp: 2
+  CoinChance: 0.4
+  CoinValue: 1
+  MinSpeed: 3.4
+  MaxSpeed: 4
+  AttackDamage: 4
+  AttackWindup: 0.35
+  AttackCooldown: 1.2
+  AttackReachGrace: 0.35
+  KnockbackScale: 1
+  Mass: 1
+  Radius: 0.4
+  LungeRange: {x: 4, y: 6}
+  LungeSpeed: 9
+  LungeDuration: 0.45
+  LungeCooldown: 4
+  PreferredRange: {x: 8, y: 12}
+  StrafeSpeed: 1.2
+  Projectile: {fileID: 0}
+  RangedWindup: 0.6
+  RangedCooldown: 3.5
+  SprintRange: 6
+  SprintMultiplier: 1.9
+  FuseRange: 2.2
+  FuseSeconds: 0.8
+  Explosion:
+    Radius: 0
+    Damage: 0
+    EdgeDamageScale: 0
+    Knockback: 0
+    StunSeconds: 0
+    PlayerDamageScale: 0

@@ -1,18 +1,22 @@
+using LastGround.Data.Combat;
 using UnityEngine;
 
 namespace LastGround.Data.Zombies
 {
     /// <summary>
-    /// Balance of one zombie type (TDD_01 §8.5). M4 has only the Walker; Runner, Tank, Spitter and Exploder
-    /// arrive in M6. Read-only at runtime.
+    /// Balance of one zombie type (TDD_01 §8.5): Walker, Runner, Tank, Spitter, Exploder. Only the section matching
+    /// <see cref="Behaviour"/> is read. Read-only at runtime.
     /// </summary>
     [CreateAssetMenu(menuName = "LastGround/Zombies/Zombie")]
     public sealed class ZombieDefinition : ScriptableObject
     {
         public string Id = "walker";
+        public string DisplayNameKey = "zombie.walker";
 
-        /// <summary>Wire/type id (CrowdState.Type).</summary>
+        /// <summary>Wire/type id (CrowdState.Type) and index in the combat catalog.</summary>
         public byte TypeIndex;
+
+        public ZombieBehaviour Behaviour = ZombieBehaviour.Walker;
 
         public float MaxHealth = 45f;
         /// <summary>Team XP for a kill (TDD_01 §13.1: shared equally).</summary>
@@ -31,8 +35,38 @@ namespace LastGround.Data.Zombies
         /// <summary>Extra distance beyond the attack start range within which the hit still lands.</summary>
         public float AttackReachGrace = 0.35f;
 
-        [Header("Knockback")]
+        [Header("Body")]
         /// <summary>1 = full weapon knockback, 0 = immune (Tank).</summary>
         [Range(0f, 1f)] public float KnockbackScale = 1f;
+        /// <summary>Crowd separation weight: heavier bodies shove lighter ones aside (Tank).</summary>
+        public float Mass = 1f;
+        /// <summary>Collision radius in metres.</summary>
+        public float Radius = 0.45f;
+
+        [Header("Runner: lunge")]
+        /// <summary>Distance band in which the Runner leaps at its target.</summary>
+        public Vector2 LungeRange = new Vector2(4f, 6f);
+        public float LungeSpeed = 9f;
+        public float LungeDuration = 0.45f;
+        public float LungeCooldown = 4f;
+
+        [Header("Spitter: keep distance and spit")]
+        /// <summary>Distance band the Spitter holds from its target while strafing.</summary>
+        public Vector2 PreferredRange = new Vector2(8f, 12f);
+        public float StrafeSpeed = 1.2f;
+        public ProjectileDefinition Projectile;
+        public float RangedWindup = 0.6f;
+        public float RangedCooldown = 3.5f;
+
+        [Header("Exploder: sprint and blow up")]
+        public float SprintRange = 6f;
+        public float SprintMultiplier = 1.9f;
+        /// <summary>Distance to the target at which the fuse starts.</summary>
+        public float FuseRange = 2.2f;
+        public float FuseSeconds = 0.8f;
+        /// <summary>Blast when the fuse ends or when it is killed (TDD_01 §8.5: chains into barrels and other Exploders).</summary>
+        public ExplosionSpec Explosion;
+
+        public bool ExplodesOnDeath => Behaviour == ZombieBehaviour.Exploder && Explosion.IsValid;
     }
 }

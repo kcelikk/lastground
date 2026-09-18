@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f19391128f005087290c39d4848c6c10, type: 3}
+  m_Name: ELT_fast
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Combat.EliteModifierDefinition
+  Id: fast
+  DisplayNameKey: elite.fast
+  NetIndex: 2
+  HealthMultiplier: 3
+  SpeedMultiplier: 1.45
+  DamageTakenMultiplier: 1
+  KnockbackImmune: 0
+  AttackSlowMultiplier: 1
+  AttackSlowSeconds: 0
+  AttackDamageMultiplier: 1
+  DeathExplosion:
+    Radius: 0
+    Damage: 0
+    EdgeDamageScale: 0
+    Knockback: 0
+    StunSeconds: 0
+    PlayerDamageScale: 0
+  Glow: {r: 1, g: 0.9, b: 0.3, a: 1}

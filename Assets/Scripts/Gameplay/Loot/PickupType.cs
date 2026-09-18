@@ -5,5 +5,9 @@ namespace LastGround.Gameplay.Loot
     {
         Coin = 0,
         Medkit = 1,
+        Ammo = 2,
+        Grenade = 3,
+        /// <summary>Value = the weapon's NetIndex; taking it replaces the primary slot.</summary>
+        Weapon = 4,
     }
 }

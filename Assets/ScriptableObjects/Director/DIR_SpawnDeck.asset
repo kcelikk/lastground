@@ -1,0 +1,169 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e36685005fbd20c3fb8754580d8048b2, type: 3}
+  m_Name: DIR_SpawnDeck
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Director.SpawnDeckDefinition
+  Cards:
+  - Zombie: {fileID: 11400000, guid: d0e85b01567956e3a89fb7b709ffd9f9, type: 2}
+    Cost: 1
+    MinRunSeconds: 0
+    Weight:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 10
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 10
+        value: 10
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    MaxConcurrentPerPlayer: 0
+    EliteChance: 0.02
+  - Zombie: {fileID: 11400000, guid: 23cd04d42b2458dcfbfef6fb91819cd0, type: 2}
+    Cost: 2
+    MinRunSeconds: 180
+    Weight:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 2
+        inSlope: 0
+        outSlope: 0.2
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 10
+        value: 4
+        inSlope: 0.2
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    MaxConcurrentPerPlayer: 12
+    EliteChance: 0.05
+  - Zombie: {fileID: 11400000, guid: a0b194278226697ef9e659fb60180a74, type: 2}
+    Cost: 4
+    MinRunSeconds: 180
+    Weight:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0.1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 10
+        value: 2
+        inSlope: 0.1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    MaxConcurrentPerPlayer: 3
+    EliteChance: 0.08
+  - Zombie: {fileID: 11400000, guid: 2bcfb2b7815b1226ba043c4c98685eac, type: 2}
+    Cost: 3
+    MinRunSeconds: 420
+    Weight:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1.5
+        inSlope: 0
+        outSlope: 0.15
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 10
+        value: 3
+        inSlope: 0.15
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    MaxConcurrentPerPlayer: 4
+    EliteChance: 0.05
+  - Zombie: {fileID: 11400000, guid: 0cc3b1e809eb77238b1c53b700473b0e, type: 2}
+    Cost: 10
+    MinRunSeconds: 420
+    Weight:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.5
+        inSlope: 0
+        outSlope: 0.07000001
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 10
+        value: 1.2
+        inSlope: 0.07000001
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    MaxConcurrentPerPlayer: 1
+    EliteChance: 0.15
+  EliteModifiers:
+  - {fileID: 11400000, guid: 41be01b7de01eab719ca699cde88e28a, type: 2}
+  - {fileID: 11400000, guid: 1f16484078e3af24e8ed4c0cc5213e7c, type: 2}
+  - {fileID: 11400000, guid: 705c4b98e156c850ea7f3b494a1d5925, type: 2}
+  - {fileID: 11400000, guid: 0cca6998e8614f954a151020eebda2f7, type: 2}
+  EliteMinRunSeconds: 180
+  EliteMinInterval: 40
+  MaxElitesBase: 1
+  MaxElitesPerPlayer: 1

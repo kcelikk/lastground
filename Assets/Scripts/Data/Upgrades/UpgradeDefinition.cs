@@ -3,8 +3,8 @@ using UnityEngine;
 namespace LastGround.Data.Upgrades
 {
     /// <summary>
-    /// A temporary run upgrade (TDD_01 §7.2, D-005: reset when the run ends). M5 upgrades each change one stat by a
-    /// value that depends on the rarity rolled for the offer. Weapon modifiers, abilities and on-hit effects join in M6.
+    /// A temporary run upgrade (TDD_01 §7.2, D-005: reset when the run ends). Each upgrade changes one stat by a value
+    /// that depends on the rarity rolled for the offer; on-hit status effects (burn, slow, stun) are stats too.
     /// </summary>
     [CreateAssetMenu(menuName = "LastGround/Upgrades/Upgrade")]
     public sealed class UpgradeDefinition : ScriptableObject
