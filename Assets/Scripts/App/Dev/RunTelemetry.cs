@@ -125,8 +125,8 @@ namespace LastGround.App.Dev
             if (_health != null) line += string.Format(CultureInfo.InvariantCulture, " downs={0} playerDeaths={1} revives={2}", _health.Downs, _health.Deaths, _health.Revives);
             if (_world != null) line += string.Format(CultureInfo.InvariantCulture, " zAttacks={0} zDodged={1}", _world.AttacksLanded, _world.AttacksDodged);
             if (_xp != null)
-                line += string.Format(CultureInfo.InvariantCulture, " level={0} xp={1}/{2} picks={3}", _xp.Level, _xp.Xp, _xp.XpToNext,
-                    _builds.Of(me).Picks);
+                line += string.Format(CultureInfo.InvariantCulture, " level={0} xp={1}/{2} picks={3} tapped={4} autoPicked={5}", _xp.Level,
+                    _xp.Xp, _xp.XpToNext, _builds.Of(me).Picks, LastGround.UI.Run.LevelUpPanel.TappedPicks, LastGround.UI.Run.LevelUpPanel.AutoPicks);
             if (_wallet != null) line += string.Format(CultureInfo.InvariantCulture, " coins={0}", _wallet.Coins);
             if (_registry != null)
                 line += string.Format(CultureInfo.InvariantCulture, " drops={0} pickups={1} pickupRejects={2}", _registry.Dropped, _registry.Claimed, _registry.Rejected);

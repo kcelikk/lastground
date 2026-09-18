@@ -43,6 +43,10 @@ namespace LastGround.UI.Run
         public static bool DevAutoPick;
 #endif
 
+        /// <summary>Picks made by tapping a card vs by the dev auto-pick (telemetry).</summary>
+        public static int TappedPicks;
+        public static int AutoPicks;
+
         /// <summary>True while the panel is open in a solo run (the installer pauses the simulation).</summary>
         public bool WantsPause => _isSolo != null && LevelUpPause.ShouldPause(_isSolo() ? 1 : 2, _panel.activeSelf, PauseInSolo);
 
@@ -61,7 +65,11 @@ namespace LastGround.UI.Run
             for (int i = 0; i < _cards.Length; i++)
             {
                 int choice = i;
-                _cards[i].onClick.AddListener(() => Pick(choice));
+                _cards[i].onClick.AddListener(() =>
+                {
+                    TappedPicks++;
+                    Pick(choice);
+                });
             }
             _minimize.onClick.AddListener(() => _minimized = true);
             _badge.onClick.AddListener(() => _minimized = false);
@@ -94,7 +102,11 @@ namespace LastGround.UI.Run
             if (DevAutoPick)
             {
                 _autoPickTimer += Time.unscaledDeltaTime;
-                if (_autoPickTimer > 1f) Pick(RarestChoice(_offers.Current));
+                if (_autoPickTimer > 1f)
+                {
+                    AutoPicks++;
+                    Pick(RarestChoice(_offers.Current));
+                }
             }
 #endif
         }
