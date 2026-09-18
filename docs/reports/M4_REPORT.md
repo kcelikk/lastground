@@ -48,7 +48,7 @@ Yok. Sahne ve asset'ler `RebuildScenesBatch` ile üretildi.
 Yok. Balance değerleri `Assets/ScriptableObjects/*` asset'lerinde; Inspector'dan ayarlanabilir (`CombatContentBuilder` mevcut değerlere dokunmaz).
 
 ## ANDROID BUILD STEPS
-`BuildScripts.BuildAndroidDevelopment`, artımlı 1–3 dk, APK 66.1 MB. Unity build'i adb sunucusunu yeniden başlatır → Redmi için `adb connect 192.168.1.7:36807`.
+`BuildScripts.BuildAndroidDevelopment`, artımlı 1–3 dk, APK 66.1 MB. Unity build'i adb sunucusunu yeniden başlatır → Redmi için `adb connect <ip>:<port>` (Kablosuz hata ayıklama ekranından; bu testte 192.168.1.14:33733).
 
 ## TEST RESULTS
 EditMode **101 / 101** (M3'e göre +22). Öne çıkanlar: loopback'te client ateş eder → host doğrular → 5 zombi ölür → client 5 ceset görür (15/15 claim kabul, 0 red); savaş döngüsü 90 tick'te **0 B** ayırır; hile benzeri atış seli (40 atış bir anda) ≤ 6 kabul; duvar arkası, eski nesil, uzak konum reddedilir; windup'tan kaçılır; kalkma zombileri iter. PlayMode testi yok.
