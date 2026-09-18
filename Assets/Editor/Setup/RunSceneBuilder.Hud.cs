@@ -190,7 +190,7 @@ namespace LastGround.EditorTools.Setup
         {
             RectTransform panel = UiFactory.Panel("Results", canvas);
             var background = panel.gameObject.AddComponent<Image>();
-            background.color = new Color(0.02f, 0.02f, 0.03f, 0.88f);
+            background.color = new Color(0.02f, 0.02f, 0.03f, 0.94f);
             TMP_Text title = UiFactory.Label("Title", panel, null, 84, FontStyles.Bold, new Color(1f, 0.35f, 0.3f));
             UiFactory.Place(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(1200f, 110f));
             title.alignment = TextAlignmentOptions.Center;

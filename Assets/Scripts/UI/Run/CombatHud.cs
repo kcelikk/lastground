@@ -4,6 +4,7 @@ using LastGround.Core.Input;
 using LastGround.Core.Services;
 using LastGround.Gameplay.Combat;
 using LastGround.Gameplay.Players;
+using LastGround.Gameplay.Run;
 using LastGround.Localization;
 using TMPro;
 using UnityEngine;
@@ -45,6 +46,10 @@ namespace LastGround.UI.Run
         string _adrenaline;
         PlayerLife _shownLife;
         System.Func<bool> _isSolo;
+        RunOutcome _outcome;
+
+        /// <summary>Once the run is over the results screen takes over; the life overlay hides.</summary>
+        public void SetOutcome(RunOutcome outcome) => _outcome = outcome;
         int _shownAmmo = -1;
         bool _shownReloading;
         int _shownHealth = -1;
@@ -110,7 +115,7 @@ namespace LastGround.UI.Run
         void UpdateLifeOverlay(int me)
         {
             PlayerLife life = _players.Life[me];
-            bool show = life != PlayerLife.Alive;
+            bool show = life != PlayerLife.Alive && (_outcome == null || !_outcome.Ended);
             if (_deathOverlay.activeSelf != show) _deathOverlay.SetActive(show);
             if (life != _shownLife)
             {
