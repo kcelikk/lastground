@@ -5,5 +5,6 @@ namespace LastGround.App
     {
         public const string Boot = "Boot";
         public const string Menu = "Menu";
+        public const string Run = "Run";
     }
 }

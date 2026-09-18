@@ -15,5 +15,14 @@ namespace LastGround.Save
 
         /// <summary>30 or 60.</summary>
         public int TargetFps = 60;
+
+        /// <summary>Name shown in lobbies; generated on first launch.</summary>
+        public string PlayerName;
+
+        /// <summary>Stable device identity for future reconnects (TDD_01 §14.5).</summary>
+        public string PlayerGuid;
+
+        /// <summary>Last address typed in Join by IP.</summary>
+        public string LastJoinAddress;
     }
 }

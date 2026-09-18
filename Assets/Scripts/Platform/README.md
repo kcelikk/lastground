@@ -1,5 +1,9 @@
 # LastGround.Platform
 
-Android köprüleri: MulticastLock, Java arayüz listesi, termal, cihaz tier (TDD_02 §18.2, §22.5). İlk kod: M1.
+Platform köprüleri. Bağımlılık: Core.
 
-**Bağımlılıklar:** LastGround.Core
+- `Net/INetworkInterfaces` — IPv4 arayüzleri + directed broadcast. Android: `java.net.NetworkInterface` (Android 11+'da .NET API güvenilmez); Editor/masaüstü: `System.Net`.
+- `Net/IMulticastLock` — Android `WifiManager.MulticastLock` (broadcast paketleri için); yalnızca discovery ekranlarında tutulur.
+- `Net/PlatformNet` — platforma göre implementasyon, host ekranında gösterilecek adres (wlan → ap/swlan).
+
+Sonraki: termal izleme, cihaz tier tespiti (M2/M13).

@@ -5,7 +5,10 @@
         "LastGround.Core",
         "LastGround.Data",
         "LastGround.Gameplay",
-        "LastGround.Platform"
+        "LastGround.Platform",
+        "Mirror",
+        "Mirror.Transports",
+        "kcp2k"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

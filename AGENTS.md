@@ -24,10 +24,12 @@ Localization ← Core   Save / Meta ← Core, Data   Platform ← Core   App ←
 - Rol kontrolü (`Host/Client/Offline`) yalnızca installer ve network adapter'larında; gameplay koduna `if (isServer)` serpiştirilmez.
 - `AppServices` (servis kaydı) yalnızca App, installer'lar ve UI/presentation bağlamalarında kullanılır. Gameplay sistemleri bağımlılıklarını constructor ile alır.
 - Presentation (VFX/ses/UI) event dinler; event'in sim'den mi ağdan mı geldiğini bilmez.
+- Ağ: Mirror yalnızca taşıyıcıdır (tek `LgPacket` mesajı, `Networking/Mirror`). Protokol (`Core/Net/Protocol`), oturum (`NetSession`) ve replikasyon (`Networking/Replication`) Mirror'sız yazılır ve `LoopbackNetwork` ile EditMode'da test edilir. Yeni mesaj id'si = `NetMsgId`'ye ekle, numaraları asla değiştirme; format değişirse `NetProtocol.Version` artır.
+- Yüksek frekanslı akışlar (snapshot, oyuncu durumu) `session.Begin(id)` + doğrudan yazım ile gönderilir (mesaj başına dizi yok); düşük frekanslı olanlar `INetMessage` struct'larıdır.
 - Zombiler GameObject/NavMeshAgent/NetworkObject **değildir** — SoA veri + instanced render (TDD_01 §8).
 
 ## 4. Kod kuralları
-- Dosya başına bir tip, hedef ≤ 250–300 satır. Namespace = assembly root namespace + klasör.
+- Dosya başına bir tip, hedef ≤ 250–300 satır. Namespace = assembly root namespace + klasör. İstisna: küçük ağ mesaj struct'ları alan bazında tek dosyada toplanabilir (`Core/Net/Protocol/SessionMessages.cs`). Büyüyen sınıflar `partial` ile sorumluluk bazında bölünür (`NetSession.Host.cs`).
 - Public API'de kısa `/// <summary>`.
 - Sihirli sayı yok: balance ScriptableObject'te; teknik sabitler `NetworkTuningProfile` / `QualityPresetDefinition` vb. içinde.
 - SO'lar runtime'da **salt okunur**; runtime durum saf C# sınıflarında.
@@ -74,7 +76,14 @@ $U -batchmode -nographics -projectPath . -buildTarget Android -executeMethod Las
 $U -batchmode -nographics -projectPath . -buildTarget Android -executeMethod LastGround.EditorTools.Build.BuildScripts.BuildAndroidDevelopment
 # Cihaza kur (Unity'nin adb'si PATH'te önde)
 adb install -r Builds/Android/LastGround-dev.apk
+# Linux test oyuncusu (LAN karşı tarafı, performans referansı değil) → Builds/Linux/LastGround.x86_64
+$U -batchmode -nographics -projectPath . -buildTarget Linux64 -executeMethod LastGround.EditorTools.Build.BuildScripts.BuildLinuxDevelopment
+# LAN otomasyonu (yalnızca dev build): masaüstünde argüman, Android'de intent extra
+Builds/Linux/LastGround.x86_64 -lg-host -lg-start-at 2
+adb shell am start -n com.asgardgame.lastground/com.unity3d.player.UnityPlayerGameActivity -e lgargs "-lg-join 192.168.1.10"
+# Ölçüm: [NetStats] satırları (5 s'de bir) → adb logcat -s Unity | grep NetStats ; ~/.config/unity3d/AsgardGame/Last\ Ground/Player.log
 ```
+- Sahneleri bilerek yeniden üretmek: `-executeMethod LastGround.EditorTools.Setup.ProjectSetup.RebuildScenesBatch` (Menu ve Run'ın üzerine yazar).
 - Unity Editor açıkken batchmode aynı projeyi açamaz; önce Editor'ü kapat.
 - **Performans verisi yalnızca gerçek telefondan** (OnePlus 5T = LOW, Redmi Pad Pro = MID). Editor ölçümü kabul edilmez.
 

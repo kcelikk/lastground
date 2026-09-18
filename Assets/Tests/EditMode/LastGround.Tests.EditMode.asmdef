@@ -8,7 +8,10 @@
         "LastGround.Localization",
         "LastGround.Save",
         "LastGround.App",
-        "LastGround.Editor"
+        "LastGround.Editor",
+        "LastGround.Gameplay",
+        "LastGround.Networking",
+        "LastGround.Platform"
     ],
     "includePlatforms": [
         "Editor"

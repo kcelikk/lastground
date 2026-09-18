@@ -35,6 +35,22 @@ namespace LastGround.EditorTools.Setup
             Debug.Log("[Setup] Project settings applied.");
         }
 
+        [MenuItem("LastGround/Setup/Rebuild Scenes (overwrites Menu and Run)")]
+        public static void RebuildScenes()
+        {
+            SceneBuilder.BuildAll(rebuild: true);
+            AssetDatabase.SaveAssets();
+        }
+
+        public static void RebuildScenesBatch()
+        {
+            RunBatch(() =>
+            {
+                ApplyAll();
+                RebuildScenes();
+            });
+        }
+
         /// <summary>Batch entry point; exits with a non-zero code on failure.</summary>
         public static void ApplyAllBatch()
         {
@@ -97,6 +113,13 @@ namespace LastGround.EditorTools.Setup
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
 
             PlayerSettings.enableFrameTimingStats = true;
+
+            // Desktop builds are LAN test peers only (TDD_02 §31.1): small window, keep running unfocused.
+            PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
+            PlayerSettings.defaultScreenWidth = 1280;
+            PlayerSettings.defaultScreenHeight = 720;
+            PlayerSettings.resizableWindow = true;
+            PlayerSettings.runInBackground = true;
 
             // Input System only (no legacy UnityEngine.Input). 0 = old, 1 = new, 2 = both.
             var playerSettings = new SerializedObject(Unsupported.GetSerializedAssetInterfaceSingleton("PlayerSettings"));
