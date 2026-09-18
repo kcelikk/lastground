@@ -33,6 +33,8 @@ namespace LastGround.EditorTools.Setup
         static ResultsScreen _results;
         static LevelUpPanel _levelUp;
         static XpBar _xpBar;
+        static ObjectivePanel _objectivePanel;
+        static ObjectiveIndicator _objectiveIndicator;
 
         public static void Build(string path)
         {
@@ -114,6 +116,10 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_results", _results);
             UiFactory.Assign(installer, "_levelUp", _levelUp);
             UiFactory.Assign(installer, "_xpBar", _xpBar);
+            UiFactory.Assign(installer, "_objectivePanel", _objectivePanel);
+            UiFactory.Assign(installer, "_objectiveIndicator", _objectiveIndicator);
+            UiFactory.Assign(installer, "_zones", AssetDatabase.LoadAssetAtPath<LastGround.Data.Map.MapZoneSet>(CombatContentBuilder.ZonesPath));
+            UiFactory.Assign(installer, "_clearArea", AssetDatabase.LoadAssetAtPath<LastGround.Data.Objectives.ObjectiveDefinition>(CombatContentBuilder.ClearAreaPath));
             UiFactory.Assign(installer, "_upgrades", AssetDatabase.LoadAssetAtPath<LastGround.Data.Upgrades.UpgradeCatalog>(UpgradeContentBuilder.CatalogPath));
             UiFactory.Assign(installer, "_levelCurve", AssetDatabase.LoadAssetAtPath<LastGround.Data.Upgrades.LevelCurveDefinition>(UpgradeContentBuilder.LevelCurvePath));
             UiFactory.Assign(installer, "_directorProfile", AssetDatabase.LoadAssetAtPath<LastGround.Data.Director.DirectorProfile>(CombatContentBuilder.DirectorPath));
@@ -179,6 +185,8 @@ namespace LastGround.EditorTools.Setup
 
             (GameObject deathOverlay, TMP_Text deathLabel, Image reviveRing) = BuildDeathOverlay(canvasGo.transform);
             _teamPanel = BuildTeamPanel(safe);
+            _objectivePanel = BuildObjectivePanel(safe);
+            _objectiveIndicator = BuildObjectiveIndicator(canvasGo.transform);
             _indicators = BuildIndicators(canvasGo.transform);
             _levelUp = BuildLevelUp(canvasGo.transform);
             _results = BuildResults(canvasGo.transform);

@@ -101,5 +101,12 @@
   "upgrade.scavenger.desc": "+%{0} toplama alanı",
   "upgrade.bloodthirst.name": "Kan Susamışlığı",
   "upgrade.bloodthirst.desc": "Öldürme başına {0:1} can",
-  "hud.coins": "PARA {0}"
+  "hud.coins": "PARA {0}",
+  "objective.clear_area.title": "Bölgeyi temizle — {0}",
+  "objective.clear_area.counter": "Zombileri öldür: {0}/{1}",
+  "objective.completed": "TAMAMLANDI — erzak bırakıldı",
+  "zone.north_yard": "Kuzey Avlu",
+  "zone.south_yard": "Güney Avlu",
+  "zone.west_lane": "Batı Koridor",
+  "zone.east_lane": "Doğu Koridor"
 }

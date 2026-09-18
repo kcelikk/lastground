@@ -209,6 +209,48 @@ namespace LastGround.EditorTools.Setup
             return levelUp;
         }
 
+        static ObjectivePanel BuildObjectivePanel(RectTransform parent)
+        {
+            RectTransform root = UiFactory.Rect("Objective", parent);
+            UiFactory.Place(root, new Vector2(0f, 1f), new Vector2(24f, -272f), new Vector2(560f, 76f));
+            var background = root.gameObject.AddComponent<Image>();
+            background.color = new Color(0.05f, 0.05f, 0.06f, 0.65f);
+            background.raycastTarget = false;
+            RectTransform accent = UiFactory.Rect("Accent", root);
+            UiFactory.Place(accent, new Vector2(0f, 0.5f), Vector2.zero, new Vector2(6f, 76f));
+            var accentImage = accent.gameObject.AddComponent<Image>();
+            accentImage.color = new Color(1f, 0.65f, 0.15f);
+            accentImage.raycastTarget = false;
+            TMP_Text title = UiFactory.Label("Title", root, null, 24, FontStyles.Bold, Color.white);
+            UiFactory.Place(title.rectTransform, new Vector2(0f, 1f), new Vector2(18f, -6f), new Vector2(530f, 32f));
+            title.alignment = TextAlignmentOptions.MidlineLeft;
+            title.overflowMode = TextOverflowModes.Ellipsis;
+            TMP_Text counter = UiFactory.Label("Counter", root, null, 26, FontStyles.Bold, new Color(1f, 0.85f, 0.35f));
+            UiFactory.Place(counter.rectTransform, new Vector2(0f, 0f), new Vector2(18f, 6f), new Vector2(530f, 34f));
+            counter.alignment = TextAlignmentOptions.MidlineLeft;
+            var panel = parent.gameObject.AddComponent<ObjectivePanel>();
+            UiFactory.Assign(panel, "_root", root.gameObject);
+            UiFactory.Assign(panel, "_title", title);
+            UiFactory.Assign(panel, "_counter", counter);
+            return panel;
+        }
+
+        static ObjectiveIndicator BuildObjectiveIndicator(Transform canvas)
+        {
+            RectTransform layer = UiFactory.Panel("ObjectiveIndicator", canvas);
+            RectTransform arrow = UiFactory.Rect("Arrow", layer);
+            arrow.anchorMin = arrow.anchorMax = new Vector2(0.5f, 0.5f);
+            arrow.sizeDelta = new Vector2(64f, 64f);
+            var image = arrow.gameObject.AddComponent<Image>();
+            image.sprite = ArrowSprite();
+            image.color = new Color(1f, 0.65f, 0.15f, 0.9f);
+            image.raycastTarget = false;
+            var indicator = layer.gameObject.AddComponent<ObjectiveIndicator>();
+            UiFactory.Assign(indicator, "_arrow", arrow);
+            UiFactory.Assign(indicator, "_image", image);
+            return indicator;
+        }
+
         static TeamPanel BuildTeamPanel(RectTransform parent)
         {
             const int Rows = 3;

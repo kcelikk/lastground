@@ -101,5 +101,12 @@
   "upgrade.scavenger.desc": "+{0}% pickup radius",
   "upgrade.bloodthirst.name": "Bloodthirst",
   "upgrade.bloodthirst.desc": "Heal {0:1} per kill",
-  "hud.coins": "COINS {0}"
+  "hud.coins": "COINS {0}",
+  "objective.clear_area.title": "Clear the area — {0}",
+  "objective.clear_area.counter": "Kill zombies: {0}/{1}",
+  "objective.completed": "COMPLETED — supplies dropped",
+  "zone.north_yard": "North Yard",
+  "zone.south_yard": "South Yard",
+  "zone.west_lane": "West Lane",
+  "zone.east_lane": "East Lane"
 }

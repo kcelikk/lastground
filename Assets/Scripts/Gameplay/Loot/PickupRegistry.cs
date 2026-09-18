@@ -121,6 +121,17 @@ namespace LastGround.Gameplay.Loot
 
         void IPickupClaimSink.Claim(int player, int id) => Claim(player, id);
 
+        /// <summary>Objective reward (TDD_01 §12.4 loot chest): one coin pile plus instanced medkits around a point.</summary>
+        public void SpawnReward(float2 center, int coins, int medkits)
+        {
+            if (coins > 0) Spawn(PickupType.Coin, center, coins, _loot.CoinLifetime, 0xFF);
+            for (int i = 0; i < medkits; i++)
+            {
+                float angle = i * 2.4f;
+                Spawn(PickupType.Medkit, center + new float2(math.cos(angle), math.sin(angle)) * 1.5f, 1, _loot.MedkitLifetime, AllPlayersMask());
+            }
+        }
+
         void OnDeath(in CrowdDeath death)
         {
             if (_rng.NextFloat() < _walker.CoinChance) AddCoin(new float2(death.X, death.Z), _walker.CoinValue);

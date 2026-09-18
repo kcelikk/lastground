@@ -10,6 +10,7 @@ using LastGround.Data.Crowd;
 using LastGround.Data.Director;
 using LastGround.Data.Loot;
 using LastGround.Data.Map;
+using LastGround.Data.Objectives;
 using LastGround.Data.Players;
 using LastGround.Data.Presentation;
 using LastGround.Data.Quality;
@@ -21,6 +22,7 @@ using LastGround.Gameplay.Crowd;
 using LastGround.Gameplay.Loot;
 using LastGround.Gameplay.Director;
 using LastGround.Gameplay.Navigation;
+using LastGround.Gameplay.Objectives;
 using LastGround.Gameplay.Players;
 using LastGround.Gameplay.Run;
 using LastGround.Gameplay.Upgrades;
@@ -62,6 +64,8 @@ namespace LastGround.App
         [SerializeField] UpgradeCatalog _upgrades;
         [SerializeField] LevelCurveDefinition _levelCurve;
         [SerializeField] LootDefinition _loot;
+        [SerializeField] MapZoneSet _zones;
+        [SerializeField] ObjectiveDefinition _clearArea;
         [SerializeField] Material _coinMaterial;
         [SerializeField] Material _medkitMaterial;
         [SerializeField] Material _bloodParticleMaterial;
@@ -78,6 +82,8 @@ namespace LastGround.App
         [SerializeField] ResultsScreen _results;
         [SerializeField] LevelUpPanel _levelUp;
         [SerializeField] XpBar _xpBar;
+        [SerializeField] ObjectivePanel _objectivePanel;
+        [SerializeField] ObjectiveIndicator _objectiveIndicator;
 
         readonly List<System.IDisposable> _disposables = new List<System.IDisposable>();
         SessionService _service;
@@ -113,6 +119,7 @@ namespace LastGround.App
             public PickupTable Pickups;
             public TeamWallet Wallet;
             public PickupRegistry Registry;
+            public ObjectiveState Objective;
         }
 
         void Start()
@@ -139,6 +146,7 @@ namespace LastGround.App
                 Offers = new LocalOffers(session.LocalPlayer.Value),
                 Pickups = new PickupTable(256),
                 Wallet = new TeamWallet(),
+                Objective = new ObjectiveState(),
             };
             _disposables.Add(parts.Nav);
             float worldSize = parts.Nav.Width * parts.Nav.CellSize;
@@ -154,6 +162,9 @@ namespace LastGround.App
             _disposables.Add(runEnd);
 
             IHitClaimSink claims = session.IsAuthority ? BuildHost(ref parts, loop, benchmark, seed) : BuildClient(ref parts, loop);
+            var objectiveSync = new ObjectiveSync(session, parts.Objective);
+            _disposables.Add(objectiveSync);
+            loop.Register(TickPhase.NetSend, objectiveSync);
             var lootSync = new LootSync(session, parts.Pickups, parts.Wallet, parts.Registry);
             _disposables.Add(lootSync);
             loop.Register(TickPhase.NetSend, lootSync);
@@ -209,6 +220,8 @@ namespace LastGround.App
             BuildPresentation(parts, loop);
             _statusHud.Bind(parts.Status);
             _xpBar.Bind(parts.Xp);
+            _objectivePanel.Bind(parts.Objective, _zones, _clearArea);
+            _objectiveIndicator.Bind(parts.Objective, _zones, _camera);
             _levelUp.Bind(parts.Offers, _upgrades, () => CountActive(players) <= 1);
             _pause = _levelUp;
             _input.Blocker = () => _levelUp.BlockingRect;
@@ -289,6 +302,11 @@ namespace LastGround.App
             loop.Register(TickPhase.LootEvents, Gate(parts.Registry));
             TeamWallet wallet = parts.Wallet;
             parts.Referee.Coins = () => wallet.Coins;
+            var objectives = new ObjectiveSystem(crowd, parts.Players, _zones, _clearArea, parts.Status, parts.Objective, seed)
+            {
+                Director = parts.Director, Loot = parts.Registry,
+            };
+            loop.Register(TickPhase.LootEvents, Gate(objectives));
             loop.Register(TickPhase.Combat, Gate(parts.Authority));
             var claimSync = new HitClaimSync(parts.Session, parts.Authority);
             _disposables.Add(claimSync);

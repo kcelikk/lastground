@@ -7,6 +7,7 @@ using LastGround.Rendering.Combat;
 using LastGround.Rendering.Crowd;
 using LastGround.Rendering.Lighting;
 using LastGround.Rendering.Loot;
+using LastGround.Rendering.Objectives;
 using LastGround.UI.Run;
 using UnityEngine;
 
@@ -36,6 +37,9 @@ namespace LastGround.App
             _disposables.Add(blood);
             loop.Register(TickPhase.Presentation, blood);
 
+            var zoneMarker = new ZoneMarker(parts.Objective, _zones, _tracerMaterial);
+            _disposables.Add(zoneMarker);
+            loop.Register(TickPhase.Presentation, zoneMarker);
             var tracers = new TracerSystem(parts.Shots, _tracerMaterial, parts.Preset.TracerCap);
             _disposables.Add(tracers);
             loop.Register(TickPhase.Presentation, tracers);

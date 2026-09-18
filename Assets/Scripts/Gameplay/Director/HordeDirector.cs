@@ -114,6 +114,13 @@ namespace LastGround.Gameplay.Director
             }
         }
 
+        /// <summary>An objective was completed: the team gets a breather now (TDD_01 §12.4).</summary>
+        public void ForceRelax()
+        {
+            Enter(DirectorState.Relax, Range(_profile.RelaxMinDuration));
+            _pendingSize = 0;
+        }
+
         void UpdateState(float dt)
         {
             _stateTimer += dt;

@@ -1,5 +1,7 @@
 using LastGround.Data.Director;
 using LastGround.Data.Loot;
+using LastGround.Data.Map;
+using LastGround.Data.Objectives;
 using LastGround.Data.Players;
 using LastGround.Data.Presentation;
 using LastGround.Data.Weapons;
@@ -24,6 +26,8 @@ namespace LastGround.EditorTools.Setup
         public const string ThreatPath = Root + "/Director/DIR_ThreatCurve.asset";
         public const string ScalingPath = Root + "/Director/DIR_PlayerCountScaling.asset";
         public const string LootPath = Root + "/Loot/LOOT_Default.asset";
+        public const string ZonesPath = Root + "/Maps/MAP_Greybox_Zones.asset";
+        public const string ClearAreaPath = Root + "/Objectives/OBJ_ClearArea.asset";
 
         public static void Build()
         {
@@ -40,6 +44,15 @@ namespace LastGround.EditorTools.Setup
             Ensure<ThreatCurveDefinition>(ThreatPath, null);
             Ensure<PlayerCountScalingProfile>(ScalingPath, null);
             Ensure<LootDefinition>(LootPath, null);
+            Ensure<ObjectiveDefinition>(ClearAreaPath, null);
+            Ensure<MapZoneSet>(ZonesPath, z => z.Zones = new[]
+            {
+                // Greybox map (80 × 80 m, inner walls at z = ±20 with gaps).
+                new MapZoneSet.Zone { Id = "north_yard", NameKey = "zone.north_yard", Center = new Vector2(0f, 30f), HalfSize = new Vector2(36f, 8f) },
+                new MapZoneSet.Zone { Id = "south_yard", NameKey = "zone.south_yard", Center = new Vector2(0f, -30f), HalfSize = new Vector2(36f, 8f) },
+                new MapZoneSet.Zone { Id = "west_lane", NameKey = "zone.west_lane", Center = new Vector2(-26f, 0f), HalfSize = new Vector2(12f, 17f) },
+                new MapZoneSet.Zone { Id = "east_lane", NameKey = "zone.east_lane", Center = new Vector2(26f, 0f), HalfSize = new Vector2(12f, 17f) },
+            });
         }
 
         static void Ensure<T>(string path, System.Action<T> init) where T : ScriptableObject

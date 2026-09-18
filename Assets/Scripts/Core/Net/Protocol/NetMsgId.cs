@@ -49,6 +49,9 @@ namespace LastGround.Core.Net.Protocol
         public const byte PickupTaken = 72;
         public const byte TeamWallet = 73;
 
+        // Objectives (80–89)
+        public const byte ObjectiveState = 80;
+
         public const int Count = 256;
     }
 }
