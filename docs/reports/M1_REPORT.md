@@ -1,6 +1,6 @@
 # M1 Raporu — Networking PoC
 
-- **Tarih:** 2026-09-18 · **Branch:** `m1-networking` · **Unity:** 6000.3.24f1 · **Mirror:** 96.11.2 · **Durum:** APPROVE bekliyor
+- **Tarih:** 2026-09-18 · **Branch:** `m1-networking` · **Unity:** 6000.3.24f1 · **Mirror:** 96.11.2 · **Durum:** ✅ Onaylandı (2026-09-18), `main`e merge edildi. Hotspot ve iki telefon testi açık (OPEN_QUESTIONS B4, B5)
 - **Test düzeni:** OnePlus 5T (Android 10, LOW) + dizüstü Linux dev oyuncusu (T14), aynı ev Wi-Fi'ı (192.168.1.0/24). İkinci telefon (Redmi Pad Pro) henüz bağlanmadı.
 
 ## Çıkış kriterleri (TDD_03 §36 M1)
