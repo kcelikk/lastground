@@ -74,6 +74,16 @@ namespace LastGround.Gameplay.Players
             _players.Hurt.Publish(new PlayerHurt { Player = player, Amount = amount, Died = down });
         }
 
+        /// <summary>Heals a standing player (medkit). False when they are down or already at full health.</summary>
+        public bool Heal(int player, float amount)
+        {
+            if ((uint)player >= PlayerStateTable.Max || !_players.CanAct(player)) return false;
+            float max = _players.MaxHealth[player];
+            if (_players.Health[player] >= max - 0.01f) return false;
+            _players.Health[player] = UnityEngine.Mathf.Min(max, _players.Health[player] + amount);
+            return true;
+        }
+
         /// <summary>The shooter killed a zombie: heal-on-kill upgrades (TDD_01 §7.2 OnKillEffect).</summary>
         public void OnKill(int player)
         {

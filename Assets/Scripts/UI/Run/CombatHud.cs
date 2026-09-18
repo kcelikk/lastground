@@ -29,6 +29,7 @@ namespace LastGround.UI.Run
         [SerializeField] Image _reviveRing;
         [SerializeField] Button _autoFireButton;
         [SerializeField] TMP_Text _autoFireLabel;
+        [SerializeField] TMP_Text _coinLabel;
 
         PlayerStateTable _players;
         IWeaponStatus _weapon;
@@ -47,6 +48,12 @@ namespace LastGround.UI.Run
         PlayerLife _shownLife;
         System.Func<bool> _isSolo;
         RunOutcome _outcome;
+        LastGround.Gameplay.Loot.TeamWallet _wallet;
+        int _shownCoins = -1;
+        string _coinFormat;
+
+        /// <summary>Team run coin shown top-right (gold = money, TDD_01 §0.9).</summary>
+        public void SetWallet(LastGround.Gameplay.Loot.TeamWallet wallet) => _wallet = wallet;
 
         /// <summary>Once the run is over the results screen takes over; the life overlay hides.</summary>
         public void SetOutcome(RunOutcome outcome) => _outcome = outcome;
@@ -110,6 +117,11 @@ namespace LastGround.UI.Run
             _hurtVignette.color = c;
 
             UpdateLifeOverlay(me);
+            if (_wallet != null && _wallet.Coins != _shownCoins)
+            {
+                _shownCoins = _wallet.Coins;
+                _coinLabel.SetText(_coinFormat, _shownCoins);
+            }
         }
 
         void UpdateLifeOverlay(int me)
@@ -153,6 +165,8 @@ namespace LastGround.UI.Run
             _deadFormat = _localization.Get("hud.dead");
             _deadWaiting = _localization.Get("hud.dead_waiting");
             _adrenaline = _localization.Get("hud.adrenaline");
+            _coinFormat = _localization.Get("hud.coins");
+            _shownCoins = -1;
             _autoFireLabel.text = _localization.Get(_aim.Mode == ControlMode.AutoAimAutoFire ? "hud.auto_fire_on" : "hud.auto_fire_off");
             _shownAmmo = -1;
             _shownCountdown = -1;

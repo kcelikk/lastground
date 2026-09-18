@@ -100,5 +100,6 @@
   "upgrade.scavenger.name": "Scavenger",
   "upgrade.scavenger.desc": "+{0}% pickup radius",
   "upgrade.bloodthirst.name": "Bloodthirst",
-  "upgrade.bloodthirst.desc": "Heal {0:1} per kill"
+  "upgrade.bloodthirst.desc": "Heal {0:1} per kill",
+  "hud.coins": "COINS {0}"
 }

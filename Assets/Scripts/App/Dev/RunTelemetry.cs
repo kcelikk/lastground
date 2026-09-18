@@ -31,6 +31,8 @@ namespace LastGround.App.Dev
         HordeDirector _director;
         TeamXp _xp;
         TeamBuilds _builds;
+        LastGround.Gameplay.Loot.TeamWallet _wallet;
+        LastGround.Gameplay.Loot.PickupRegistry _registry;
         float _simMsSum;
         float _simMsMax;
         int _simSamples;
@@ -60,6 +62,12 @@ namespace LastGround.App.Dev
         {
             _status = status;
             _director = director;
+        }
+
+        public void BindLoot(LastGround.Gameplay.Loot.TeamWallet wallet, LastGround.Gameplay.Loot.PickupRegistry registry)
+        {
+            _wallet = wallet;
+            _registry = registry;
         }
 
         public void BindProgress(TeamXp xp, TeamBuilds builds)
@@ -119,6 +127,9 @@ namespace LastGround.App.Dev
             if (_xp != null)
                 line += string.Format(CultureInfo.InvariantCulture, " level={0} xp={1}/{2} picks={3}", _xp.Level, _xp.Xp, _xp.XpToNext,
                     _builds.Of(me).Picks);
+            if (_wallet != null) line += string.Format(CultureInfo.InvariantCulture, " coins={0}", _wallet.Coins);
+            if (_registry != null)
+                line += string.Format(CultureInfo.InvariantCulture, " drops={0} pickups={1} pickupRejects={2}", _registry.Dropped, _registry.Claimed, _registry.Rejected);
             if (_status != null)
             {
                 line += string.Format(CultureInfo.InvariantCulture, " run={0:0} horde={1} threat={2}", _status.RunSeconds, _status.Horde, _status.Threat);

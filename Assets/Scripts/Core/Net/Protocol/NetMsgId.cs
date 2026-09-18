@@ -43,6 +43,12 @@ namespace LastGround.Core.Net.Protocol
         public const byte SelectUpgrade = 62;
         public const byte BuildChanged = 63;
 
+        // Loot (70–79)
+        public const byte PickupSpawnBatch = 70;
+        public const byte PickupClaim = 71;
+        public const byte PickupTaken = 72;
+        public const byte TeamWallet = 73;
+
         public const int Count = 256;
     }
 }

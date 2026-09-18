@@ -8,6 +8,7 @@ using LastGround.Core.Services;
 using LastGround.Core.Tick;
 using LastGround.Data.Crowd;
 using LastGround.Data.Director;
+using LastGround.Data.Loot;
 using LastGround.Data.Map;
 using LastGround.Data.Players;
 using LastGround.Data.Presentation;
@@ -17,6 +18,7 @@ using LastGround.Data.Weapons;
 using LastGround.Data.Zombies;
 using LastGround.Gameplay.Combat;
 using LastGround.Gameplay.Crowd;
+using LastGround.Gameplay.Loot;
 using LastGround.Gameplay.Director;
 using LastGround.Gameplay.Navigation;
 using LastGround.Gameplay.Players;
@@ -59,6 +61,9 @@ namespace LastGround.App
         [SerializeField] PlayerCountScalingProfile _playerScaling;
         [SerializeField] UpgradeCatalog _upgrades;
         [SerializeField] LevelCurveDefinition _levelCurve;
+        [SerializeField] LootDefinition _loot;
+        [SerializeField] Material _coinMaterial;
+        [SerializeField] Material _medkitMaterial;
         [SerializeField] Material _bloodParticleMaterial;
         [SerializeField] Material _bloodSplatMaterial;
         [SerializeField] Material _tracerMaterial;
@@ -105,6 +110,9 @@ namespace LastGround.App
             public TeamXp Xp;
             public LocalOffers Offers;
             public TeamProgress Progress;
+            public PickupTable Pickups;
+            public TeamWallet Wallet;
+            public PickupRegistry Registry;
         }
 
         void Start()
@@ -129,6 +137,8 @@ namespace LastGround.App
                 Builds = new TeamBuilds(_upgrades),
                 Xp = new TeamXp(),
                 Offers = new LocalOffers(session.LocalPlayer.Value),
+                Pickups = new PickupTable(256),
+                Wallet = new TeamWallet(),
             };
             _disposables.Add(parts.Nav);
             float worldSize = parts.Nav.Width * parts.Nav.CellSize;
@@ -144,6 +154,10 @@ namespace LastGround.App
             _disposables.Add(runEnd);
 
             IHitClaimSink claims = session.IsAuthority ? BuildHost(ref parts, loop, benchmark, seed) : BuildClient(ref parts, loop);
+            var lootSync = new LootSync(session, parts.Pickups, parts.Wallet, parts.Registry);
+            _disposables.Add(lootSync);
+            loop.Register(TickPhase.NetSend, lootSync);
+            IPickupClaimSink pickupClaims = parts.Registry != null ? parts.Registry : (IPickupClaimSink)lootSync;
             var progression = new ProgressionSync(session, parts.Xp, parts.Builds, parts.Offers, parts.Progress);
             _disposables.Add(progression);
             loop.Register(TickPhase.NetSend, progression);
@@ -184,6 +198,7 @@ namespace LastGround.App
                 loop.Register(TickPhase.LocalPlayer, Gate(new PlayerMotor(players, parts.Aim, _playerDefinition, worldSize,
                     me.Value * 3f - 4.5f, -3f, parts.Nav, parts.Crowd) { Builds = parts.Builds }));
                 loop.Register(TickPhase.LocalPlayer, Gate(parts.Weapon));
+                loop.Register(TickPhase.LocalPlayer, Gate(new PickupCollector(parts.Pickups, players, _loot, pickupClaims) { Builds = parts.Builds }));
             }
             loop.Register(TickPhase.NetSend, sync);
             loop.Register(TickPhase.NetSend, vitals);
@@ -201,6 +216,7 @@ namespace LastGround.App
             _teammateIndicators.Bind(players, _camera);
             _results.Bind(_outcome, _service);
             _combatHud.SetOutcome(_outcome);
+            _combatHud.SetWallet(parts.Wallet);
             _combatHud.Bind(players, parts.Weapon, parts.Aim, _playerDefinition.MaxHealth, () => CountActive(players) <= 1, mode =>
             {
                 save.Settings.ControlMode = (int)mode;
@@ -212,6 +228,7 @@ namespace LastGround.App
             telemetry.BindCombat(players, parts.Weapon, parts.Authority, parts.Health);
             telemetry.BindDirector(parts.Status, parts.Director);
             telemetry.BindProgress(parts.Xp, parts.Builds);
+            telemetry.BindLoot(parts.Wallet, parts.Registry);
             if (parts.Director != null) gameObject.AddComponent<DirectorLog>().Bind(parts.Status, parts.Director, _service.CurrentRun.Seed);
             if (parts.Benchmark != null)
             {
@@ -265,6 +282,13 @@ namespace LastGround.App
             parts.Referee.Kills = () => authority.Kills;
             parts.Progress = new TeamProgress(crowd, parts.Players, parts.Builds, _levelCurve, _walker.Xp, seed);
             loop.Register(TickPhase.Combat, Gate(parts.Progress));
+            parts.Registry = new PickupRegistry(parts.Pickups, crowd, parts.Players, _loot, _walker, parts.Wallet, seed)
+            {
+                Health = parts.Health, Builds = parts.Builds,
+            };
+            loop.Register(TickPhase.LootEvents, Gate(parts.Registry));
+            TeamWallet wallet = parts.Wallet;
+            parts.Referee.Coins = () => wallet.Coins;
             loop.Register(TickPhase.Combat, Gate(parts.Authority));
             var claimSync = new HitClaimSync(parts.Session, parts.Authority);
             _disposables.Add(claimSync);

@@ -1,4 +1,5 @@
 using LastGround.Data.Director;
+using LastGround.Data.Loot;
 using LastGround.Data.Players;
 using LastGround.Data.Presentation;
 using LastGround.Data.Weapons;
@@ -22,6 +23,7 @@ namespace LastGround.EditorTools.Setup
         public const string DirectorPath = Root + "/Director/DIR_Default.asset";
         public const string ThreatPath = Root + "/Director/DIR_ThreatCurve.asset";
         public const string ScalingPath = Root + "/Director/DIR_PlayerCountScaling.asset";
+        public const string LootPath = Root + "/Loot/LOOT_Default.asset";
 
         public static void Build()
         {
@@ -37,6 +39,7 @@ namespace LastGround.EditorTools.Setup
             Ensure<DirectorProfile>(DirectorPath, null);
             Ensure<ThreatCurveDefinition>(ThreatPath, null);
             Ensure<PlayerCountScalingProfile>(ScalingPath, null);
+            Ensure<LootDefinition>(LootPath, null);
         }
 
         static void Ensure<T>(string path, System.Action<T> init) where T : ScriptableObject

@@ -100,5 +100,6 @@
   "upgrade.scavenger.name": "Leşçi",
   "upgrade.scavenger.desc": "+%{0} toplama alanı",
   "upgrade.bloodthirst.name": "Kan Susamışlığı",
-  "upgrade.bloodthirst.desc": "Öldürme başına {0:1} can"
+  "upgrade.bloodthirst.desc": "Öldürme başına {0:1} can",
+  "hud.coins": "PARA {0}"
 }

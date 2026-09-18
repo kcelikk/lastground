@@ -54,6 +54,12 @@ namespace LastGround.EditorTools.Setup
             Material bloodParticle = CreateFxMaterial("M_BloodParticle", "LG/FX_AlphaBlend");
             Material bloodSplat = CreateFxMaterial("M_BloodSplat", "LG/GroundDecal");
             Material tracer = CreateFxMaterial("M_Tracer", "LG/FX_Additive");
+            Material coin = CreateMaterial("M_PickupCoin", new Color(1f, 0.78f, 0.2f));
+            coin.EnableKeyword("_EMISSION");
+            coin.SetColor("_EmissionColor", new Color(0.6f, 0.4f, 0.05f));
+            Material medkit = CreateMaterial("M_PickupMedkit", new Color(0.9f, 0.15f, 0.12f));
+            medkit.EnableKeyword("_EMISSION");
+            medkit.SetColor("_EmissionColor", new Color(0.35f, 0.05f, 0.05f));
             var catalog = AssetDatabase.LoadAssetAtPath<CrowdVisualCatalog>("Assets/Art/Crowd/CrowdCatalog.asset");
             if (catalog == null) Debug.LogWarning("[Setup] Crowd catalog missing; run LastGround/Crowd/Bake Bodies first.");
             Material ground = CreateMaterial("M1_Ground", new Color(0.16f, 0.17f, 0.18f));
@@ -90,6 +96,9 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_bloodParticleMaterial", bloodParticle);
             UiFactory.Assign(installer, "_bloodSplatMaterial", bloodSplat);
             UiFactory.Assign(installer, "_tracerMaterial", tracer);
+            UiFactory.Assign(installer, "_coinMaterial", coin);
+            UiFactory.Assign(installer, "_medkitMaterial", medkit);
+            UiFactory.Assign(installer, "_loot", AssetDatabase.LoadAssetAtPath<LastGround.Data.Loot.LootDefinition>(CombatContentBuilder.LootPath));
             UiFactory.Assign(installer, "_weapon", AssetDatabase.LoadAssetAtPath<WeaponDefinition>(CombatContentBuilder.WeaponPath));
             UiFactory.Assign(installer, "_walker", AssetDatabase.LoadAssetAtPath<ZombieDefinition>(CombatContentBuilder.WalkerPath));
             UiFactory.Assign(installer, "_playerDefinition", AssetDatabase.LoadAssetAtPath<PlayerDefinition>(CombatContentBuilder.PlayerPath));
@@ -164,6 +173,9 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Place((RectTransform)leave.transform, new Vector2(1f, 1f), new Vector2(-24f, -24f), new Vector2(240f, 84f));
             Button autoFire = UiFactory.Button("AutoFire", safe, null, new Vector2(300f, 70f), out TMP_Text autoFireLabel, 28f);
             UiFactory.Place((RectTransform)autoFire.transform, new Vector2(1f, 1f), new Vector2(-24f, -122f), new Vector2(300f, 70f));
+            TMP_Text coins = UiFactory.Label("Coins", safe, null, 34, FontStyles.Bold, new Color(1f, 0.8f, 0.25f));
+            UiFactory.Place(coins.rectTransform, new Vector2(1f, 1f), new Vector2(-24f, -206f), new Vector2(300f, 44f));
+            coins.alignment = TextAlignmentOptions.Right;
 
             (GameObject deathOverlay, TMP_Text deathLabel, Image reviveRing) = BuildDeathOverlay(canvasGo.transform);
             _teamPanel = BuildTeamPanel(safe);
@@ -199,6 +211,7 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(combat, "_reviveRing", reviveRing);
             UiFactory.Assign(combat, "_autoFireButton", autoFire);
             UiFactory.Assign(combat, "_autoFireLabel", autoFireLabel);
+            UiFactory.Assign(combat, "_coinLabel", coins);
             _statusHud = runStatus;
             return (input, hud, combat);
         }
