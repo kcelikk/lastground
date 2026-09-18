@@ -1,5 +1,11 @@
 # LastGround.Gameplay
 
-Player, Weapons, Combat, Zombies, AI, Horde, Boss, Map, Environment, Loot, Upgrades, Events. **Mirror, UI ve Save'e referans veremez** (TDD_02 §26.1). İlk kod: M1 (oyuncu hareketi) / M3 (ZombieWorld).
+Player, Weapons, Combat, Zombies, AI, Horde, Boss, Map, Environment, Loot, Upgrades, Events.
+**Mirror, UI ve Save'e referans veremez** (TDD_02 §26.1). Bağımlılık: Core, Data, Unity.Mathematics/Collections/Burst.
 
-**Bağımlılıklar:** LastGround.Core, LastGround.Data, Unity.Mathematics, Unity.Collections, Unity.Burst
+| Klasör | İçerik |
+|---|---|
+| `Crowd/` | `CrowdState` (host SoA verisi), `CrowdReplica` (client interpolasyonu), `DummyCrowdSim` (M1 test sürüsü — M3'te ZombieWorld ile değişir), `ICrowdRenderSource` |
+| `Players/` | `PlayerStateTable` (4 oyuncu, uzaklar interpolasyonlu), `PlayerMotor` (yerel kinematik hareket) |
+
+**Değiştirirsen etkilenenler:** `CrowdState` alanları Networking replikasyonu ve Rendering tarafından okunur.

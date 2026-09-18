@@ -26,7 +26,7 @@ namespace LastGround.Tests
             return session;
         }
 
-        public void Step(double seconds, double dt = 1.0 / 30.0)
+        public void Step(double seconds, double dt = 1.0 / 30.0, System.Action<float> perTick = null)
         {
             double end = Now + seconds;
             while (Now < end - 1e-9)
@@ -34,6 +34,7 @@ namespace LastGround.Tests
                 Now += dt;
                 Network.Pump(Now);
                 for (int i = 0; i < Sessions.Count; i++) Sessions[i].Tick(Now);
+                perTick?.Invoke((float)dt);
             }
         }
     }
