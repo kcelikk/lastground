@@ -1,0 +1,17 @@
+{
+    "name": "LastGround.Audio",
+    "rootNamespace": "LastGround.Audio",
+    "references": [
+        "LastGround.Core",
+        "LastGround.Data"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

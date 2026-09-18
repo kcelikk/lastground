@@ -450,7 +450,7 @@ Shader/PSO ön ısıtma: yükleme ekranında `ShaderVariantCollection` ve Unity 
 
 ### 24A.2 Dosyalar
 ```
-Assets/Localization/
+Assets/Resources/Localization/     (M0: Resources.Load ile yüklenir; Addressables yok)
 ├── languages.json          [{ "code":"en", "name":"English", "fallback":null },
 │                            { "code":"tr", "name":"Türkçe",  "fallback":"en" }]
 ├── en/  ui.json  gameplay.json  items.json  meta.json   (varsayılan / referans dil)
@@ -541,7 +541,7 @@ lastground/                       (git + Git LFS)
     ├── Scenes/         Boot/ Menu/ Run/ Maps/ Tests/
     ├── ScriptableObjects/  Weapons/ Upgrades/ Zombies/ Director/ Boss/ Maps/ Events/
     │                       Loot/ Audio/ Quality/ Pools/ Network/ Meta/
-    ├── Localization/   languages.json, en/*.json, tr/*.json
+    ├── Resources/Localization/   languages.json, en/*.json, tr/*.json (runtime yüklemesi için Resources altında)
     ├── Settings/       URP asset'leri (LOW/MED/HIGH), Volume profilleri, Input Actions
     ├── ThirdParty/     Mirror (versiyonu sabitlenmiş)
     ├── Scripts/

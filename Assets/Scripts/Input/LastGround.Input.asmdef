@@ -1,0 +1,17 @@
+{
+    "name": "LastGround.Input",
+    "rootNamespace": "LastGround.Input",
+    "references": [
+        "LastGround.Core",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

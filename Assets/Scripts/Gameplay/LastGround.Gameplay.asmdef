@@ -1,0 +1,20 @@
+{
+    "name": "LastGround.Gameplay",
+    "rootNamespace": "LastGround.Gameplay",
+    "references": [
+        "LastGround.Core",
+        "LastGround.Data",
+        "Unity.Mathematics",
+        "Unity.Collections",
+        "Unity.Burst"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

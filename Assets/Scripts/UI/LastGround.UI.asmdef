@@ -1,0 +1,19 @@
+{
+    "name": "LastGround.UI",
+    "rootNamespace": "LastGround.UI",
+    "references": [
+        "LastGround.Core",
+        "LastGround.Localization",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
