@@ -43,6 +43,9 @@ namespace LastGround.Gameplay.Combat
 
         public PlayerInputFrame Current => _frame;
 
+        /// <summary>Slots to leave alone (the weapon's presumed-dead zombies). Optional.</summary>
+        public bool[] Ignore { get; set; }
+
         /// <summary>Slot the auto mode is shooting at, or -1 (HUD reticle).</summary>
         public int AutoTarget => _autoTarget;
 
@@ -85,7 +88,7 @@ namespace LastGround.Gameplay.Combat
             float bestScore = float.MaxValue;
             for (int i = 0; i < _crowd.Capacity; i++)
             {
-                if (!_crowd.Alive[i]) continue;
+                if (!_crowd.Alive[i] || (Ignore != null && Ignore[i])) continue;
                 float2 to = new float2(_crowd.X[i], _crowd.Z[i]) - origin;
                 float d2 = math.lengthsq(to);
                 if (d2 > range2 || d2 < 1e-4f) continue;
@@ -115,7 +118,7 @@ namespace LastGround.Gameplay.Combat
             float bestDistance = float.MaxValue;
             for (int i = 0; i < _crowd.Capacity; i++)
             {
-                if (!_crowd.Alive[i]) continue;
+                if (!_crowd.Alive[i] || (Ignore != null && Ignore[i])) continue;
                 float d2 = math.distancesq(new float2(_crowd.X[i], _crowd.Z[i]), origin);
                 if (d2 >= bestDistance || d2 > range2) continue;
                 if (_nav != null && !_nav.HasLineOfSight(origin, new float2(_crowd.X[i], _crowd.Z[i]))) continue;
@@ -127,7 +130,7 @@ namespace LastGround.Gameplay.Combat
 
         bool Valid(int slot, float2 origin)
         {
-            if (slot < 0 || !_crowd.Alive[slot]) return false;
+            if (slot < 0 || !_crowd.Alive[slot] || (Ignore != null && Ignore[slot])) return false;
             return math.distancesq(new float2(_crowd.X[slot], _crowd.Z[slot]), origin) <= _weapon.Range * _weapon.Range;
         }
     }

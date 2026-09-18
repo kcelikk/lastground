@@ -413,6 +413,33 @@ namespace LastGround.Tests
         }
 
         [Test]
+        public void Weapon_ShootsPastZombiesItHasAlreadyKilled()
+        {
+            var rifle = Asset<WeaponDefinition>();
+            rifle.Penetration = 0;
+            rifle.CritChance = 0f;
+            var crowd = new CrowdState(8);
+            int front = crowd.Spawn(0, 0f, 8f, 0f);
+            int behind = crowd.Spawn(0, 0f, 11f, 0f);
+            PlayerStateTable players = PlayerAtOrigin();
+            var input = new ScriptedInput();
+            var sink = new RecordingSink();
+            var weapon = new WeaponController(players, input, rifle, crowd, Grid(false), 11u, sink, null, null, zombieHealth: 45f);
+
+            input.Aim(0f, 1f, true);
+            for (int f = 0; f < 60 && sink.Claims.Count < 4; f++) weapon.Tick(1f / 60f, 0);
+            Assert.AreEqual(4, sink.Claims.Count);
+            Assert.AreEqual(front, sink.Claims[2].Slot, "three rifle hits (48) kill a 45 HP walker");
+            Assert.AreEqual(behind, sink.Claims[3].Slot, "the fourth bullet passes the presumed-dead zombie");
+            Assert.AreEqual(1, weapon.PresumedDead);
+
+            // The host never confirmed the kill: after the grace period the zombie is a target again.
+            input.Aim(0f, 1f, false);
+            for (int f = 0; f < 60; f++) weapon.Tick(1f / 60f, 0);
+            Assert.AreEqual(0, weapon.PresumedDead);
+        }
+
+        [Test]
         public void Weapon_DoesNotFireWhileDead()
         {
             var rifle = Asset<WeaponDefinition>();

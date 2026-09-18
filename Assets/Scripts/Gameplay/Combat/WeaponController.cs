@@ -14,6 +14,8 @@ namespace LastGround.Gameplay.Combat
     /// without firing), deterministic spread, hit detection against what this device shows, and hit claims.
     /// Runs every rendered frame so firing feels immediate; the host resolves damage in its Combat phase.
     /// On clients it also publishes the predicted hit (flash, blood, damage number) right away.
+    /// Zombies this weapon has already dealt lethal damage to are "presumed dead" for a moment: bullets pass through
+    /// them to the next target instead of being wasted on a corpse-to-be (and its claim rejected as TargetGone).
     /// </summary>
     public sealed class WeaponController : ITickable, IWeaponStatus
     {
@@ -22,6 +24,8 @@ namespace LastGround.Gameplay.Combat
         const float MuzzleForward = 0.6f;
         const float FiringFlagHold = 0.2f;
         const int MaxHitsPerPellet = 8;
+        /// <summary>Longer than a kill takes to come back from the host; afterwards the zombie is targetable again.</summary>
+        const float PresumedDeadTime = 0.6f;
 
         readonly PlayerStateTable _players;
         readonly IPlayerInputSource _input;
@@ -34,6 +38,13 @@ namespace LastGround.Gameplay.Combat
         readonly CrowdReplica _predictions;
         readonly int[] _hitSlots = new int[MaxHitsPerPellet];
         readonly float[] _hitDistances = new float[MaxHitsPerPellet];
+        readonly float _zombieHealth;
+        readonly float[] _dealt;
+        readonly byte[] _dealtGeneration;
+        readonly float[] _presumedDeadUntil;
+        readonly bool[] _presumedDead;
+        int _presumedCount;
+        float _time;
 
         float _cooldown;
         float _reloadTimer;
@@ -41,9 +52,10 @@ namespace LastGround.Gameplay.Combat
         ushort _shotSeq;
 
         /// <param name="predictions">Client replica for predicted hits; null on the host (it resolves at once).</param>
+        /// <param name="zombieHealth">Health of a fresh zombie (M4: walkers only; M6 looks it up per type).</param>
         public WeaponController(PlayerStateTable players, IPlayerInputSource input, WeaponDefinition weapon,
             ICrowdRenderSource targets, NavGrid nav, uint runSeed, IHitClaimSink sink, EventChannel<ShotFired> shots,
-            CrowdReplica predictions)
+            CrowdReplica predictions, float zombieHealth = float.MaxValue)
         {
             _players = players;
             _input = input;
@@ -54,6 +66,11 @@ namespace LastGround.Gameplay.Combat
             _sink = sink;
             _shots = shots;
             _predictions = predictions;
+            _zombieHealth = zombieHealth;
+            _dealt = new float[targets.Capacity];
+            _dealtGeneration = new byte[targets.Capacity];
+            _presumedDeadUntil = new float[targets.Capacity];
+            _presumedDead = new bool[targets.Capacity];
             Ammo = weapon.MagazineSize;
         }
 
@@ -64,6 +81,12 @@ namespace LastGround.Gameplay.Combat
         public WeaponDefinition Weapon => _weapon;
         public int ShotsFired { get; private set; }
         public int ClaimsSent { get; private set; }
+
+        /// <summary>Zombies currently skipped because this weapon expects them to die.</summary>
+        public int PresumedDead => _presumedCount;
+
+        /// <summary>Per slot: true while presumed dead (auto-aim skips these too).</summary>
+        public bool[] PresumedDeadMask => _presumedDead;
 
         public void Tick(float dt, uint tick)
         {
@@ -79,6 +102,8 @@ namespace LastGround.Gameplay.Combat
             }
 
             _sinceFired += dt;
+            _time += dt;
+            if (_presumedCount > 0) ExpirePresumedDead();
             if (_reloadTimer > 0f)
             {
                 _reloadTimer -= dt;
@@ -124,7 +149,7 @@ namespace LastGround.Gameplay.Combat
                 math.sincos(angle, out float sin, out float cos);
                 var dir = new float2(baseDir.x * cos - baseDir.y * sin, baseDir.x * sin + baseDir.y * cos);
                 int hits = HitQuery.Cast(_targets, _nav, origin, dir, _weapon.Range, HitRadius, maxHits, _hitSlots, _hitDistances,
-                    out float end);
+                    out float end, _presumedDead);
 
                 for (int k = 0; k < hits; k++)
                 {
@@ -143,9 +168,10 @@ namespace LastGround.Gameplay.Combat
                     };
                     _sink.Submit(claim);
                     ClaimsSent++;
+                    float damage = DamageResolver.Resolve(_weapon, seed, pellet, out bool crit);
+                    TrackDamage(slot, claim.Generation, damage);
                     if (_predictions != null)
                     {
-                        float damage = DamageResolver.Resolve(_weapon, seed, pellet, out bool crit);
                         _predictions.PublishLocalHit(new CrowdHit
                         {
                             Slot = slot, X = claim.HitX, Z = claim.HitZ, DirX = dir.x, DirZ = dir.y,
@@ -161,6 +187,33 @@ namespace LastGround.Gameplay.Combat
                     Shooter = (byte)me, OriginX = muzzle.x, OriginZ = muzzle.y, EndX = tip.x, EndZ = tip.y,
                     FirstPellet = pellet == 0, Local = true,
                 });
+            }
+        }
+
+        void TrackDamage(int slot, byte generation, float damage)
+        {
+            if (_dealtGeneration[slot] != generation)
+            {
+                _dealtGeneration[slot] = generation;
+                _dealt[slot] = 0f;
+            }
+            _dealt[slot] += damage;
+            if (_dealt[slot] < _zombieHealth || _presumedDead[slot]) return;
+            _presumedDead[slot] = true;
+            _presumedDeadUntil[slot] = _time + PresumedDeadTime;
+            _presumedCount++;
+        }
+
+        void ExpirePresumedDead()
+        {
+            for (int i = 0; i < _presumedDead.Length; i++)
+            {
+                if (!_presumedDead[i]) continue;
+                // Gone (confirmed), reused by a new zombie, or the host disagreed: stop skipping it.
+                if (_time < _presumedDeadUntil[i] && _targets.Alive[i] && _targets.GenerationOf(i) == _dealtGeneration[i]) continue;
+                _presumedDead[i] = false;
+                _dealt[i] = 0f;
+                _presumedCount--;
             }
         }
     }

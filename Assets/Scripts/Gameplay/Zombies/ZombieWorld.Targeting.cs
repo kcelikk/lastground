@@ -41,7 +41,8 @@ namespace LastGround.Gameplay.Zombies
             {
                 if (_alive[i] == 0) continue;
                 float2 p = _position[i];
-                bool walking = _outState[i] == ZombieSteeringJob.StateWalk;
+                // Knocked-back zombies slow down on purpose; they are not stuck.
+                bool walking = _outState[i] == ZombieSteeringJob.StateWalk && _stagger[i] <= 0f;
                 // Only zombies on their way count: those queueing in the surround rings are supposed to wait.
                 if (walking && math.distance(p, _stuckAnchor[i]) < _tuning.StuckDistance && IsFarFromTarget(i, _tuning.SurroundRange))
                 {

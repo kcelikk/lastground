@@ -123,7 +123,8 @@ namespace LastGround.App
             loop.Register(TickPhase.Input, _input);
             loop.Register(TickPhase.Input, parts.Aim);
             parts.Weapon = new WeaponController(players, parts.Aim, _weapon, parts.Crowd, parts.Nav, seed, claims, parts.Shots,
-                session.IsAuthority ? null : parts.Crowd as CrowdReplica);
+                session.IsAuthority ? null : parts.Crowd as CrowdReplica, _walker.MaxHealth);
+            parts.Aim.Ignore = parts.Weapon.PresumedDeadMask;
             if (benchmark)
             {
                 // The benchmark player stands still at the centre of the horde.
