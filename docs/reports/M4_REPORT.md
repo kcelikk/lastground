@@ -1,14 +1,14 @@
 # M4 Raporu — Shooting & Combat (MVP KAPISI)
 
-- **Tarih:** 2026-09-18 · **Branch:** `m4-combat` · **Unity:** 6000.3.24f1 · **Durum:** 🚧 Taslak — iki telefonlu 20 dk kapı testi Redmi şarj olunca yapılacak
-- **Cihazlar:** OnePlus 5T = LOW (USB) · Redmi Pad Pro = MID (kablosuz ADB) · Linux PC (yalnızca ağ karşı tarafı, performans referansı değil)
+- **Tarih:** 2026-09-18 · **Branch:** `m4-combat` · **Unity:** 6000.3.24f1 · **Durum:** ⏳ Onay bekliyor (kullanıcı kontrol testi dahil)
+- **Cihazlar:** OnePlus 5T = LOW (USB) · Redmi Pad Pro = MID (kablosuz ADB, 192.168.1.14) · Linux PC (yalnızca ağ karşı tarafı, performans referansı değil)
 
 ## Kapı kriterleri (TDD_03 §36 M4)
 | Kriter | Sonuç |
 |---|---|
-| 2 telefon, 250+ zombi, 20 dk savaş | ⏳ **Bekliyor (Redmi şarjda).** Ön testler: Redmi host + OnePlus client 3 dk temiz; PC host + OnePlus client **21.5 dk, 0 hata** |
-| Crash / desync yok | ✅ şimdiye kadar: iki cihazda 0 exception; client 300 zombiyi 16–19 KB/s ile izliyor; claim'lerin 0'ı "hedeften uzak" (pozisyon uyumsuzluğu yok) |
-| LOW ≥ 30, MID 45–60 FPS | ✅ OnePlus (LOW) 30.6 ort.; Redmi (MID host) 60.0 |
+| 2 telefon, 250+ zombi, 20 dk savaş | ✅ **Redmi host + OnePlus client, 300 zombi, 20.3 dk**, iki cihazda otomatik ateş + gezinme; 6264 öldürme, 111 oyuncu ölümü. Ayrıca PC host + OnePlus client 21.5 dk |
+| Crash / desync yok | ✅ iki cihazda **0 exception**, kopma yok; client ort. 298 zombi görüyor; **"hedeften uzak" red = 0** (client'ın gördüğü zombi konumu host'la uyumlu) |
+| LOW ≥ 30, MID 45–60 FPS | ✅ Redmi (MID host) **60.0 ort., min 59.6**, en kötü kare 43.8 ms · OnePlus (LOW client) **30.6 sabit**, en kötü kare 34.5 ms |
 | 0 GC/frame | ✅ **oyun kodu 0 B**: EditMode testi (host sim + savaş + replikasyon + client silahı, 90 tick) ve cihazda 300 kare call-stack kaydı. Kalan: Mirror `KcpTransport.OnGUI` ~365 B/f (yalnızca dev build) ve Mirror/kcp2k client döngüsünde ~27 B/f (üçüncü taraf, aşağıda) |
 | Yeni oyuncu kontrolleri 1 dk'da kullanabiliyor | ⏳ Kullanıcı testi bekleniyor. Dokunmatik nişan/ateş cihazda `adb input swipe` ile doğrulandı |
 
@@ -39,7 +39,7 @@
 | App | RunInstaller (+`.Presentation` partial), DevAutomation, RunTelemetry, GcProfileCapture |
 | Editor | `Setup/CombatContentBuilder`, RunSceneBuilder (+`.Hud`), QualityPresetBuilder, `Tools/GcAllocReport` |
 | İçerik | `Assets/ScriptableObjects/{Weapons,Zombies,Players,Presentation}`, `LG_FX_Additive` shader, `M_Tracer`, `Art/UI/{White,HurtVignette}.png`, Run sahnesi, EN/TR `hud.*` + `weapon.assault_rifle` key'leri |
-| Testler | `CombatTests` (17), `CombatNetworkTests` (4) |
+| Testler | `CombatTests` (18), `CombatNetworkTests` (4) |
 
 ## UNITY EDITOR ACTIONS
 Yok. Sahne ve asset'ler `RebuildScenesBatch` ile üretildi.
@@ -51,7 +51,7 @@ Yok. Balance değerleri `Assets/ScriptableObjects/*` asset'lerinde; Inspector'da
 `BuildScripts.BuildAndroidDevelopment`, artımlı 1–3 dk, APK 66.1 MB. Unity build'i adb sunucusunu yeniden başlatır → Redmi için `adb connect 192.168.1.7:36807`.
 
 ## TEST RESULTS
-EditMode **100 / 100** (M3'e göre +21). Öne çıkanlar: loopback'te client ateş eder → host doğrular → 5 zombi ölür → client 5 ceset görür (15/15 claim kabul, 0 red); savaş döngüsü 90 tick'te **0 B** ayırır; hile benzeri atış seli (40 atış bir anda) ≤ 6 kabul; duvar arkası, eski nesil, uzak konum reddedilir; windup'tan kaçılır; kalkma zombileri iter. PlayMode testi yok.
+EditMode **101 / 101** (M3'e göre +22). Öne çıkanlar: loopback'te client ateş eder → host doğrular → 5 zombi ölür → client 5 ceset görür (15/15 claim kabul, 0 red); savaş döngüsü 90 tick'te **0 B** ayırır; hile benzeri atış seli (40 atış bir anda) ≤ 6 kabul; duvar arkası, eski nesil, uzak konum reddedilir; windup'tan kaçılır; kalkma zombileri iter. PlayMode testi yok.
 
 ## PROFILE
 | Test | Cihaz | FPS | Frame max | Sim | Ağ | Not |
@@ -61,7 +61,9 @@ EditMode **100 / 100** (M3'e göre +21). Öne çıkanlar: loopback'te client ate
 | 〃 | OnePlus (LOW) | 30.6 | 32.7 ms | — | giriş 18.4 KB/s, RTT 32 ms | |
 | PC host + OnePlus client, **21.5 dk** | OnePlus (LOW) | 30.6 ort. (min 29.5) | 196 ms (tek), ort. 35 | — | giriş 16.6 ort. / 18.6 maks KB/s | 0 hata, 6383 öldürme, 120 oyuncu ölümü |
 | GC call-stack kaydı, 300 kare savaş | OnePlus client | | | | | oyun kodu 0 B; Mirror IMGUI 365.6 + NetworkLoop 27.0 + telemetri |
-| **İki telefon 20 dk kapı testi** | Redmi + OnePlus | ⏳ | | | | |
+| **İki telefon 20.3 dk kapı testi** | Redmi (MID host) | 60.0 (min 59.6) | 43.8 ms | 0.40 ms ort., tick max 2.28 ms | çıkış 16.8 ort. / 18.6 maks KB/s | 0 hata, 6264 öldürme |
+| 〃 | OnePlus (LOW client) | 30.6 | 34.5 ms | — | giriş 16.6 ort. / **19.1 maks** KB/s, RTT 31.7 ms | 0 hata |
+| Düzeltme doğrulaması, 5 dk | Redmi + OnePlus | 60.0 / 30.6 | 16.7 / 33.2 ms | 0.34 ms | | claim reddi **%2.1** (hız 0, ölü hedef 3) |
 
 Bellek: OnePlus 145–148 MB, Redmi 264 MB.
 
@@ -81,9 +83,9 @@ Bellek: OnePlus 145–148 MB, Redmi 264 MB.
 
 ## OPEN ISSUES
 1. **İki telefonlu 20 dk kapı testi** (Redmi şarjda) + kullanıcı kontrol testi ("1 dk'da öğreniliyor mu").
-2. **Reddedilen claim'ler:** PC testinde %33, bunların **%95'i `TargetGone`** (zaten ölmüş zombiye atış, zararsız). Düzeltme sonrası build'de silah öldürdüğünü öngördüğü zombiyi atlıyor; iki telefon testinde oran ölçülecek. Diğerleri: görüş hattı 298, hız 75, ölü atıcı 75, uzak konum **0**.
+2. **Reddedilen claim'ler — çözüldü.** PC testinde %33 (%95'i ölmüş zombiye atış). "Ölü varsayma" eklenince kapı testinde ölü hedef 8622 → 307'ye indi ama **hız reddi 2195** çıktı: gerçek bir hata — tetik basılıyken reload sırasında cooldown birikiyor, reload bitince **tek karede ~14 mermi** atılıyordu (eskiden hepsi aynı ölen zombiye gidip "ölü hedef" sayıldığı için gizliydi). Düzeltildi + test (düzeltmesiz 0.5 s'de 16 atış ölçüyor). 5 dk doğrulama: **red %2.1**, hız 0. 20 dk kapı testi bu düzeltmeden önceki build'le yapıldı; düzeltme yalnızca patlamayı kaldırıyor (stabilite/FPS/bant etkilenmez).
 3. **Mirror/kcp2k client ~27 B/frame** (üçüncü taraf; oyun kodu değil). IL2CPP yığınları cihaz dışında çözülmüyor; M13'te kcp2k client soket okuma yolunda incelenecek.
 4. Tek seferlik GC tepeleri (client HUD'da bir kez 4906 B/f) ve 196 ms'lik tek frame tepesi — sürekli değil; ilk kullanım (TMP glif, ses) şüphesi, M13 PSO/ısınma ile.
 5. Director olmadan 300 zombi sürekli oyunculara akıyor → otomatik ateşle ~10–20 s'de bir ölüm. Denge M5 (HordeDirector, dalgasız yoğunluk).
-6. Anti-stuck sayacı savaşta arttı (sendeleme "takılma" sayılıyordu) — düzeltildi, iki telefon testinde doğrulanacak.
+6. Anti-stuck savaşta ~2/s (M3'te 0.4/s). Sendeleyen zombiler artık sayılmıyor; kalan dürtmeler hedefinden 14 m'den uzak (çoğu ekran dışı) kalabalıkta. Playtest'te görünür bir sorun olursa M5'te (Director yoğunluğu düşürünce azalması bekleniyor).
 7. Hotspot testi (B5) açık; zombiler placeholder (D1).
