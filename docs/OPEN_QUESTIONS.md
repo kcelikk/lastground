@@ -18,6 +18,7 @@
 | B2 | HIGH sınıf (Snapdragon 8 serisi vb.) bir cihaza erişim var mı? Test grubundan ödünç alınabilir mi? | Üst segment FPS doğrulaması (M10'a kadar gerekmez) | ⏳ Bilgi |
 | B3 | 21 kişilik test grubundaki kaç kişi **aynı ortamda ikişerli** test yapabilir? LAN co-op yalnızca aynı Wi-Fi'da çalışır | Co-op test planı | ⏳ Bilgi |
 | B4 | OnePlus 5T bağlantısı — **çözüldü** (2026-09-18: telefon recovery/sideload modundaydı, sonra USB debugging kapalıydı; TalkBack geliştirici menüsü Developer options ile karıştırılmıştı). Redmi Pad Pro henüz bağlanmadı | M1 iki cihaz testi | ⏳ Redmi bekliyor |
+| B5 | **Hotspot testi (M1 çıkış kriteri):** telefonlardan biri hotspot açıp diğer cihaz ona bağlanınca discovery + oyun. Dizüstünü hotspot'a geçirmek Claude'un internet bağlantısını da taşır; senin onayınla ve uygun anda yapılır. Alternatif: iki telefonla (Redmi bağlanınca) | M1 onayı | ⏳ Bekliyor |
 
 ## C. Yayın / altyapı (M14'e kadar gerekmiyor)
 

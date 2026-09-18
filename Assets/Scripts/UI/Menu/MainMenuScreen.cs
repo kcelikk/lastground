@@ -14,6 +14,7 @@ namespace LastGround.UI.Menu
     public sealed class MainMenuScreen : MonoBehaviour
     {
         const float StatusSeconds = 2.5f;
+        const float DisconnectStatusSeconds = 6f;
 
         [SerializeField] Button _soloButton;
         [SerializeField] Button _coopButton;
@@ -53,7 +54,7 @@ namespace LastGround.UI.Menu
             string reason = NetMessageKeys.For(_sessions.LastDisconnect, _sessions.LastReject);
             if (reason != null)
             {
-                ShowStatus(reason);
+                ShowStatus(reason, DisconnectStatusSeconds);
                 _sessions.ClearLastDisconnect();
             }
         }
@@ -81,14 +82,14 @@ namespace LastGround.UI.Menu
             _localization.SetLanguage(languages[(current + 1) % languages.Count].Code);
         }
 
-        void ShowNotAvailable() => ShowStatus("menu.not_available");
+        void ShowNotAvailable() => ShowStatus("menu.not_available", StatusSeconds);
 
-        void ShowStatus(string key)
+        void ShowStatus(string key, float seconds)
         {
             _statusKey = key;
             _statusLabel.text = _localization.Get(key);
             _statusLabel.gameObject.SetActive(true);
-            _statusHideAt = Time.unscaledTime + StatusSeconds;
+            _statusHideAt = Time.unscaledTime + seconds;
         }
 
         void OnLanguageChanged(string language)
