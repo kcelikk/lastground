@@ -138,6 +138,10 @@ namespace LastGround.App
                 Mode = DevAutomation.ForceAutoFire ? Core.Input.ControlMode.AutoAimAutoFire : (Core.Input.ControlMode)save.Settings.ControlMode,
                 AssistLevel = save.Settings.AimAssist * 0.5f,
             };
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // Soak-test bot: walk to a downed teammate so revives happen without hands on the phones.
+            loop.Register(TickPhase.Input, new TickAction(_ => TouchTwinStickInput.DevSeek = DevReviveDirection(players)));
+#endif
             loop.Register(TickPhase.Input, _input);
             loop.Register(TickPhase.Input, parts.Aim);
             parts.Weapon = new WeaponController(players, parts.Aim, _weapon, parts.Crowd, parts.Nav, seed, claims, parts.Shots,
@@ -275,6 +279,22 @@ namespace LastGround.App
         {
             if (_started && !_outcome.Ended) inner.Tick(dt, _scheduler.Loop.SimTick);
         });
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        static Vector2 DevReviveDirection(PlayerStateTable players)
+        {
+            int me = players.Local.IsValid ? players.Local.Value : -1;
+            if (me < 0 || !players.CanAct(me)) return Vector2.zero;
+            for (int p = 0; p < PlayerStateTable.Max; p++)
+            {
+                if (p == me || !players.IsDowned(p)) continue;
+                players.GetDisplay(p, out float x, out float z, out _);
+                var to = new Vector2(x - players.X[me], z - players.Z[me]);
+                return to.sqrMagnitude > 1f ? to.normalized : Vector2.zero;
+            }
+            return Vector2.zero;
+        }
+#endif
 
         static int CountActive(PlayerStateTable players)
         {

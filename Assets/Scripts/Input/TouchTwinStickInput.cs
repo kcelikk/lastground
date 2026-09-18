@@ -40,6 +40,9 @@ namespace LastGround.Input
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         /// <summary>Dev soak tests: wander in slow circles when there is no touch/keyboard input.</summary>
         public static bool DevWander;
+
+        /// <summary>Dev soak tests: when non-zero, the wander bot walks this way instead (e.g. to a downed teammate).</summary>
+        public static Vector2 DevSeek;
         float _wanderTime;
 #endif
 
@@ -66,7 +69,11 @@ namespace LastGround.Input
             ReadKeyboardAndMouse(ref move, ref aim, ref fire);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            if (DevWander && move == Vector2.zero)
+            if (DevWander && move == Vector2.zero && DevSeek != Vector2.zero)
+            {
+                move = DevSeek;
+            }
+            else if (DevWander && move == Vector2.zero)
             {
                 _wanderTime += dt;
                 float angle = _wanderTime * 0.35f;
