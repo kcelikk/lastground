@@ -89,7 +89,7 @@ adb -s <cihaz> shell "am start -n com.asgardgame.lastground/com.unity3d.player.U
 ```
 - Sahneleri bilerek yeniden üretmek: `-executeMethod LastGround.EditorTools.Setup.ProjectSetup.RebuildScenesBatch` (Menu ve Run'ın üzerine yazar).
 - Unity Editor açıkken batchmode aynı projeyi açamaz; önce Editor'ü kapat.
-- **Performans verisi yalnızca gerçek telefondan** (OnePlus 5T = LOW, USB `3e415066`; Redmi Pad Pro = MID, kablosuz `adb connect 192.168.1.7:<port>`; Unity build adb sunucusunu yeniden başlatır → tekrar bağlan). Editor ölçümü kabul edilmez.
+- **Performans verisi yalnızca gerçek telefondan** (OnePlus 5T = LOW, USB `3e415066`; Redmi Pad Pro = MID, kablosuz `adb connect <ip>:<port>` — IP (DHCP) ve port her açılışta değişebilir, Redmi'de Geliştirici seçenekleri → Kablosuz hata ayıklama ekranından okunur; Unity build adb sunucusunu yeniden başlatır → tekrar bağlan). Editor ölçümü kabul edilmez.
 - İki cihaz bağlıyken her `adb` komutunda `-s <seri>` kullan.
 - Dev build GC ölçümü Mirror `KcpTransport.OnGUI`'den ~360 B/frame içerir (release'te derlenmez); oyun kodunun payı `GcAllocReport` ile ayrılır.
 
