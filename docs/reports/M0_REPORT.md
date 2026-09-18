@@ -1,6 +1,6 @@
 # M0 Raporu — Architecture & Project Foundation
 
-- **Tarih:** 2026-09-18 · **Branch:** `m0-foundation` · **Unity:** 6000.3.24f1 · **Durum:** APPROVE bekliyor
+- **Tarih:** 2026-09-18 · **Branch:** `m0-foundation` · **Unity:** 6000.3.24f1 · **Durum:** ✅ Onaylandı (2026-09-18), `main`e merge edildi
 - Çıkış kriterleri (TDD_03 §36): APK telefonda açılıyor ✅ (OnePlus 5T) · profiler bağlantı noktası ✅ (adb forward ile el sıkışma; Editor Profiler penceresinden bağlanma geliştiricide) · EN↔TR dil değişimi ✅ (cihazda) · repo başka ortamda clone edilip açılıyor ✅ (temiz clone, aynı makine)
 
 ## CREATED / CHANGED FILES
