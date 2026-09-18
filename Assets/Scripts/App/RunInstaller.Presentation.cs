@@ -6,6 +6,8 @@ using LastGround.Rendering.Carnage;
 using LastGround.Rendering.Combat;
 using LastGround.Rendering.Crowd;
 using LastGround.Rendering.Lighting;
+using LastGround.Rendering.Loot;
+using LastGround.Rendering.Objectives;
 using LastGround.UI.Run;
 using UnityEngine;
 
@@ -35,11 +37,16 @@ namespace LastGround.App
             _disposables.Add(blood);
             loop.Register(TickPhase.Presentation, blood);
 
+            var zoneMarker = new ZoneMarker(parts.Objective, _zones, _tracerMaterial);
+            _disposables.Add(zoneMarker);
+            loop.Register(TickPhase.Presentation, zoneMarker);
             var tracers = new TracerSystem(parts.Shots, _tracerMaterial, parts.Preset.TracerCap);
             _disposables.Add(tracers);
             loop.Register(TickPhase.Presentation, tracers);
             loop.Register(TickPhase.Presentation, new DamageNumbers(parts.Hits, _camera, _worldRoot, parts.Preset.DamageNumberCap));
             loop.Register(TickPhase.Presentation, new PlayerViews(parts.Players, _worldRoot, _playerMesh, _playerMaterial));
+            loop.Register(TickPhase.Presentation, new PickupRenderSystem(parts.Pickups, parts.Players,
+                Resources.GetBuiltinResource<Mesh>("Cylinder.fbx"), _coinMaterial, Resources.GetBuiltinResource<Mesh>("Cube.fbx"), _medkitMaterial));
 
             var sfx = new SfxPlayer(transform, parts.Preset.AudioVoices, ProceduralSfx.CreateAll());
             _disposables.Add(sfx);

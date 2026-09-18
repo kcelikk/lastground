@@ -9,6 +9,9 @@ ScriptableObject tanımları; runtime'da **salt okunur** (TDD_02 §25). Bağıml
 | `Weapons/` | `WeaponDefinition` (hasar, atış hızı, şarjör, reload, menzil, spread, crit, delme, knockback, aim assist; `NetIndex` = wire id), `WeaponFireMode` |
 | `Zombies/` | `ZombieDefinition` (can, hız aralığı, saldırı hasarı/windup/cooldown, knockback çarpanı) |
 | `Players/` | `PlayerDefinition` (can, hız, temas yavaşlaması, ölüm/kalkma) |
-| `Presentation/` | `CameraProfile` (pitch, FOV, mesafe, look-ahead, shake) |
+| `Presentation/` | `CameraProfile` (pitch, FOV, mesafe, look-ahead, shake), `PlayerSlotColors` |
+| `Director/` | `DirectorProfile`, `ThreatCurveDefinition`, `PlayerCountScalingProfile` |
+| `Upgrades/` | `UpgradeDefinition`, `UpgradeCatalog` (dizi indeksi = ağ id'si), `LevelCurveDefinition`, `StatId`, `UpgradeRarity` |
+| `Loot/` | `LootDefinition` · `Objectives/ObjectiveDefinition` · `Map/MapZoneSet` |
 
 Asset'ler: `Assets/Art/Crowd/Baked/` (CrowdBaker üretir), `Assets/Resources/Quality/`, `Assets/ScriptableObjects/{Weapons,Zombies,Players,Presentation}/` (`CombatContentBuilder` eksikleri oluşturur, mevcut değerlere dokunmaz).

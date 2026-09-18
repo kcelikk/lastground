@@ -54,7 +54,7 @@ namespace LastGround.Rendering
             var player = new Vector3(_table.X[me], 0f, _table.Z[me]);
             PlayerInputFrame frame = _input.Current;
             Vector3 ahead = Vector3.zero;
-            if (_table.Dead[me]) ahead = Vector3.zero;
+            if (_table.Life[me] != PlayerLife.Alive) ahead = Vector3.zero;
             else if (frame.AimActive) ahead = new Vector3(frame.AimX, 0f, frame.AimY) * _profile.AimLookAhead;
             else ahead = Vector3.ClampMagnitude(new Vector3(frame.MoveX, 0f, frame.MoveY), 1f) * _profile.MoveLookAhead;
             _lookAhead = Vector3.SmoothDamp(_lookAhead, ahead, ref _lookAheadVelocity, _profile.LookAheadSmoothTime, Mathf.Infinity, dt);

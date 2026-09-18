@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dae89924cedd8c4ba2dff32b82d2e91, type: 3}
+  m_Name: DIR_Default
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Director.DirectorProfile
+  SpawnRateStart: 1.2
+  SpawnRatePerMinute: 0.25
+  SpawnRateCap: 8
+  MaxAliveStart: 45
+  MaxAlivePerMinute: 14
+  MaxAliveCap: 300
+  BudgetCarryCap: 30
+  CalmAtStart: 8
+  BuildUpDuration: {x: 35, y: 70}
+  PeakHoldDuration: {x: 15, y: 30}
+  RelaxMinDuration: {x: 10, y: 20}
+  PeakIntensity: 0.75
+  RelaxIntensity: 0.3
+  CalmRate: 0.35
+  BuildUpRate: 1
+  PeakRate: 1.9
+  PeakHoldRate: 1.4
+  RelaxRate: 0.15
+  RateVariance: 0.15
+  BuildUpVariance: 0.3
+  PeakThresholdVariance: 0.08
+  DamageStress: 2.2
+  NearbyRadius: 6
+  NearbySaturation: 25
+  NearbyStress: 0.55
+  LowHealthStress: 0.35
+  StressDecay: 0.12
+  MinSpawnDistance: 22
+  MaxSpawnDistance: 45
+  DespawnDistance: 70
+  SpawnsPerTick: 12
+  TrickleSize: {x: 1, y: 3}
+  PackSize: {x: 6, y: 12}
+  PincerSideSize: {x: 4, y: 8}
+  SurroundSectors: {x: 4, y: 6}
+  SurroundSectorSize: {x: 4, y: 6}
+  PackSpreadDeg: 18
+  LowThreshold: 0.15
+  MediumThreshold: 0.35
+  HighThreshold: 0.55
+  ExtremeThreshold: 0.8
+  LabelHysteresis: 2

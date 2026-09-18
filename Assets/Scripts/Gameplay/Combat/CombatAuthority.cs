@@ -3,6 +3,7 @@ using LastGround.Data.Weapons;
 using LastGround.Gameplay.Crowd;
 using LastGround.Gameplay.Navigation;
 using LastGround.Gameplay.Players;
+using LastGround.Gameplay.Upgrades;
 using LastGround.Gameplay.Zombies;
 using Unity.Mathematics;
 
@@ -32,6 +33,16 @@ namespace LastGround.Gameplay.Combat
             _runSeed = runSeed;
             _validator = new HitClaimValidator(players, world.Crowd, nav, weaponsByNetIndex);
         }
+
+        /// <summary>Team builds (upgraded damage, pierce, fire rate). Null = base weapon values.</summary>
+        public TeamBuilds Builds
+        {
+            get => _validator.Builds;
+            set => _validator.Builds = value;
+        }
+
+        /// <summary>Kill rewards that depend on the shooter's build (heal on kill).</summary>
+        public PlayerHealthSystem Health { get; set; }
 
         public int Accepted => _verdicts[(int)HitClaimVerdict.Accepted];
         public int Kills { get; private set; }
@@ -73,13 +84,15 @@ namespace LastGround.Gameplay.Combat
             _verdicts[(int)verdict]++;
             if (verdict != HitClaimVerdict.Accepted) return;
 
-            WeaponDefinition weapon = _validator.WeaponOf(claim.Weapon);
+            ref readonly WeaponStats stats = ref _validator.StatsOf(claim.Shooter);
             uint seed = ShotRng.Seed(_runSeed, claim.Shooter, claim.ShotSeq);
-            float damage = DamageResolver.Resolve(weapon, seed, claim.Pellet, out bool crit);
+            float damage = DamageResolver.Resolve(stats, seed, claim.Pellet, out bool crit);
             var shooter = new float2(_players.X[claim.Shooter], _players.Z[claim.Shooter]);
             float2 dir = math.normalizesafe(new float2(claim.HitX, claim.HitZ) - shooter);
             bool local = _players.Local.IsValid && claim.Shooter == _players.Local.Value;
-            if (_world.ApplyDamage(claim.Slot, damage, dir, weapon.Knockback, crit, local)) Kills++;
+            if (!_world.ApplyDamage(claim.Slot, damage, dir, stats.Knockback, crit, local)) return;
+            Kills++;
+            Health?.OnKill(claim.Shooter);
         }
     }
 }

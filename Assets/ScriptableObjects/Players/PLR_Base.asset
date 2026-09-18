@@ -17,7 +17,7 @@ MonoBehaviour:
   SlowPerContact: 0.07
   MaxContactSlow: 0.35
   ContactRadius: 1.1
-  RespawnDelay: 5
+  RespawnDelay: 60
   RespawnInvulnerability: 3
   RespawnPushRadius: 5
   RespawnPushSpeed: 10

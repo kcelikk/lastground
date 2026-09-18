@@ -18,6 +18,7 @@ namespace LastGround.Core.Net.Protocol
         public const byte LoadRun = 10;
         public const byte RunReady = 11;
         public const byte RunStart = 12;
+        public const byte RunEnd = 13;
 
         // Players (20–29)
         public const byte PlayerInput = 20;
@@ -32,6 +33,24 @@ namespace LastGround.Core.Net.Protocol
         // Combat (40–49)
         public const byte HitClaimBatch = 40;
         public const byte PlayerVitals = 41;
+
+        // Director / run status (50–59)
+        public const byte DirectorInfo = 50;
+
+        // Progression (60–69)
+        public const byte TeamXp = 60;
+        public const byte UpgradeOffer = 61;
+        public const byte SelectUpgrade = 62;
+        public const byte BuildChanged = 63;
+
+        // Loot (70–79)
+        public const byte PickupSpawnBatch = 70;
+        public const byte PickupClaim = 71;
+        public const byte PickupTaken = 72;
+        public const byte TeamWallet = 73;
+
+        // Objectives (80–89)
+        public const byte ObjectiveState = 80;
 
         public const int Count = 256;
     }

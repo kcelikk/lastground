@@ -41,7 +41,7 @@ namespace LastGround.Gameplay.Combat
         {
             for (int p = 0; p < PlayerStateTable.Max; p++)
             {
-                if (p == _players.Local.Value || !_players.Active[p] || !_players.Firing[p] || _players.Dead[p])
+                if (p == _players.Local.Value || !_players.Active[p] || !_players.Firing[p] || !_players.CanAct(p))
                 {
                     _timer[p] = 0f;
                     continue;

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ad764d0804baf5e4a3194daf171fe0c, type: 3}
+  m_Name: MAP_Greybox_Zones
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Map.MapZoneSet
+  Zones:
+  - Id: north_yard
+    NameKey: zone.north_yard
+    Center: {x: 0, y: 30}
+    HalfSize: {x: 36, y: 8}
+  - Id: south_yard
+    NameKey: zone.south_yard
+    Center: {x: 0, y: -30}
+    HalfSize: {x: 36, y: 8}
+  - Id: west_lane
+    NameKey: zone.west_lane
+    Center: {x: -26, y: 0}
+    HalfSize: {x: 12, y: 17}
+  - Id: east_lane
+    NameKey: zone.east_lane
+    Center: {x: 26, y: 0}
+    HalfSize: {x: 12, y: 17}

@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 401c9f02bade9a40ca7d2a074fb6b7e7, type: 3}
+  m_Name: UPG_Catalog
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Upgrades.UpgradeCatalog
+  Upgrades:
+  - {fileID: 11400000, guid: af4ae760142c6244caf0cb5803b65f26, type: 2}
+  - {fileID: 11400000, guid: add22d55ea87ede1cab8e59ad1d43c80, type: 2}
+  - {fileID: 11400000, guid: 2edba0d31aadd7a53850ff29a1babb30, type: 2}
+  - {fileID: 11400000, guid: 276a47b00ff302c2fb9bf43b8a4aa200, type: 2}
+  - {fileID: 11400000, guid: f1cd55942693fb1b0ac9653a21cb9f86, type: 2}
+  - {fileID: 11400000, guid: e0aa08ea5f6550e55a53dfc94f65926e, type: 2}
+  - {fileID: 11400000, guid: 87eb3f9e2b1101b39982a42ed5841a50, type: 2}
+  - {fileID: 11400000, guid: dc60e98587149801aabd8e521c85d513, type: 2}
+  - {fileID: 11400000, guid: 6c6c98b04579e88e4967dd5cdf6c55ea, type: 2}
+  - {fileID: 11400000, guid: 28165b9e0c03e38849b3d6493904db75, type: 2}
+  - {fileID: 11400000, guid: 429fc121ac638fc808db9a9a8c03835d, type: 2}
+  - {fileID: 11400000, guid: 03993d60774cd632696d5b580a0b54e1, type: 2}
+  RarityWeights:
+  - 60
+  - 28
+  - 10
+  - 2
+  RarityColors:
+  - {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  - {r: 0.3, g: 0.6, b: 1, a: 1}
+  - {r: 0.7, g: 0.35, b: 1, a: 1}
+  - {r: 1, g: 0.7, b: 0.15, a: 1}
+  RarityKeys:
+  - upgrade.rarity.common
+  - upgrade.rarity.rare
+  - upgrade.rarity.epic
+  - upgrade.rarity.legendary
+  ChoicesPerOffer: 3

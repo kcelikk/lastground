@@ -11,7 +11,7 @@ namespace LastGround.Gameplay.Players
     /// <summary>
     /// Kinematic movement of the local player (client-authoritative, validated by the host — TDD_02 §16).
     /// Slides along walls, is slowed by touching zombies (−7 % each, at most −35 %, TDD_01 §8.4) but never blocked,
-    /// faces the aim direction while aiming, and stands still while dead.
+    /// faces the aim direction while aiming, crawls while downed and stands still while dead.
     /// </summary>
     public sealed class PlayerMotor : ITickable
     {
@@ -39,17 +39,21 @@ namespace LastGround.Gameplay.Players
             _table.SetLocal(_x, _z, _yaw, 0f, 0f);
         }
 
+        /// <summary>Team builds (move speed upgrades). Optional.</summary>
+        public LastGround.Gameplay.Upgrades.TeamBuilds Builds { get; set; }
+
         /// <summary>Speed multiplier from touching zombies last frame (1 = free).</summary>
         public float ContactFactor { get; private set; } = 1f;
 
         public void Tick(float dt, uint tick)
         {
             int me = _table.Local.IsValid ? _table.Local.Value : -1;
-            if (me >= 0 && _table.Dead[me])
+            if (me >= 0 && _table.Life[me] == PlayerLife.Dead)
             {
                 _table.SetLocal(_x, _z, _yaw, 0f, 0f);
                 return;
             }
+            bool downed = me >= 0 && _table.Life[me] == PlayerLife.Downed;
 
             PlayerInputFrame frame = _input.Current;
             float mx = frame.MoveX;
@@ -62,7 +66,8 @@ namespace LastGround.Gameplay.Players
             }
 
             ContactFactor = 1f - Mathf.Min(_definition.MaxContactSlow, CountContacts() * _definition.SlowPerContact);
-            float speed = _definition.MoveSpeed * ContactFactor;
+            float upgrade = me >= 0 && Builds != null ? 1f + Builds.Of(me).Get(LastGround.Data.Upgrades.StatId.MoveSpeedPct) / 100f : 1f;
+            float speed = _definition.MoveSpeed * upgrade * ContactFactor * (downed ? _definition.DownedSpeedFactor : 1f);
             float vx = mx * speed;
             float vz = mz * speed;
             float nx = Mathf.Clamp(_x + vx * dt, -_halfBounds, _halfBounds);
@@ -76,7 +81,7 @@ namespace LastGround.Gameplay.Players
             }
             _x = nx;
             _z = nz;
-            if (frame.AimActive && (frame.AimX != 0f || frame.AimY != 0f))
+            if (!downed && frame.AimActive && (frame.AimX != 0f || frame.AimY != 0f))
                 _yaw = Mathf.Atan2(frame.AimX, frame.AimY) * Mathf.Rad2Deg;
             else if (magnitude > 0.1f)
                 _yaw = Mathf.Atan2(mx, mz) * Mathf.Rad2Deg;

@@ -7,16 +7,25 @@ using LastGround.Core.Net.Session;
 using LastGround.Core.Services;
 using LastGround.Core.Tick;
 using LastGround.Data.Crowd;
+using LastGround.Data.Director;
+using LastGround.Data.Loot;
 using LastGround.Data.Map;
+using LastGround.Data.Objectives;
 using LastGround.Data.Players;
 using LastGround.Data.Presentation;
 using LastGround.Data.Quality;
+using LastGround.Data.Upgrades;
 using LastGround.Data.Weapons;
 using LastGround.Data.Zombies;
 using LastGround.Gameplay.Combat;
 using LastGround.Gameplay.Crowd;
+using LastGround.Gameplay.Loot;
+using LastGround.Gameplay.Director;
 using LastGround.Gameplay.Navigation;
+using LastGround.Gameplay.Objectives;
 using LastGround.Gameplay.Players;
+using LastGround.Gameplay.Run;
+using LastGround.Gameplay.Upgrades;
 using LastGround.Gameplay.Zombies;
 using LastGround.Input;
 using LastGround.Networking.Replication;
@@ -39,7 +48,6 @@ namespace LastGround.App
     public sealed partial class RunInstaller : MonoBehaviour
     {
         const int CrowdCapacity = 512;
-        const int HordePopulation = 300;
         const float BenchmarkWorldSize = 140f;
 
         [SerializeField] Camera _camera;
@@ -50,6 +58,16 @@ namespace LastGround.App
         [SerializeField] ZombieDefinition _walker;
         [SerializeField] PlayerDefinition _playerDefinition;
         [SerializeField] CameraProfile _cameraProfile;
+        [SerializeField] DirectorProfile _directorProfile;
+        [SerializeField] ThreatCurveDefinition _threatCurve;
+        [SerializeField] PlayerCountScalingProfile _playerScaling;
+        [SerializeField] UpgradeCatalog _upgrades;
+        [SerializeField] LevelCurveDefinition _levelCurve;
+        [SerializeField] LootDefinition _loot;
+        [SerializeField] MapZoneSet _zones;
+        [SerializeField] ObjectiveDefinition _clearArea;
+        [SerializeField] Material _coinMaterial;
+        [SerializeField] Material _medkitMaterial;
         [SerializeField] Material _bloodParticleMaterial;
         [SerializeField] Material _bloodSplatMaterial;
         [SerializeField] Material _tracerMaterial;
@@ -58,11 +76,21 @@ namespace LastGround.App
         [SerializeField] TouchTwinStickInput _input;
         [SerializeField] RunHud _hud;
         [SerializeField] CombatHud _combatHud;
+        [SerializeField] RunStatusHud _statusHud;
+        [SerializeField] TeamPanel _teamPanel;
+        [SerializeField] TeammateIndicators _teammateIndicators;
+        [SerializeField] ResultsScreen _results;
+        [SerializeField] LevelUpPanel _levelUp;
+        [SerializeField] XpBar _xpBar;
+        [SerializeField] ObjectivePanel _objectivePanel;
+        [SerializeField] ObjectiveIndicator _objectiveIndicator;
 
         readonly List<System.IDisposable> _disposables = new List<System.IDisposable>();
         SessionService _service;
         TickScheduler _scheduler;
         bool _started;
+        readonly RunOutcome _outcome = new RunOutcome();
+        LevelUpPanel _pause;
 
         /// <summary>Everything the presentation half needs, collected while the simulation half is built.</summary>
         struct RunParts
@@ -81,6 +109,17 @@ namespace LastGround.App
             public CombatAuthority Authority;
             public PlayerHealthSystem Health;
             public BenchmarkCrowdDriver Benchmark;
+            public RunStatus Status;
+            public HordeDirector Director;
+            public RunReferee Referee;
+            public TeamBuilds Builds;
+            public TeamXp Xp;
+            public LocalOffers Offers;
+            public TeamProgress Progress;
+            public PickupTable Pickups;
+            public TeamWallet Wallet;
+            public PickupRegistry Registry;
+            public ObjectiveState Objective;
         }
 
         void Start()
@@ -101,17 +140,47 @@ namespace LastGround.App
                 Nav = benchmark || _navGrid == null ? NavGrid.Open((int)BenchmarkWorldSize) : NavGrid.FromAsset(_navGrid),
                 Players = new PlayerStateTable { Local = session.LocalPlayer },
                 Shots = new EventChannel<ShotFired>(128),
+                Status = new RunStatus(),
+                Builds = new TeamBuilds(_upgrades),
+                Xp = new TeamXp(),
+                Offers = new LocalOffers(session.LocalPlayer.Value),
+                Pickups = new PickupTable(256),
+                Wallet = new TeamWallet(),
+                Objective = new ObjectiveState(),
             };
             _disposables.Add(parts.Nav);
             float worldSize = parts.Nav.Width * parts.Nav.CellSize;
             PlayerStateTable players = parts.Players;
 
-            var sync = new PlayerSync(session, players, _playerDefinition.MoveSpeed);
+            var sync = new PlayerSync(session, players, _playerDefinition.MoveSpeed) { Builds = parts.Builds };
             _disposables.Add(sync);
             var vitals = new PlayerVitalsSync(session, players);
             _disposables.Add(vitals);
+            var directorInfo = new DirectorInfoSync(session, parts.Status);
+            _disposables.Add(directorInfo);
+            var runEnd = new RunEndSync(session, _outcome);
+            _disposables.Add(runEnd);
 
             IHitClaimSink claims = session.IsAuthority ? BuildHost(ref parts, loop, benchmark, seed) : BuildClient(ref parts, loop);
+            var objectiveSync = new ObjectiveSync(session, parts.Objective);
+            _disposables.Add(objectiveSync);
+            loop.Register(TickPhase.NetSend, objectiveSync);
+            var lootSync = new LootSync(session, parts.Pickups, parts.Wallet, parts.Registry);
+            _disposables.Add(lootSync);
+            loop.Register(TickPhase.NetSend, lootSync);
+            IPickupClaimSink pickupClaims = parts.Registry != null ? parts.Registry : (IPickupClaimSink)lootSync;
+            var progression = new ProgressionSync(session, parts.Xp, parts.Builds, parts.Offers, parts.Progress);
+            _disposables.Add(progression);
+            loop.Register(TickPhase.NetSend, progression);
+            if (parts.Progress != null)
+            {
+                parts.Progress.Offers = progression;
+                parts.Offers.Choices = parts.Progress;
+            }
+            else
+            {
+                parts.Offers.Choices = progression;
+            }
 
             // Local player: raw sticks → aim resolver → motor + weapon (TDD_01 §3.1).
             ISaveService save = AppServices.Get<ISaveService>();
@@ -120,10 +189,14 @@ namespace LastGround.App
                 Mode = DevAutomation.ForceAutoFire ? Core.Input.ControlMode.AutoAimAutoFire : (Core.Input.ControlMode)save.Settings.ControlMode,
                 AssistLevel = save.Settings.AimAssist * 0.5f,
             };
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // Soak-test bot: walk to a downed teammate so revives happen without hands on the phones.
+            loop.Register(TickPhase.Input, new TickAction(_ => TouchTwinStickInput.DevSeek = DevReviveDirection(players)));
+#endif
             loop.Register(TickPhase.Input, _input);
             loop.Register(TickPhase.Input, parts.Aim);
             parts.Weapon = new WeaponController(players, parts.Aim, _weapon, parts.Crowd, parts.Nav, seed, claims, parts.Shots,
-                session.IsAuthority ? null : parts.Crowd as CrowdReplica, _walker.MaxHealth);
+                session.IsAuthority ? null : parts.Crowd as CrowdReplica, _walker.MaxHealth) { Builds = parts.Builds };
             parts.Aim.Ignore = parts.Weapon.PresumedDeadMask;
             if (benchmark)
             {
@@ -134,15 +207,30 @@ namespace LastGround.App
             {
                 PlayerId me = session.LocalPlayer;
                 loop.Register(TickPhase.LocalPlayer, Gate(new PlayerMotor(players, parts.Aim, _playerDefinition, worldSize,
-                    me.Value * 3f - 4.5f, -3f, parts.Nav, parts.Crowd)));
+                    me.Value * 3f - 4.5f, -3f, parts.Nav, parts.Crowd) { Builds = parts.Builds }));
                 loop.Register(TickPhase.LocalPlayer, Gate(parts.Weapon));
+                loop.Register(TickPhase.LocalPlayer, Gate(new PickupCollector(parts.Pickups, players, _loot, pickupClaims) { Builds = parts.Builds }));
             }
             loop.Register(TickPhase.NetSend, sync);
             loop.Register(TickPhase.NetSend, vitals);
+            loop.Register(session.IsAuthority ? TickPhase.NetSend : TickPhase.Presentation, Gate(directorInfo));
+            loop.Register(TickPhase.NetSend, runEnd);
             loop.Register(TickPhase.Presentation, new TickAction(_ => sync.Interpolate()));
 
             BuildPresentation(parts, loop);
-            _combatHud.Bind(players, parts.Weapon, parts.Aim, _playerDefinition.MaxHealth, _playerDefinition.RespawnDelay, mode =>
+            _statusHud.Bind(parts.Status);
+            _xpBar.Bind(parts.Xp);
+            _objectivePanel.Bind(parts.Objective, _zones, _clearArea);
+            _objectiveIndicator.Bind(parts.Objective, _zones, _camera);
+            _levelUp.Bind(parts.Offers, _upgrades, () => CountActive(players) <= 1);
+            _pause = _levelUp;
+            _input.Blocker = () => _levelUp.BlockingRect;
+            _teamPanel.Bind(players, session, _playerDefinition.MaxHealth);
+            _teammateIndicators.Bind(players, _camera);
+            _results.Bind(_outcome, _service);
+            _combatHud.SetOutcome(_outcome);
+            _combatHud.SetWallet(parts.Wallet);
+            _combatHud.Bind(players, parts.Weapon, parts.Aim, _playerDefinition.MaxHealth, () => CountActive(players) <= 1, mode =>
             {
                 save.Settings.ControlMode = (int)mode;
                 save.RequestSave();
@@ -151,6 +239,10 @@ namespace LastGround.App
             var telemetry = gameObject.AddComponent<RunTelemetry>();
             telemetry.Bind(session, parts.Crowd, parts.World);
             telemetry.BindCombat(players, parts.Weapon, parts.Authority, parts.Health);
+            telemetry.BindDirector(parts.Status, parts.Director);
+            telemetry.BindProgress(parts.Xp, parts.Builds);
+            telemetry.BindLoot(parts.Wallet, parts.Registry);
+            if (parts.Director != null) gameObject.AddComponent<DirectorLog>().Bind(parts.Status, parts.Director, _service.CurrentRun.Seed);
             if (parts.Benchmark != null)
             {
                 gameObject.AddComponent<PerfBenchmarkRunner>().Bind(parts.Benchmark, _crowdRenderer, AppServices.Get<QualityService>(),
@@ -170,8 +262,11 @@ namespace LastGround.App
             parts.Crowd = crowd;
             parts.Deaths = crowd.Deaths;
             parts.Hits = crowd.Hits;
-            parts.Health = new PlayerHealthSystem(parts.Players, _playerDefinition);
+            parts.Health = new PlayerHealthSystem(parts.Players, _playerDefinition) { Builds = parts.Builds };
             loop.Register(TickPhase.Combat, Gate(parts.Health));
+            var referee = new RunReferee(parts.Health, parts.Status, _outcome);
+            loop.Register(TickPhase.Combat, Gate(referee));
+            parts.Referee = referee;
 
             if (benchmark)
             {
@@ -184,11 +279,34 @@ namespace LastGround.App
             _disposables.Add(world);
             world.DamageSink = parts.Health;
             world.Respawns = parts.Health.Respawns;
-            var spawner = new TestHordeSpawner(world, parts.Players, seed) { Population = HordePopulation, KillsPerSecond = 0f };
-            loop.Register(TickPhase.Director, Gate(spawner));
+            var footprint = new CameraFootprint(_cameraProfile, 3f);
+            parts.Director = new HordeDirector(world, parts.Players, _directorProfile, _threatCurve, _playerScaling, footprint,
+                _playerDefinition.MaxHealth, parts.Status, seed);
+            parts.Director.Governor.TargetFrameSeconds = 1f / Mathf.Max(30, parts.Preset.TargetFps);
+            HordeDirector director = parts.Director;
+            loop.Register(TickPhase.Director, Gate(director));
+            loop.Register(TickPhase.Presentation, new TickAction(_ => director.Governor.Report(Time.unscaledDeltaTime)));
             loop.Register(TickPhase.ZombieSim, Gate(world));
 
             parts.Authority = new CombatAuthority(world, parts.Players, parts.Nav, WeaponTable(), seed);
+            CombatAuthority authority = parts.Authority;
+            authority.Builds = parts.Builds;
+            authority.Health = parts.Health;
+            parts.Referee.Kills = () => authority.Kills;
+            parts.Progress = new TeamProgress(crowd, parts.Players, parts.Builds, _levelCurve, _walker.Xp, seed);
+            loop.Register(TickPhase.Combat, Gate(parts.Progress));
+            parts.Registry = new PickupRegistry(parts.Pickups, crowd, parts.Players, _loot, _walker, parts.Wallet, seed)
+            {
+                Health = parts.Health, Builds = parts.Builds,
+            };
+            loop.Register(TickPhase.LootEvents, Gate(parts.Registry));
+            TeamWallet wallet = parts.Wallet;
+            parts.Referee.Coins = () => wallet.Coins;
+            var objectives = new ObjectiveSystem(crowd, parts.Players, _zones, _clearArea, parts.Status, parts.Objective, seed)
+            {
+                Director = parts.Director, Loot = parts.Registry,
+            };
+            loop.Register(TickPhase.LootEvents, Gate(objectives));
             loop.Register(TickPhase.Combat, Gate(parts.Authority));
             var claimSync = new HitClaimSync(parts.Session, parts.Authority);
             _disposables.Add(claimSync);
@@ -233,11 +351,35 @@ namespace LastGround.App
 
         void OnRunStarted() => _started = true;
 
-        /// <summary>Holds a system until every device has loaded the run (RunStart).</summary>
+        /// <summary>Runs a system only between RunStart (every device loaded) and the end of the run.</summary>
         ITickable Gate(ITickable inner) => new TickAction(dt =>
         {
-            if (_started) inner.Tick(dt, _scheduler.Loop.SimTick);
+            // Solo only: an open level-up panel pauses the run (co-op never pauses, TDD_01 §7.5).
+            if (_started && !_outcome.Ended && (_pause == null || !_pause.WantsPause)) inner.Tick(dt, _scheduler.Loop.SimTick);
         });
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        static Vector2 DevReviveDirection(PlayerStateTable players)
+        {
+            int me = players.Local.IsValid ? players.Local.Value : -1;
+            if (me < 0 || !players.CanAct(me)) return Vector2.zero;
+            for (int p = 0; p < PlayerStateTable.Max; p++)
+            {
+                if (p == me || !players.IsDowned(p)) continue;
+                players.GetDisplay(p, out float x, out float z, out _);
+                var to = new Vector2(x - players.X[me], z - players.Z[me]);
+                return to.sqrMagnitude > 1f ? to.normalized : Vector2.zero;
+            }
+            return Vector2.zero;
+        }
+#endif
+
+        static int CountActive(PlayerStateTable players)
+        {
+            int count = 0;
+            for (int p = 0; p < PlayerStateTable.Max; p++) if (players.Active[p]) count++;
+            return count;
+        }
 
         /// <summary>Benchmark runs have no combat authority; the idle weapon's claims go nowhere.</summary>
         sealed class DiscardClaims : IHitClaimSink

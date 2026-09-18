@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62e646abe7748662fbe451ccc6088204, type: 3}
+  m_Name: UPG_LevelCurve
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Upgrades.LevelCurveDefinition
+  A: 6
+  Exponent: 1.5
+  B: 6
+  PlayerCountXpScale:
+  - 1
+  - 1.35
+  - 1.65
+  - 1.9
+  MaxLevel: 99

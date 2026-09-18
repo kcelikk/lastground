@@ -15,6 +15,11 @@ namespace LastGround.Data.Zombies
         public byte TypeIndex;
 
         public float MaxHealth = 45f;
+        /// <summary>Team XP for a kill (TDD_01 §13.1: shared equally).</summary>
+        public int Xp = 1;
+        /// <summary>Chance a kill drops coin (aggregated into piles, TDD_01 §13.1).</summary>
+        [Range(0f, 1f)] public float CoinChance = 0.35f;
+        public int CoinValue = 1;
         public float MinSpeed = 1.3f;
         public float MaxSpeed = 2.1f;
 

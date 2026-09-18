@@ -6,7 +6,8 @@
         "LastGround.Localization",
         "LastGround.Gameplay",
         "Unity.TextMeshPro",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "LastGround.Data"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
