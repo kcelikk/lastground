@@ -155,7 +155,7 @@ namespace LastGround.Core.Net.Session
 
         void BecomeHost(bool listening)
         {
-            _clock.StartAsHost(_now);
+            _clock.StartAsHost(Now());
             LocalPlayer = new PlayerId(0);
             SessionName = string.IsNullOrEmpty(_config.SessionName) ? _config.PlayerName : _config.SessionName;
             _players.Clear();
@@ -204,6 +204,7 @@ namespace LastGround.Core.Net.Session
         void SetState(SessionState state)
         {
             if (State == state) return;
+            Log.Info(LogCategory.Net, "Session " + State + " -> " + state + " (" + Role + ")");
             State = state;
             StateChanged?.Invoke(state);
         }
@@ -226,7 +227,7 @@ namespace LastGround.Core.Net.Session
             }
             if (_server == null) return;
             LobbyPlayer target = Find(player);
-            if (target == null || target.ConnectionId < 0) return;
+            if (target == null || !target.HasConnection) return;
             SendRaw(target.ConnectionId, channel);
         }
 
@@ -235,7 +236,7 @@ namespace LastGround.Core.Net.Session
             if (_server == null) return;
             for (int i = 0; i < _players.Count; i++)
             {
-                if (_players[i].ConnectionId >= 0)
+                if (_players[i].HasConnection)
                     SendRaw(_players[i].ConnectionId, channel);
             }
         }
@@ -347,6 +348,9 @@ namespace LastGround.Core.Net.Session
 
         // ------------------------------------------------------------------ helpers
 
+        /// <summary>Current local time: the configured clock when available, else the last tick time.</summary>
+        double Now() => _config.TimeSource != null ? _config.TimeSource() : _now;
+
         LobbyPlayer Find(PlayerId id)
         {
             for (int i = 0; i < _players.Count; i++)
@@ -360,7 +364,7 @@ namespace LastGround.Core.Net.Session
         {
             for (int i = 0; i < _players.Count; i++)
             {
-                if (_players[i].ConnectionId == connectionId) return _players[i];
+                if (_players[i].HasConnection && _players[i].ConnectionId == connectionId) return _players[i];
             }
             return null;
         }

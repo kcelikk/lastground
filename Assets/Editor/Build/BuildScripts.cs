@@ -35,6 +35,23 @@ namespace LastGround.EditorTools.Build
             Run(options);
         }
 
+        public const string LinuxDevPath = "Builds/Linux/LastGround.x86_64";
+
+        /// <summary>Desktop test peer for LAN sessions with a phone (not a performance reference).</summary>
+        [MenuItem("LastGround/Build/Linux Development Player")]
+        public static void BuildLinuxDevelopment()
+        {
+            var options = new BuildPlayerOptions
+            {
+                scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray(),
+                locationPathName = LinuxDevPath,
+                target = BuildTarget.StandaloneLinux64,
+                targetGroup = BuildTargetGroup.Standalone,
+                options = BuildOptions.Development,
+            };
+            Run(options);
+        }
+
         static void Run(BuildPlayerOptions options)
         {
             if (options.scenes.Length == 0)

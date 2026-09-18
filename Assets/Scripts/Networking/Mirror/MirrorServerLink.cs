@@ -10,7 +10,10 @@ namespace LastGround.Networking.MirrorLink
     /// <summary>Host side over Mirror's NetworkServer. Only one instance may be active (Mirror is static).</summary>
     sealed class MirrorServerLink : IServerLink
     {
+        const int TraceCount = 5;
+
         readonly KcpTransport _transport;
+        int _sent;
 
         public MirrorServerLink(KcpTransport transport)
         {
@@ -50,8 +53,13 @@ namespace LastGround.Networking.MirrorLink
 
         public void Send(int connectionId, ArraySegment<byte> data, NetChannel channel)
         {
-            if (NetworkServer.connections.TryGetValue(connectionId, out NetworkConnectionToClient conn))
-                conn.Send(new LgPacket { Payload = data }, MirrorLinkFactory.ToMirrorChannel(channel));
+            if (!NetworkServer.connections.TryGetValue(connectionId, out NetworkConnectionToClient conn))
+            {
+                Log.Warning(LogCategory.Net, "Send to unknown connection " + connectionId);
+                return;
+            }
+            if (_sent++ < TraceCount) Log.Info(LogCategory.Net, "Server send #" + _sent + " to " + connectionId + " id " + data.Array[data.Offset] + " (" + data.Count + " B)");
+            conn.Send(new LgPacket { Payload = data }, MirrorLinkFactory.ToMirrorChannel(channel));
         }
 
         public void Disconnect(int connectionId)

@@ -1,5 +1,7 @@
 # LastGround.Rendering
 
-ZombieRenderSystem (VAT + instancing), Corpse, BloodMap, Tracer, QualityService (TDD_02 §21). Gameplay'i yalnızca okur. İlk kod: M2.
+Çizim sistemleri; Gameplay'i yalnızca okur. Bağımlılık: Core, Data, Gameplay, URP.
 
-**Bağımlılıklar:** LastGround.Core, LastGround.Data, LastGround.Gameplay, Unity.Mathematics, Unity.Collections, Unity.Burst, Unity.RenderPipelines.Core.Runtime, Unity.RenderPipelines.Universal.Runtime
+- `CrowdRenderer` — `ICrowdRenderSource` → `Graphics.RenderMeshInstanced` (1023'lük batch). M1: kapsül; M2: VAT + LOD + footprint culling + tint (TDD_02 §21.3).
+- `PlayerViews` — 4 oyuncu slotu için GameObject, slot rengi.
+- `FollowCamera` — sabit 55°/0° yaw, FOV 35, 22 m. M4'te `TopDownCameraRig`.

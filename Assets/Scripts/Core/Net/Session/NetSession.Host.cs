@@ -52,6 +52,7 @@ namespace LastGround.Core.Net.Session
                     player.RttMs = ping.LastRttMs;
                     _rosterDirty = true;
                 }
+                _clock.SetLocalTime(Now());
                 Send(player.Id, new Pong { ClientTime = ping.ClientTime, HostTime = _clock.HostTime });
                 return;
             }
@@ -85,6 +86,7 @@ namespace LastGround.Core.Net.Session
             {
                 Id = FreePlayerId(),
                 Name = SanitizeName(request.PlayerName),
+                HasConnection = true,
                 ConnectionId = connectionId,
             };
             _players.Add(player);

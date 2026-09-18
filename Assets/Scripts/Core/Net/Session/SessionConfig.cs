@@ -20,5 +20,11 @@ namespace LastGround.Core.Net.Session
 
         /// <summary>Seconds between client clock pings.</summary>
         public double PingInterval = 1.0;
+
+        /// <summary>
+        /// Optional high-resolution clock in the same time base as <c>Tick(now)</c>. Messages arrive between ticks;
+        /// without it, RTT and clock offset are quantized to whole frames (a LAN ping is shorter than one frame).
+        /// </summary>
+        public System.Func<double> TimeSource;
     }
 }

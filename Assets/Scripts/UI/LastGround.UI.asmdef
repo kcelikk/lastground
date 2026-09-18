@@ -4,6 +4,7 @@
     "references": [
         "LastGround.Core",
         "LastGround.Localization",
+        "LastGround.Gameplay",
         "Unity.TextMeshPro",
         "UnityEngine.UI"
     ],

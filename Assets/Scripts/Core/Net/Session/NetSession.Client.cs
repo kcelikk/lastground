@@ -70,7 +70,7 @@ namespace LastGround.Core.Net.Session
                 {
                     var pong = default(Pong);
                     pong.Read(ref reader);
-                    if (!reader.Failed) _clock.AddSample(pong.ClientTime, _now, pong.HostTime);
+                    if (!reader.Failed) _clock.AddSample(pong.ClientTime, Now(), pong.HostTime);
                     return;
                 }
             }

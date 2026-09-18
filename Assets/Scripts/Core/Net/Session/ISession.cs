@@ -29,6 +29,9 @@ namespace LastGround.Core.Net.Session
         INetStats Stats { get; }
         IReadOnlyList<LobbyPlayer> Players { get; }
 
+        /// <summary>Client: why the host refused the last join (None otherwise).</summary>
+        JoinRejectReason LastRejectReason { get; }
+
         /// <summary>Host only: whether new joins are accepted (false once a run starts).</summary>
         bool AcceptingPlayers { get; set; }
 

@@ -30,6 +30,12 @@ namespace LastGround.Core.Net.Link
         /// <summary>One-way delay in seconds applied to every packet.</summary>
         public double Latency { get; set; }
 
+        /// <summary>
+        /// Hands out negative connection ids like kcp2k does for some endpoints (hash-based ids).
+        /// Keeps code from treating the sign of an id as meaningful.
+        /// </summary>
+        public bool NegativeConnectionIds { get; set; }
+
         /// <summary>0..1 drop probability for unreliable packets.</summary>
         public float UnreliableLoss { get; set; }
 
@@ -132,7 +138,7 @@ namespace LastGround.Core.Net.Link
             {
                 connectionId = 0;
                 if (!IsActive || Clients.Count >= _max) return false;
-                connectionId = _net._nextConnectionId++;
+                connectionId = _net.NegativeConnectionIds ? -(_net._nextConnectionId++) : _net._nextConnectionId++;
                 Clients[connectionId] = client;
                 Connected?.Invoke(connectionId);
                 return true;

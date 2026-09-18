@@ -10,7 +10,10 @@ namespace LastGround.Core.Net.Session
         public bool IsHost;
         public int RttMs;
 
-        /// <summary>Transport connection on the host; -1 for the host's own player and on clients.</summary>
-        internal int ConnectionId = -1;
+        /// <summary>True on the host for remote players. Transport ids can be any int (kcp2k uses negative ones).</summary>
+        internal bool HasConnection;
+
+        /// <summary>Transport connection id on the host; only meaningful when <see cref="HasConnection"/>.</summary>
+        internal int ConnectionId;
     }
 }

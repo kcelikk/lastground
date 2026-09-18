@@ -53,6 +53,28 @@ namespace LastGround.Tests
         }
 
         [Test]
+        public void NegativeTransportIds_Work()
+        {
+            // Regression (found on device): kcp2k produced a negative connection id and the host
+            // treated the player as "no connection", so JoinAccepted was never sent.
+            var net = new TestNet();
+            net.Network.NegativeConnectionIds = true;
+            var host = net.CreateSession("Host");
+            Assert.IsTrue(host.StartHost());
+            var a = net.CreateSession("A");
+            a.Join("loopback", NetProtocol.DefaultGamePort);
+            net.Step(0.5);
+
+            Assert.AreEqual(SessionState.Connected, a.State);
+            Assert.AreEqual(2, a.Players.Count);
+            uint seed = 0;
+            a.Subscribe((PlayerId from, in LoadRun m) => seed = m.RunSeed);
+            host.SendToClients(new LoadRun { RunSeed = 5, MapId = "x" });
+            net.Step(0.1);
+            Assert.AreEqual(5u, seed);
+        }
+
+        [Test]
         public void ContentMismatch_IsRejected()
         {
             var (net, host) = Host();

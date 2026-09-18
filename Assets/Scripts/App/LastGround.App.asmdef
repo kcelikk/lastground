@@ -5,7 +5,14 @@
         "LastGround.Core",
         "LastGround.Localization",
         "LastGround.Save",
-        "LastGround.UI"
+        "LastGround.UI",
+        "LastGround.Networking",
+        "LastGround.Platform",
+        "LastGround.Gameplay",
+        "LastGround.Rendering",
+        "LastGround.Input",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
