@@ -1,6 +1,6 @@
 # M5 Raporu — Endless Loop Core
 
-- **Tarih:** 2026-09-18 · **Branch:** `m5-loop` · **Unity:** 6000.3.24f1 · **Durum:** ⏳ Onay bekliyor
+- **Tarih:** 2026-09-18 · **Branch:** `m5-loop` · **Unity:** 6000.3.24f1 · **Durum:** ✅ Onaylandı (2026-09-18), `main`e merge edildi
 - **Cihazlar:** Redmi Pad Pro = MID (host, kablosuz ADB 192.168.1.14) · OnePlus 5T = LOW (client, USB) · Linux PC (yalnızca ağ karşı tarafı)
 
 ## Çıkış kriterleri (TDD_03 §36 M5)

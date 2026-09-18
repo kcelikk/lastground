@@ -21,7 +21,7 @@ _Son güncelleme: 2026-09-18 · Sonraki oturum buradan devam eder._
 | M2 | Zombie rendering benchmark (kemik texture GPU skinning, LOD, kalite preset'leri) | ✅ onaylı, main |
 | M3 | Horde simulation (Burst ZombieWorld, flow field, katmanlı surround, AI LOD) | ✅ onaylı, main |
 | M4 | Shooting & Combat — MVP kapısı (twin-stick, host doğrulamalı hit claim, windup'lı zombi saldırısı, VFX, ses) | ✅ onaylı, main |
-| M5 | Endless loop (director, threat, downed/revive, XP + 12 upgrade, coin + instanced pickup, "Bölgeyi temizle", sonuç ekranı) | ⏳ onay bekliyor, `m5-loop` |
+| M5 | Endless loop (director, threat, downed/revive, XP + 12 upgrade, coin + instanced pickup, "Bölgeyi temizle", sonuç ekranı) | ✅ onaylı, main |
 
 ## M5'ten açık konular (rapordaki OPEN ISSUES)
 - Denge: botlarla HORDE etiketi çoğunlukla LOW; insanla playtest gerek (`Assets/ScriptableObjects/Director/DIR_Default.asset`).
