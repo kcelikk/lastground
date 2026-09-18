@@ -1,5 +1,7 @@
 using LastGround.Core.Input;
 using LastGround.Core.Tick;
+using LastGround.Gameplay.Navigation;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace LastGround.Gameplay.Players
@@ -15,14 +17,16 @@ namespace LastGround.Gameplay.Players
         readonly PlayerStateTable _table;
         readonly IPlayerInputSource _input;
         readonly float _halfBounds;
+        readonly NavGrid _nav;
         float _x;
         float _z;
         float _yaw;
 
-        public PlayerMotor(PlayerStateTable table, IPlayerInputSource input, float boundsSize, float startX, float startZ)
+        public PlayerMotor(PlayerStateTable table, IPlayerInputSource input, float boundsSize, float startX, float startZ, NavGrid nav = null)
         {
             _table = table;
             _input = input;
+            _nav = nav;
             _halfBounds = boundsSize * 0.5f;
             _x = startX;
             _z = startZ;
@@ -43,8 +47,17 @@ namespace LastGround.Gameplay.Players
 
             float vx = mx * MoveSpeed;
             float vz = mz * MoveSpeed;
-            _x = Mathf.Clamp(_x + vx * dt, -_halfBounds, _halfBounds);
-            _z = Mathf.Clamp(_z + vz * dt, -_halfBounds, _halfBounds);
+            float nx = Mathf.Clamp(_x + vx * dt, -_halfBounds, _halfBounds);
+            float nz = Mathf.Clamp(_z + vz * dt, -_halfBounds, _halfBounds);
+            if (_nav != null && !_nav.IsWalkable(new float2(nx, nz)))
+            {
+                // Slide along walls like the zombies do.
+                if (_nav.IsWalkable(new float2(nx, _z))) nz = _z;
+                else if (_nav.IsWalkable(new float2(_x, nz))) nx = _x;
+                else { nx = _x; nz = _z; }
+            }
+            _x = nx;
+            _z = nz;
             if (magnitude > 0.1f)
                 _yaw = Mathf.Atan2(mx, mz) * Mathf.Rad2Deg;
 

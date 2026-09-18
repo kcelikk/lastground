@@ -13,7 +13,9 @@
         "LastGround.Networking",
         "LastGround.Platform",
         "LastGround.Data",
-        "LastGround.Rendering"
+        "LastGround.Rendering",
+        "Unity.Mathematics",
+        "Unity.Collections"
     ],
     "includePlatforms": [
         "Editor"

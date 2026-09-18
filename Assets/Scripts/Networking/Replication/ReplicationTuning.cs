@@ -16,8 +16,8 @@ namespace LastGround.Networking.Replication
         public float TierBRate = 6f;
         public float TierCRate = 2f;
 
-        /// <summary>Snapshot budget per client per 30 Hz tick (700 B ≈ 21 KB/s ceiling).</summary>
-        public int SnapshotBytesPerTick = 700;
+        /// <summary>Snapshot budget per client per 30 Hz tick (600 B ≈ 18 KB/s; M3 target ≤ 20 KB/s downstream in total).</summary>
+        public int SnapshotBytesPerTick = 600;
 
         public const int SnapshotEntryBits = 56;
         public const int SlotBits = 10;
