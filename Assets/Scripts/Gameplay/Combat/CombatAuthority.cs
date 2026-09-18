@@ -1,4 +1,5 @@
 using LastGround.Core.Tick;
+using LastGround.Data.Combat;
 using LastGround.Data.Weapons;
 using LastGround.Gameplay.Crowd;
 using LastGround.Gameplay.Navigation;
@@ -13,6 +14,7 @@ namespace LastGround.Gameplay.Combat
     /// Host damage pipeline (TDD_01 §5.2): hit claims from every player (the host's own weapon included, no special
     /// case) are queued, validated, resolved with the shooter's deterministic RNG and applied to the ZombieWorld in
     /// the Combat sim phase. Kills flow out through the crowd's Deaths channel (corpses, replication).
+    /// On-hit upgrades (M6) set the zombie on fire, slow it, or stun it on a deterministic roll.
     /// </summary>
     public sealed class CombatAuthority : ITickable, IHitClaimSink
     {
@@ -33,6 +35,16 @@ namespace LastGround.Gameplay.Combat
             _runSeed = runSeed;
             _validator = new HitClaimValidator(players, world.Crowd, nav, weaponsByNetIndex);
         }
+
+        /// <summary>Who carries which weapon (claims must use one of them). Null = any weapon.</summary>
+        public LoadoutTable Loadouts
+        {
+            get => _validator.Loadouts;
+            set => _validator.Loadouts = value;
+        }
+
+        /// <summary>Durations of on-hit status effects. Null = upgrades apply no status effects.</summary>
+        public CombatCatalog Catalog { get; set; }
 
         /// <summary>Team builds (upgraded damage, pierce, fire rate). Null = base weapon values.</summary>
         public TeamBuilds Builds
@@ -81,14 +93,26 @@ namespace LastGround.Gameplay.Combat
             _verdicts[(int)verdict]++;
             if (verdict != HitClaimVerdict.Accepted) return;
 
-            ref readonly WeaponStats stats = ref _validator.StatsOf(claim.Shooter);
+            ref readonly WeaponStats stats = ref _validator.StatsOf(claim.Shooter, claim.Weapon);
             uint seed = ShotRng.Seed(_runSeed, claim.Shooter, claim.ShotSeq);
             float damage = DamageResolver.Resolve(stats, seed, claim.Pellet, out bool crit);
             var shooter = new float2(_players.X[claim.Shooter], _players.Z[claim.Shooter]);
             float2 dir = math.normalizesafe(new float2(claim.HitX, claim.HitZ) - shooter);
             bool local = _players.Local.IsValid && claim.Shooter == _players.Local.Value;
-            if (!_world.ApplyDamage(claim.Slot, damage, dir, stats.Knockback, crit, local, claim.Shooter)) return;
-            Kills++;
+            if (_world.ApplyDamage(claim.Slot, damage, dir, stats.Knockback, crit, local, claim.Shooter))
+            {
+                Kills++;
+                return;
+            }
+            ApplyOnHit(claim, stats, seed);
+        }
+
+        void ApplyOnHit(in HitClaim claim, in WeaponStats stats, uint seed)
+        {
+            if (Catalog == null) return;
+            if (stats.BurnDps > 0f) _world.ApplyBurn(claim.Slot, stats.BurnDps, Catalog.BurnSeconds, claim.Shooter);
+            if (stats.SlowPct > 0f) _world.ApplySlow(claim.Slot, 1f - stats.SlowPct / 100f, Catalog.SlowSeconds);
+            if (ShotRng.IsStun(seed, claim.Pellet, claim.Pierce, stats.StunChance)) _world.ApplyStun(claim.Slot, Catalog.StunSeconds);
         }
     }
 }

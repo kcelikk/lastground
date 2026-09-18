@@ -32,3 +32,18 @@ Altı çıktı görsel olarak incelendi; dört görünüş ve tam boy kadraj kon
 Sorumluluk: karakter silüeti, kıyafet ve malzeme yönünü anlatmak. Bağımlılıklar: yukarıdaki kararlar ve referanslar. Değiştirirsen etkilenenler: bu paftalara göre hazırlanacak modelleme, kaplama, rig ve animasyon işleri; mevcut oyun doğrudan bu dosyaları tüketmez.
 
 Nihai istemlerin tamamı: [PROMPTS.md](PROMPTS.md).
+
+## Bağımsız özgün seri — 2026-09-19
+
+Kullanıcının referans görsellerinden bağımsız, gerçekçi ve abartısız karakter isteği üzerine dört yeni pafta eklendi. Özgünlük; yüz, yaş, beden yapısı, meslek geçmişi ve kıyafet ayrıntıları üzerinden tasarlandı. Evrensel benzersizlik iddiası veya karşılaştırmalı karakter araştırması yapılmadı.
+
+| Görsel | Tasarım | Görsel kimlik |
+|---|---|---|
+| [07-gece-vardiyasi.png](07-gece-vardiyasi.png) | Gece Vardiyası | Kısa gri saçlı kadın teknisyen; çapraz kapanan mavi ceket, sırtta tek reflektör şerit, tek eldiven |
+| [08-kirec-ustasi.png](08-kirec-ustasi.png) | Kireç Ustası | Yaşlı, tıknaz sıvacı; mineral tozlu kahverengi yelek, dikilmiş diz yamaları |
+| [09-soguk-depo.png](09-soguk-depo.png) | Soğuk Depo | Uzun ve ince depo çalışanı; yüksek yakalı soluk mürdüm mont, tek onarılmış manşet |
+| [10-son-sefer.png](10-son-sefer.png) | Son Sefer | Topuzlu kadın otobüs görevlisi; petrol yeşili hırka, sökülmüş yaka kartının soluk izi |
+
+Her yeni PNG 1536 × 1024 piksel ve dört tam boy görünüş içerir. Çıktılar görsel olarak incelendi. Gece Vardiyası'nda istemdeki eldiven yönü ters üretilmiştir; modellemede ön görünüşteki anatomik sağ eldiven esas alınmalıdır. Bu seri mevcut düşman davranışları için görsel varyant önerisidir; yeni gameplay sınıfı veya runtime 3D model eklemez. Önceki altı pafta korunmuştur.
+
+Üretim: yerleşik `image_gen`, görsel girdi olmadan. Tam istemler: [PROMPTS_ORIGINALS.md](PROMPTS_ORIGINALS.md).

@@ -32,13 +32,15 @@ namespace LastGround.Gameplay.Projectiles
         int _count;
 
         /// <summary>Every blast, for presentation and replication.</summary>
-        public readonly EventChannel<ExplosionFx> Blasts = new EventChannel<ExplosionFx>(32);
+        public EventChannel<ExplosionFx> Blasts { get; }
 
-        public ExplosionSystem(ZombieWorld world, PlayerStateTable players, IPlayerDamageSink damage)
+        /// <param name="blasts">Shared blast feed (presentation reads the same channel on every device); null = own.</param>
+        public ExplosionSystem(ZombieWorld world, PlayerStateTable players, IPlayerDamageSink damage, EventChannel<ExplosionFx> blasts = null)
         {
             _world = world;
             _players = players;
             _damage = damage;
+            Blasts = blasts ?? new EventChannel<ExplosionFx>(32);
         }
 
         public int Exploded { get; private set; }

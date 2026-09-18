@@ -130,6 +130,28 @@ namespace LastGround.Tests
         }
 
         [Test]
+        public void TypeEliteAndStatusFlags_ReachTheClient()
+        {
+            var rig = Create(entities: 0);
+            rig.Net.Step(1.0, perTick: rig.Tick);
+            int tank = rig.Crowd.Spawn(2, 2f, 1f, 0f, elite: 3);
+            int walker = rig.Crowd.Spawn(0, 3f, 1f, 0f);
+            rig.Crowd.Flags[walker] |= CrowdFlags.Burning | CrowdFlags.Priming;
+            rig.Net.Step(0.5, perTick: rig.Tick);
+            Assert.AreEqual(2, rig.Replica.Types[tank]);
+            Assert.AreEqual(3, rig.Replica.Elites[tank]);
+            Assert.AreNotEqual(0, rig.Replica.FlagBits[tank] & CrowdFlags.Elite);
+            Assert.AreEqual(0, rig.Replica.Elites[walker]);
+            Assert.AreEqual(CrowdFlags.Burning | CrowdFlags.Priming, rig.Replica.FlagBits[walker]);
+
+            var reader = rig.Replica.Deaths.CreateReader();
+            rig.Crowd.Despawn(tank, died: true);
+            rig.Net.Step(0.3, perTick: rig.Tick);
+            Assert.IsTrue(rig.Replica.Deaths.TryRead(ref reader, out CrowdDeath death));
+            Assert.AreEqual(2, death.Type, "the corpse keeps its body");
+        }
+
+        [Test]
         public void Players_SeeEachOther()
         {
             var rig = Create(entities: 0);

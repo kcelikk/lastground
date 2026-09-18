@@ -26,6 +26,9 @@ namespace LastGround.Gameplay.Players
         /// <summary>Trigger held recently (remote tracers; replicated with the player state).</summary>
         public readonly bool[] Firing = new bool[Max];
 
+        /// <summary>0 = primary, 1 = sidearm (chosen on the owner's device, replicated with the player state).</summary>
+        public readonly byte[] ActiveSlot = new byte[Max];
+
         /// <summary>Vitals: host-authoritative, replicated to clients on change (PlayerVitals).</summary>
         public readonly float[] Health = new float[Max];
         /// <summary>Base plus upgrades (HP bar scale).</summary>
@@ -94,6 +97,7 @@ namespace LastGround.Gameplay.Players
             if (!id.IsValid || id.Value >= Max) return;
             Active[id.Value] = false;
             Firing[id.Value] = false;
+            ActiveSlot[id.Value] = 0;
             Life[id.Value] = PlayerLife.Alive;
             _display.Exit(id.Value);
         }

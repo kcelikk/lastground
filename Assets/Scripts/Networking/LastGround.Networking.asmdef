@@ -8,7 +8,8 @@
         "LastGround.Platform",
         "Mirror",
         "Mirror.Transports",
-        "kcp2k"
+        "kcp2k",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

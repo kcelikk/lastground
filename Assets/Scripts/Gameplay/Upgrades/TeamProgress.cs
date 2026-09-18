@@ -41,6 +41,9 @@ namespace LastGround.Gameplay.Upgrades
             Level = 1;
         }
 
+        /// <summary>XP per kill by zombie type (M6: Runners, Tanks… are worth more). Null = the flat value for every kill.</summary>
+        public Data.Zombies.ZombieDefinition[] ZombieTypes { get; set; }
+
         /// <summary>Receives new offers (local UI queue for the host's player, network for the others).</summary>
         public IOfferSink Offers { get; set; }
 
@@ -57,9 +60,12 @@ namespace LastGround.Gameplay.Upgrades
         public void Tick(float dt, uint tick)
         {
             int gained = 0;
-            while (_crowd.Deaths.TryRead(ref _deaths, out _)) gained += _xpPerKill;
+            while (_crowd.Deaths.TryRead(ref _deaths, out CrowdDeath death)) gained += XpOf(death.Type);
             if (gained > 0) AddXp(gained);
         }
+
+        int XpOf(byte type) =>
+            ZombieTypes != null && type < ZombieTypes.Length && ZombieTypes[type] != null ? ZombieTypes[type].Xp : _xpPerKill;
 
         public void AddXp(int amount)
         {

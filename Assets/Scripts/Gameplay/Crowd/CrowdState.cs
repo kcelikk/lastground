@@ -78,7 +78,7 @@ namespace LastGround.Gameplay.Crowd
             if (!AliveSlots[slot]) return;
             AliveSlots[slot] = false;
             ActiveCount--;
-            if (died) Deaths.Publish(new CrowdDeath { Slot = slot, X = PosX[slot], Z = PosZ[slot], Yaw = Heading[slot], Type = Type[slot] });
+            if (died) Deaths.Publish(new CrowdDeath { Slot = slot, X = PosX[slot], Z = PosZ[slot], Yaw = Heading[slot], Type = Type[slot], Elite = Elite[slot] });
         }
     }
 }

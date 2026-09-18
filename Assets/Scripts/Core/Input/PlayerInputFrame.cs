@@ -15,5 +15,13 @@ namespace LastGround.Core.Input
         public float AimY;
         public bool AimActive;
         public bool FireHeld;
+
+        /// <summary>Swap between primary and sidearm this frame (edge).</summary>
+        public bool SwitchWeapon;
+
+        /// <summary>Throw a grenade this frame (edge) at <see cref="GrenadeX"/>/<see cref="GrenadeY"/>, an offset from the player in world XZ.</summary>
+        public bool ThrowGrenade;
+        public float GrenadeX;
+        public float GrenadeY;
     }
 }

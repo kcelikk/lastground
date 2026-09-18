@@ -9,5 +9,7 @@ namespace LastGround.Gameplay.Crowd
         public float Yaw;
         /// <summary>Zombie type (corpse body).</summary>
         public byte Type;
+        /// <summary>Elite modifier id (host only: loot; 0 on clients).</summary>
+        public byte Elite;
     }
 }
