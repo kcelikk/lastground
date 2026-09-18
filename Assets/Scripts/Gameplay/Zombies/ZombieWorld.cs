@@ -31,7 +31,7 @@ namespace LastGround.Gameplay.Zombies
         readonly int _gridHeight;
 
         NativeArray<float2> _position, _velocity, _outPosition, _outVelocity;
-        NativeArray<float> _heading, _outHeading, _speed, _slotAngle;
+        NativeArray<float> _heading, _outHeading, _speed, _slotAngle, _slotRing;
         NativeArray<byte> _alive, _target, _outState;
         NativeArray<int> _cellStart, _cellCount, _sorted, _cellOf;
         NativeArray<float2> _playerPosition;
@@ -51,11 +51,11 @@ namespace LastGround.Gameplay.Zombies
             _tuning = tuning;
             _capacity = crowd.Capacity;
             _flow = new FlowFieldSet(nav);
-            _surround = new SurroundSlotSolver(tuning.Sectors, _capacity);
+            _surround = new SurroundSlotSolver(tuning.Sectors, _capacity, tuning.RingMin, tuning.RingSpacing);
             _rng = DeterministicRandom.ForStream(seed, "zombie-world");
 
             _position = Alloc<float2>(); _velocity = Alloc<float2>(); _outPosition = Alloc<float2>(); _outVelocity = Alloc<float2>();
-            _heading = Alloc<float>(); _outHeading = Alloc<float>(); _speed = Alloc<float>(); _slotAngle = Alloc<float>();
+            _heading = Alloc<float>(); _outHeading = Alloc<float>(); _speed = Alloc<float>(); _slotAngle = Alloc<float>(); _slotRing = Alloc<float>();
             _alive = Alloc<byte>(); _target = Alloc<byte>(); _outState = Alloc<byte>();
             _cellOf = Alloc<int>(); _sorted = Alloc<int>();
             _stuckAnchor = new float2[_capacity];
@@ -89,6 +89,7 @@ namespace LastGround.Gameplay.Zombies
             _heading[slot] = heading;
             _speed[slot] = _rng.Range(_tuning.MinSpeed, _tuning.MaxSpeed);
             _slotAngle[slot] = _rng.Range(-math.PI, math.PI);
+            _slotRing[slot] = _tuning.SurroundRange;
             _target[slot] = ZombieSteeringJob.NoTarget;
             _alive[slot] = 1;
             _stuckAnchor[slot] = position;
@@ -135,7 +136,7 @@ namespace LastGround.Gameplay.Zombies
                 for (int p = 0; p < PlayerStateTable.Max; p++)
                 {
                     if (_playerActive[p] == 0) continue;
-                    _surround.Solve(p, _playerPosition[p], _tuning.SurroundRange, _position, _alive, _target, _slotAngle);
+                    _surround.Solve(p, _playerPosition[p], _tuning.SurroundRange, _position, _alive, _target, _slotAngle, _slotRing);
                 }
             }
 
@@ -160,6 +161,7 @@ namespace LastGround.Gameplay.Zombies
                 Heading = _heading,
                 Speed = _speed,
                 SlotAngle = _slotAngle,
+                SlotRing = _slotRing,
                 Target = _target,
                 Alive = _alive,
                 PlayerPosition = _playerPosition,
@@ -183,8 +185,6 @@ namespace LastGround.Gameplay.Zombies
                 SeparationStrength = _tuning.SeparationStrength,
                 AttackRange = _tuning.AttackRange,
                 SurroundRange = _tuning.SurroundRange,
-                RingMin = _tuning.RingMin,
-                RingMax = _tuning.RingMax,
                 TierA = _tuning.TierADistance,
                 TierB = _tuning.TierBDistance,
                 OutPosition = _outPosition,
@@ -211,7 +211,7 @@ namespace LastGround.Gameplay.Zombies
         {
             _flow.Dispose();
             _position.Dispose(); _velocity.Dispose(); _outPosition.Dispose(); _outVelocity.Dispose();
-            _heading.Dispose(); _outHeading.Dispose(); _speed.Dispose(); _slotAngle.Dispose();
+            _heading.Dispose(); _outHeading.Dispose(); _speed.Dispose(); _slotAngle.Dispose(); _slotRing.Dispose();
             _alive.Dispose(); _target.Dispose(); _outState.Dispose();
             _cellStart.Dispose(); _cellCount.Dispose(); _sorted.Dispose(); _cellOf.Dispose();
             _playerPosition.Dispose(); _playerActive.Dispose();
@@ -283,7 +283,8 @@ namespace LastGround.Gameplay.Zombies
                 if (_alive[i] == 0) continue;
                 float2 p = _position[i];
                 bool walking = _outState[i] == ZombieSteeringJob.StateWalk;
-                if (walking && math.distance(p, _stuckAnchor[i]) < _tuning.StuckDistance && IsFarFromTarget(i, 3f))
+                // Only zombies on their way count: those queueing in the surround rings are supposed to wait.
+                if (walking && math.distance(p, _stuckAnchor[i]) < _tuning.StuckDistance && IsFarFromTarget(i, _tuning.SurroundRange))
                 {
                     float angle = _rng.Range(-math.PI, math.PI);
                     _velocity[i] = new float2(math.cos(angle), math.sin(angle)) * _speed[i] * 1.5f;

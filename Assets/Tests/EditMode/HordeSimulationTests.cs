@@ -102,6 +102,28 @@ namespace LastGround.Tests
                 }
                 int covered = 0;
                 foreach (bool s in sectors) if (s) covered++;
+
+                // Queueing, not piling: near zombies keep roughly a body width from their nearest neighbour.
+                double spacing = 0;
+                int measured = 0;
+                for (int i = 0; i < rig.Crowd.Capacity; i++)
+                {
+                    if (!rig.Crowd.AliveSlots[i]) continue;
+                    float xi = rig.Crowd.PosX[i], zi = rig.Crowd.PosZ[i];
+                    if (xi * xi + zi * zi > 64f) continue;
+                    float nearest = float.MaxValue;
+                    for (int j = 0; j < rig.Crowd.Capacity; j++)
+                    {
+                        if (j == i || !rig.Crowd.AliveSlots[j]) continue;
+                        float dx = rig.Crowd.PosX[j] - xi, dz = rig.Crowd.PosZ[j] - zi;
+                        nearest = math.min(nearest, math.sqrt(dx * dx + dz * dz));
+                    }
+                    spacing += nearest;
+                    measured++;
+                }
+                double averageSpacing = spacing / math.max(1, measured);
+                UnityEngine.Debug.Log($"[Test] near zombies {measured}, average nearest-neighbour spacing {averageSpacing:0.00} m, unstuck {rig.World.Unstuck}");
+                Assert.Greater(averageSpacing, 0.55, "zombies pile on top of each other");
                 Assert.Greater(near, 120, "the horde reaches the player");
                 Assert.GreaterOrEqual(covered, 11, "the ring surrounds instead of queueing");
                 Assert.Greater(attacking, 5);

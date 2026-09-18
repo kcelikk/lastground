@@ -72,6 +72,7 @@ namespace LastGround.Gameplay.Zombies
         [ReadOnly] public NativeArray<float> Heading;
         [ReadOnly] public NativeArray<float> Speed;
         [ReadOnly] public NativeArray<float> SlotAngle;
+        [ReadOnly] public NativeArray<float> SlotRing;
         [ReadOnly] public NativeArray<byte> Target;
         [ReadOnly] public NativeArray<byte> Alive;
 
@@ -99,8 +100,6 @@ namespace LastGround.Gameplay.Zombies
         public float SeparationStrength;
         public float AttackRange;
         public float SurroundRange;
-        public float RingMin;
-        public float RingMax;
         public float TierA;
         public float TierB;
 
@@ -148,12 +147,14 @@ namespace LastGround.Gameplay.Zombies
             }
             else if (distance < SurroundRange)
             {
-                // Surround ring shrinks from RingMax to RingMin as the zombie closes in (TDD_01 §8.4).
-                float ring = math.lerp(RingMin, RingMax, math.saturate((distance - AttackRange) / (SurroundRange - AttackRange)));
+                // Layered surround slot from SurroundSlotSolver: inner ring attacks, outer rings queue (TDD_01 §8.4).
+                float ring = SlotRing[i];
                 float angle = SlotAngle[i];
                 float2 slot = tp + new float2(math.cos(angle), math.sin(angle)) * ring;
                 float2 toSlot = slot - p;
-                desired = math.normalizesafe(math.lengthsq(toSlot) > 0.04f ? toSlot : toTarget) * Speed[i];
+                float slotDistance = math.length(toSlot);
+                // Arrive: slow down near the slot and hold it; never keep pushing towards the player.
+                desired = slotDistance > 0.15f ? toSlot / slotDistance * Speed[i] * math.min(1f, slotDistance / 0.6f) : float2.zero;
             }
             else
             {
