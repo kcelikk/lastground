@@ -18,9 +18,10 @@ namespace LastGround.App.Dev
     ///   -lg-solo              start a solo run
     ///   -lg-quit-after SEC    quit after SEC seconds (soak tests)
     ///   -lg-wander            local player wanders in circles (soak tests)
+    ///   -lg-autofire          auto aim + fire for this launch (combat soak tests)
     ///   -lg-bench [SEC]       crowd rendering benchmark, SEC per step (default 60), quits when done
     ///   -lg-quality N         force quality tier 0/1/2 for this launch (benchmarks)
-    ///   -lg-gc-capture        record 120 profiler frames with allocation call stacks after 8 s (GcAllocReport)
+    ///   -lg-gc-capture [SEC]  record 300 profiler frames with allocation call stacks after SEC s (default 8; GcAllocReport)
     /// </summary>
     public sealed class DevAutomation : MonoBehaviour
     {
@@ -34,6 +35,9 @@ namespace LastGround.App.Dev
         float _quitAfter = -1f;
         bool _acted;
         bool _runRequested;
+
+        /// <summary>-lg-autofire: this launch uses auto aim + fire regardless of settings (combat soak tests).</summary>
+        public static bool ForceAutoFire { get; private set; }
 
         public static void Install(GameObject root, SessionService service)
         {
@@ -53,8 +57,16 @@ namespace LastGround.App.Dev
                 {
                     case "-lg-host": _host = true; break;
                     case "-lg-solo": _solo = true; break;
-                    case "-lg-wander": LastGround.Input.TouchMoveInput.DevWander = true; break;
-                    case "-lg-gc-capture": gameObject.AddComponent<GcProfileCapture>(); break;
+                    case "-lg-wander": LastGround.Input.TouchTwinStickInput.DevWander = true; break;
+                    case "-lg-autofire": ForceAutoFire = true; break;
+                    case "-lg-gc-capture":
+                        var capture = gameObject.AddComponent<GcProfileCapture>();
+                        if (i + 1 < args.Count && float.TryParse(args[i + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out float delay))
+                        {
+                            capture.Delay = delay;
+                            i++;
+                        }
+                        break;
                     case "-lg-bench":
                         _benchSeconds = 60f;
                         if (i + 1 < args.Count && float.TryParse(args[i + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out float seconds))

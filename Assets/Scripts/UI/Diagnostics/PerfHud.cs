@@ -38,8 +38,9 @@ namespace LastGround.UI.Diagnostics
             scaler.matchWidthOrHeight = 1f;
 
             var hud = root.AddComponent<PerfHud>();
-            hud._line1 = CreateLine(root.transform, "Line1", -8f);
-            hud._line2 = CreateLine(root.transform, "Line2", -34f);
+            // Bottom centre, between the two sticks: the top-left belongs to the combat HUD.
+            hud._line1 = CreateLine(root.transform, "Line1", 34f);
+            hud._line2 = CreateLine(root.transform, "Line2", 8f);
             return hud;
         }
 
@@ -48,16 +49,17 @@ namespace LastGround.UI.Diagnostics
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
             var rect = (RectTransform)go.transform;
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(12f, y);
-            rect.sizeDelta = new Vector2(900f, 30f);
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, y);
+            rect.sizeDelta = new Vector2(900f, 26f);
 
             var text = go.AddComponent<TextMeshProUGUI>();
             text.fontSize = 22f;
             text.color = new Color(0.55f, 1f, 0.55f, 0.9f);
             text.raycastTarget = false;
+            text.alignment = TextAlignmentOptions.Bottom;
             text.textWrappingMode = TextWrappingModes.NoWrap;
             return text;
         }

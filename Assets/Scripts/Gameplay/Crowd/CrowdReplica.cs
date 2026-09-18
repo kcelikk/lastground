@@ -13,6 +13,8 @@ namespace LastGround.Gameplay.Crowd
         public const int SamplesPerSlot = 4;
         const double MaxExtrapolation = 0.25;
         const float SnapDistanceSq = 3f * 3f;
+        /// <summary>A hit flag arriving this soon after our own predicted hit on the slot is not shown twice.</summary>
+        const double LocalHitSuppression = 0.4;
 
         readonly bool[] _alive;
         readonly byte[] _generation;
@@ -21,6 +23,9 @@ namespace LastGround.Gameplay.Crowd
         readonly float[] _z;
         readonly float[] _yaw;
         readonly byte[] _anim;
+        readonly byte[] _flags;
+        readonly double[] _localHitAt;
+        double _now;
 
         readonly double[] _sampleTime;
         readonly float[] _sampleX;
@@ -32,6 +37,9 @@ namespace LastGround.Gameplay.Crowd
         /// <summary>Replicated deaths (corpses and blood on clients).</summary>
         public readonly EventChannel<CrowdDeath> Deaths = new EventChannel<CrowdDeath>(256);
 
+        /// <summary>Local predicted hits and other players' hits (from the snapshot hit flag).</summary>
+        public readonly EventChannel<CrowdHit> Hits = new EventChannel<CrowdHit>(256);
+
         public CrowdReplica(int capacity)
         {
             Capacity = capacity;
@@ -42,6 +50,8 @@ namespace LastGround.Gameplay.Crowd
             _z = new float[capacity];
             _yaw = new float[capacity];
             _anim = new byte[capacity];
+            _flags = new byte[capacity];
+            _localHitAt = new double[capacity];
             _sampleTime = new double[capacity * SamplesPerSlot];
             _sampleX = new float[capacity * SamplesPerSlot];
             _sampleZ = new float[capacity * SamplesPerSlot];
@@ -57,6 +67,7 @@ namespace LastGround.Gameplay.Crowd
         public float[] Z => _z;
         public float[] Yaw => _yaw;
         public byte[] AnimState => _anim;
+        public byte[] FlagBits => _flags;
 
         public byte GenerationOf(int slot) => _generation[slot];
 
@@ -68,6 +79,8 @@ namespace LastGround.Gameplay.Crowd
             _generation[slot] = generation;
             _type[slot] = type;
             _anim[slot] = 1; // walk until the first snapshot says otherwise
+            _flags[slot] = 0;
+            _localHitAt[slot] = double.MinValue;
             _sampleCount[slot] = 0;
             PushSample(slot, x, z, yaw, time);
             _x[slot] = x;
@@ -76,10 +89,14 @@ namespace LastGround.Gameplay.Crowd
         }
 
         /// <summary>Applies a snapshot sample. Ignored for unknown slots and for samples older than the newest.</summary>
-        public void Update(int slot, float x, float z, float yaw, double time, byte anim = 1)
+        public void Update(int slot, float x, float z, float yaw, double time, byte anim = 1, byte flags = 0)
         {
             if ((uint)slot >= (uint)Capacity || !_alive[slot]) return;
             _anim[slot] = anim;
+            bool hitEdge = (flags & CrowdFlags.Hit) != 0 && (_flags[slot] & CrowdFlags.Hit) == 0;
+            _flags[slot] = flags;
+            if (hitEdge && _now - _localHitAt[slot] > LocalHitSuppression)
+                Hits.Publish(new CrowdHit { Slot = slot, X = _x[slot], Z = _z[slot] });
             int newest = slot * SamplesPerSlot + _newest[slot];
             if (_sampleCount[slot] > 0 && time <= _sampleTime[newest]) return;
 
@@ -115,9 +132,18 @@ namespace LastGround.Gameplay.Crowd
             ActiveCount = 0;
         }
 
+        /// <summary>The local player's predicted hit: shown immediately, and the host's hit flag for it is not shown again.</summary>
+        public void PublishLocalHit(in CrowdHit hit)
+        {
+            if ((uint)hit.Slot >= (uint)Capacity) return;
+            _localHitAt[hit.Slot] = _now;
+            Hits.Publish(hit);
+        }
+
         /// <summary>Computes render positions for all live slots at the given host time.</summary>
         public void Interpolate(double renderTime)
         {
+            _now = renderTime;
             for (int slot = 0; slot < Capacity; slot++)
             {
                 if (!_alive[slot] || _sampleCount[slot] == 0) continue;

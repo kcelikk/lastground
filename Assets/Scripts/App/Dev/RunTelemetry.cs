@@ -2,7 +2,9 @@ using System.Globalization;
 using LastGround.Core.Net;
 using LastGround.Core.Net.Protocol;
 using LastGround.Core.Net.Session;
+using LastGround.Gameplay.Combat;
 using LastGround.Gameplay.Crowd;
+using LastGround.Gameplay.Players;
 using LastGround.Gameplay.Zombies;
 using UnityEngine;
 
@@ -19,6 +21,10 @@ namespace LastGround.App.Dev
         ISession _session;
         ICrowdRenderSource _crowd;
         ZombieWorld _world;
+        WeaponController _weapon;
+        CombatAuthority _authority;
+        PlayerHealthSystem _health;
+        PlayerStateTable _players;
         float _simMsSum;
         float _simMsMax;
         int _simSamples;
@@ -32,6 +38,15 @@ namespace LastGround.App.Dev
             _session = session;
             _crowd = crowd;
             _world = world;
+        }
+
+        /// <summary>Adds combat counters to the log line (authority and health are host-only, may be null).</summary>
+        public void BindCombat(PlayerStateTable players, WeaponController weapon, CombatAuthority authority, PlayerHealthSystem health)
+        {
+            _players = players;
+            _weapon = weapon;
+            _authority = authority;
+            _health = health;
         }
 
         void Update()
@@ -58,13 +73,31 @@ namespace LastGround.App.Dev
                 s.InBytesPerSecond / 1024f, s.OutBytesPerSecond / 1024f, s.InMessagesPerSecond, s.OutMessagesPerSecond,
                 (s.InBytesFor(NetMsgId.ZombieSnapshot) + s.OutBytesFor(NetMsgId.ZombieSnapshot)) / 1024f,
                 _crowd.ActiveCount, _frames / _timer, _maxDt * 1000f,
-                _simSamples > 0 ? _simMsSum / _simSamples : 0f, _simMsMax, _world != null ? _world.Unstuck : 0));
+                _simSamples > 0 ? _simMsSum / _simSamples : 0f, _simMsMax, _world != null ? _world.Unstuck : 0) + CombatStats());
             _simMsSum = 0f;
             _simMsMax = 0f;
             _simSamples = 0;
             _timer = 0f;
             _frames = 0;
             _maxDt = 0f;
+        }
+
+        string CombatStats()
+        {
+            if (_weapon == null) return string.Empty;
+            int me = _players.Local.IsValid ? _players.Local.Value : 0;
+            string line = string.Format(CultureInfo.InvariantCulture, " shots={0} claims={1} hp={2:0} dead={3}",
+                _weapon.ShotsFired, _weapon.ClaimsSent, _players.Health[me], _players.Dead[me] ? 1 : 0);
+            if (_authority != null)
+            {
+                line += string.Format(CultureInfo.InvariantCulture, " accepted={0} rejected={1} kills={2} gone={3} farTarget={4} noLos={5} rate={6} deadShooter={7}",
+                    _authority.Accepted, _authority.Rejected, _authority.Kills, _authority.CountOf(HitClaimVerdict.TargetGone),
+                    _authority.CountOf(HitClaimVerdict.FarFromTarget), _authority.CountOf(HitClaimVerdict.NoLineOfSight),
+                    _authority.CountOf(HitClaimVerdict.RateLimited), _authority.CountOf(HitClaimVerdict.ShooterDead));
+            }
+            if (_health != null) line += string.Format(CultureInfo.InvariantCulture, " playerDeaths={0}", _health.Deaths);
+            if (_world != null) line += string.Format(CultureInfo.InvariantCulture, " zAttacks={0} zDodged={1}", _world.AttacksLanded, _world.AttacksDodged);
+            return line;
         }
     }
 }

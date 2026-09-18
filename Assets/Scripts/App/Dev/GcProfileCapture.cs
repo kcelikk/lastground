@@ -7,12 +7,15 @@ namespace LastGround.App.Dev
 {
     /// <summary>
     /// Dev: records a few frames of profiler data with allocation call stacks to
-    /// persistentDataPath/gc_<scene>.raw, for the editor GcAllocReport tool. Started by -lg-gc-capture.
+    /// persistentDataPath/gc_<scene>.raw, for the editor GcAllocReport tool. Started by -lg-gc-capture [SEC]
+    /// (delay after launch, default 8 s).
     /// </summary>
     public sealed class GcProfileCapture : MonoBehaviour
     {
-        const float Delay = 8f;
-        const int Frames = 120;
+        const int Frames = 300;
+
+        /// <summary>Seconds after launch before recording starts.</summary>
+        public float Delay { get; set; } = 8f;
 
         float _timer;
         int _captured = -1;

@@ -1,5 +1,9 @@
 using LastGround.App;
 using LastGround.Data.Crowd;
+using LastGround.Data.Players;
+using LastGround.Data.Presentation;
+using LastGround.Data.Weapons;
+using LastGround.Data.Zombies;
 using LastGround.EditorTools.Map;
 using LastGround.Input;
 using LastGround.UI.Common;
@@ -15,10 +19,11 @@ using UnityEngine.UI;
 namespace LastGround.EditorTools.Setup
 {
     /// <summary>
-    /// M1 run scene: greybox ground, light, camera, HUD with floating joystick, and the RunInstaller wired to
-    /// placeholder meshes/materials (TDD_02 §28). Map content moves to additive map scenes in M3/M7.
+    /// Run scene: greybox map + nav grid, light, camera, twin-stick HUD with combat panels, and the RunInstaller
+    /// wired to placeholder meshes/materials and the combat data assets (TDD_02 §28). Map content moves to additive
+    /// map scenes in M7.
     /// </summary>
-    static class RunSceneBuilder
+    static partial class RunSceneBuilder
     {
         const string MaterialDir = "Assets/Art/Materials";
         const float GroundSize = 140f;
@@ -42,6 +47,7 @@ namespace LastGround.EditorTools.Setup
             Material player = CreateMaterial("M1_Player", Color.white);
             Material bloodParticle = CreateFxMaterial("M_BloodParticle", "LG/FX_AlphaBlend");
             Material bloodSplat = CreateFxMaterial("M_BloodSplat", "LG/GroundDecal");
+            Material tracer = CreateFxMaterial("M_Tracer", "LG/FX_Additive");
             var catalog = AssetDatabase.LoadAssetAtPath<CrowdVisualCatalog>("Assets/Art/Crowd/CrowdCatalog.asset");
             if (catalog == null) Debug.LogWarning("[Setup] Crowd catalog missing; run LastGround/Crowd/Bake Bodies first.");
             Material ground = CreateMaterial("M1_Ground", new Color(0.16f, 0.17f, 0.18f));
@@ -67,7 +73,7 @@ namespace LastGround.EditorTools.Setup
             var world = new GameObject("World");
             Mesh capsule = Resources.GetBuiltinResource<Mesh>("Capsule.fbx");
 
-            (TouchMoveInput input, RunHud hud) = BuildHud();
+            (TouchTwinStickInput input, RunHud hud, CombatHud combatHud) = BuildHud();
 
             var systems = new GameObject("[Systems]");
             var installer = systems.AddComponent<RunInstaller>();
@@ -77,15 +83,21 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_navGrid", navGrid);
             UiFactory.Assign(installer, "_bloodParticleMaterial", bloodParticle);
             UiFactory.Assign(installer, "_bloodSplatMaterial", bloodSplat);
+            UiFactory.Assign(installer, "_tracerMaterial", tracer);
+            UiFactory.Assign(installer, "_weapon", AssetDatabase.LoadAssetAtPath<WeaponDefinition>(CombatContentBuilder.WeaponPath));
+            UiFactory.Assign(installer, "_walker", AssetDatabase.LoadAssetAtPath<ZombieDefinition>(CombatContentBuilder.WalkerPath));
+            UiFactory.Assign(installer, "_playerDefinition", AssetDatabase.LoadAssetAtPath<PlayerDefinition>(CombatContentBuilder.PlayerPath));
+            UiFactory.Assign(installer, "_cameraProfile", AssetDatabase.LoadAssetAtPath<CameraProfile>(CombatContentBuilder.CameraPath));
             UiFactory.Assign(installer, "_playerMesh", capsule);
             UiFactory.Assign(installer, "_playerMaterial", player);
             UiFactory.Assign(installer, "_input", input);
             UiFactory.Assign(installer, "_hud", hud);
+            UiFactory.Assign(installer, "_combatHud", combatHud);
 
             EditorSceneManager.SaveScene(scene, path);
         }
 
-        static (TouchMoveInput, RunHud) BuildHud()
+        static (TouchTwinStickInput, RunHud, CombatHud) BuildHud()
         {
             var canvasGo = new GameObject("Canvas_HUD", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasGo.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
@@ -94,21 +106,12 @@ namespace LastGround.EditorTools.Setup
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 1f;
 
-            // Joystick lives directly under the canvas: its position is set from screen coordinates.
-            Sprite knob = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
-            RectTransform stickBase = UiFactory.Rect("StickBase", canvasGo.transform);
-            stickBase.anchorMin = stickBase.anchorMax = new Vector2(0.5f, 0.5f);
-            stickBase.sizeDelta = new Vector2(260f, 260f);
-            var baseImage = stickBase.gameObject.AddComponent<Image>();
-            baseImage.sprite = knob;
-            baseImage.color = new Color(1f, 1f, 1f, 0.15f);
-            baseImage.raycastTarget = false;
-            RectTransform stickKnob = UiFactory.Rect("Knob", stickBase);
-            stickKnob.sizeDelta = new Vector2(110f, 110f);
-            var knobImage = stickKnob.gameObject.AddComponent<Image>();
-            knobImage.sprite = knob;
-            knobImage.color = new Color(1f, 1f, 1f, 0.5f);
-            knobImage.raycastTarget = false;
+            // Hurt vignette first so everything else draws above it.
+            Image vignette = BuildVignette(canvasGo.transform);
+
+            // Sticks live directly under the canvas: their positions are set from screen coordinates.
+            (RectTransform moveBase, RectTransform moveKnob, _) = BuildStick("MoveStick", canvasGo.transform);
+            (RectTransform aimBase, RectTransform aimKnob, Image aimKnobImage) = BuildStick("AimStick", canvasGo.transform);
 
             RectTransform safe = UiFactory.Panel("SafeArea", canvasGo.transform);
             safe.gameObject.AddComponent<SafeAreaFitter>();
@@ -116,24 +119,51 @@ namespace LastGround.EditorTools.Setup
             TMP_Text status = UiFactory.Label("Status", safe, null, 34, FontStyles.Bold, Color.white);
             UiFactory.Place(status.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(1000f, 50f));
             status.alignment = TextAlignmentOptions.Top;
+
+            (Image healthFill, TMP_Text healthLabel) = BuildHealthBar(safe);
+            TMP_Text ammo = UiFactory.Label("Ammo", safe, null, 40, FontStyles.Bold, Color.white);
+            UiFactory.Place(ammo.rectTransform, new Vector2(0f, 1f), new Vector2(74f, -72f), new Vector2(400f, 50f));
+            Image reloadRing = BuildReloadRing(safe);
+
+            // Dev stats sit at the bottom centre above the PerfHud rows (development builds only).
             TMP_Text net = UiFactory.Label("NetStats", safe, null, 22, FontStyles.Normal, new Color(0.55f, 1f, 0.55f, 0.9f));
-            UiFactory.Place(net.rectTransform, new Vector2(0f, 1f), new Vector2(12f, -62f), new Vector2(900f, 30f));
+            UiFactory.Place(net.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 86f), new Vector2(900f, 26f));
+            net.alignment = TextAlignmentOptions.Bottom;
             TMP_Text crowd = UiFactory.Label("CrowdStats", safe, null, 22, FontStyles.Normal, new Color(0.55f, 1f, 0.55f, 0.9f));
-            UiFactory.Place(crowd.rectTransform, new Vector2(0f, 1f), new Vector2(12f, -88f), new Vector2(900f, 30f));
+            UiFactory.Place(crowd.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 60f), new Vector2(900f, 26f));
+            crowd.alignment = TextAlignmentOptions.Bottom;
 
             Button leave = UiFactory.Button("Leave", safe, "run.leave", new Vector2(240f, 84f), out _);
             UiFactory.Place((RectTransform)leave.transform, new Vector2(1f, 1f), new Vector2(-24f, -24f), new Vector2(240f, 84f));
+            Button autoFire = UiFactory.Button("AutoFire", safe, null, new Vector2(300f, 70f), out TMP_Text autoFireLabel, 28f);
+            UiFactory.Place((RectTransform)autoFire.transform, new Vector2(1f, 1f), new Vector2(-24f, -122f), new Vector2(300f, 70f));
 
-            var input = canvasGo.AddComponent<TouchMoveInput>();
-            UiFactory.Assign(input, "_stickBase", stickBase);
-            UiFactory.Assign(input, "_stickKnob", stickKnob);
+            (GameObject deathOverlay, TMP_Text deathLabel) = BuildDeathOverlay(canvasGo.transform);
+
+            var input = canvasGo.AddComponent<TouchTwinStickInput>();
+            UiFactory.Assign(input, "_moveBase", moveBase);
+            UiFactory.Assign(input, "_moveKnob", moveKnob);
+            UiFactory.Assign(input, "_aimBase", aimBase);
+            UiFactory.Assign(input, "_aimKnob", aimKnob);
+            UiFactory.Assign(input, "_aimKnobImage", aimKnobImage);
 
             var hud = canvasGo.AddComponent<RunHud>();
             UiFactory.Assign(hud, "_statusLabel", status);
             UiFactory.Assign(hud, "_netLabel", net);
             UiFactory.Assign(hud, "_crowdLabel", crowd);
             UiFactory.Assign(hud, "_leaveButton", leave);
-            return (input, hud);
+
+            var combat = canvasGo.AddComponent<CombatHud>();
+            UiFactory.Assign(combat, "_healthFill", healthFill);
+            UiFactory.Assign(combat, "_healthLabel", healthLabel);
+            UiFactory.Assign(combat, "_ammoLabel", ammo);
+            UiFactory.Assign(combat, "_reloadRing", reloadRing);
+            UiFactory.Assign(combat, "_hurtVignette", vignette);
+            UiFactory.Assign(combat, "_deathOverlay", deathOverlay);
+            UiFactory.Assign(combat, "_deathLabel", deathLabel);
+            UiFactory.Assign(combat, "_autoFireButton", autoFire);
+            UiFactory.Assign(combat, "_autoFireLabel", autoFireLabel);
+            return (input, hud, combat);
         }
 
         static Material CreateFxMaterial(string name, string shader)

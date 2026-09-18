@@ -23,3 +23,6 @@ MonoBehaviour:
   CorpseLifetime: 20
   BloodSplatCap: 192
   ParticleMultiplier: 1
+  TracerCap: 64
+  DamageNumberCap: 32
+  AudioVoices: 32

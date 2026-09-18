@@ -17,7 +17,8 @@
         "Unity.RenderPipelines.Core.Runtime",
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.Mathematics",
-        "Unity.Collections"
+        "Unity.Collections",
+        "LastGround.Audio"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using LastGround.App.Dev;
+using LastGround.Core.Events;
 using LastGround.Core.Ids;
 using LastGround.Core.Net;
 using LastGround.Core.Net.Session;
@@ -7,18 +8,21 @@ using LastGround.Core.Services;
 using LastGround.Core.Tick;
 using LastGround.Data.Crowd;
 using LastGround.Data.Map;
+using LastGround.Data.Players;
+using LastGround.Data.Presentation;
 using LastGround.Data.Quality;
+using LastGround.Data.Weapons;
+using LastGround.Data.Zombies;
+using LastGround.Gameplay.Combat;
 using LastGround.Gameplay.Crowd;
 using LastGround.Gameplay.Navigation;
-using LastGround.Gameplay.Zombies;
 using LastGround.Gameplay.Players;
+using LastGround.Gameplay.Zombies;
 using LastGround.Input;
 using LastGround.Networking.Replication;
 using LastGround.Rendering;
-using LastGround.Rendering.Carnage;
-using LastGround.Rendering.Crowd;
-using LastGround.Rendering.Lighting;
 using LastGround.Rendering.Quality;
+using LastGround.Save;
 using LastGround.UI.Run;
 using UnityEngine;
 
@@ -27,11 +31,12 @@ namespace LastGround.App
     /// <summary>
     /// Run scene composition root (TDD_02 §15.3): builds the system set for the session role and registers it on
     /// the tick scheduler. Role checks live here, not in gameplay code.
-    /// Host/offline: horde simulation (ZombieWorld + test spawner, or the benchmark driver) + replication sender.
-    /// Client: replica + receiver (deaths → corpses/blood).
-    /// Everyone: local motor, player sync, crowd/corpse/blood rendering, camera, HUD.
+    /// Host/offline: horde simulation (ZombieWorld + test spawner, or the benchmark driver), combat authority, player
+    /// health, replication senders. Client: replica + receivers, hit claims to the host.
+    /// Everyone: twin-stick input, aim resolver, motor, weapon, camera, crowd/combat presentation, HUD.
+    /// Presentation wiring lives in <c>RunInstaller.Presentation.cs</c>.
     /// </summary>
-    public sealed class RunInstaller : MonoBehaviour
+    public sealed partial class RunInstaller : MonoBehaviour
     {
         const int CrowdCapacity = 512;
         const int HordePopulation = 300;
@@ -41,75 +46,85 @@ namespace LastGround.App
         [SerializeField] Transform _worldRoot;
         [SerializeField] CrowdVisualCatalog _crowdCatalog;
         [SerializeField] NavGridAsset _navGrid;
+        [SerializeField] WeaponDefinition _weapon;
+        [SerializeField] ZombieDefinition _walker;
+        [SerializeField] PlayerDefinition _playerDefinition;
+        [SerializeField] CameraProfile _cameraProfile;
         [SerializeField] Material _bloodParticleMaterial;
         [SerializeField] Material _bloodSplatMaterial;
+        [SerializeField] Material _tracerMaterial;
         [SerializeField] Mesh _playerMesh;
         [SerializeField] Material _playerMaterial;
-        [SerializeField] TouchMoveInput _input;
+        [SerializeField] TouchTwinStickInput _input;
         [SerializeField] RunHud _hud;
+        [SerializeField] CombatHud _combatHud;
 
         readonly List<System.IDisposable> _disposables = new List<System.IDisposable>();
         SessionService _service;
         TickScheduler _scheduler;
         bool _started;
 
+        /// <summary>Everything the presentation half needs, collected while the simulation half is built.</summary>
+        struct RunParts
+        {
+            public ISession Session;
+            public QualityPresetDefinition Preset;
+            public NavGrid Nav;
+            public PlayerStateTable Players;
+            public ICrowdRenderSource Crowd;
+            public IGameEventStream<CrowdDeath> Deaths;
+            public IGameEventStream<CrowdHit> Hits;
+            public EventChannel<ShotFired> Shots;
+            public AimResolver Aim;
+            public WeaponController Weapon;
+            public ZombieWorld World;
+            public CombatAuthority Authority;
+            public PlayerHealthSystem Health;
+            public BenchmarkCrowdDriver Benchmark;
+        }
+
         void Start()
         {
             _service = AppServices.Get<SessionService>();
             _service.EnsureRunForDirectPlay();
             ISession session = _service.Session;
-            QualityPresetDefinition preset = AppServices.Get<QualityService>().Current;
             bool benchmark = _service.CurrentRun.Benchmark;
+            uint seed = _service.CurrentRun.Seed;
 
             _scheduler = gameObject.AddComponent<TickScheduler>();
             TickLoop loop = _scheduler.Loop;
 
-            NavGrid nav = benchmark || _navGrid == null ? NavGrid.Open((int)BenchmarkWorldSize) : NavGrid.FromAsset(_navGrid);
-            _disposables.Add(nav);
-            float worldSize = nav.Width * nav.CellSize;
+            var parts = new RunParts
+            {
+                Session = session,
+                Preset = AppServices.Get<QualityService>().Current,
+                Nav = benchmark || _navGrid == null ? NavGrid.Open((int)BenchmarkWorldSize) : NavGrid.FromAsset(_navGrid),
+                Players = new PlayerStateTable { Local = session.LocalPlayer },
+                Shots = new EventChannel<ShotFired>(128),
+            };
+            _disposables.Add(parts.Nav);
+            float worldSize = parts.Nav.Width * parts.Nav.CellSize;
+            PlayerStateTable players = parts.Players;
 
-            var players = new PlayerStateTable { Local = session.LocalPlayer };
-            PlayerId me = session.LocalPlayer;
-            var sync = new PlayerSync(session, players, PlayerMotor.MoveSpeed);
+            var sync = new PlayerSync(session, players, _playerDefinition.MoveSpeed);
             _disposables.Add(sync);
+            var vitals = new PlayerVitalsSync(session, players);
+            _disposables.Add(vitals);
 
-            ICrowdRenderSource crowdSource;
-            IGameEventStream<CrowdDeath> deaths = null;
-            BenchmarkCrowdDriver benchmarkDriver = null;
-            ZombieWorld zombieWorld = null;
-            if (session.IsAuthority)
-            {
-                var crowd = new CrowdState(CrowdCapacity);
-                deaths = crowd.Deaths;
-                if (benchmark)
-                {
-                    benchmarkDriver = new BenchmarkCrowdDriver(crowd, _service.CurrentRun.Seed);
-                    loop.Register(TickPhase.ZombieSim, benchmarkDriver);
-                }
-                else
-                {
-                    var world = zombieWorld = new ZombieWorld(crowd, players, nav, new ZombieTuning(), _service.CurrentRun.Seed);
-                    _disposables.Add(world);
-                    var spawner = new TestHordeSpawner(world, players, _service.CurrentRun.Seed) { Population = HordePopulation };
-                    loop.Register(TickPhase.Director, Gate(spawner));
-                    loop.Register(TickPhase.ZombieSim, Gate(world));
-                    var sender = new CrowdReplicationSender(session, crowd, players, new ReplicationTuning());
-                    _disposables.Add(sender);
-                    loop.Register(TickPhase.NetSend, sender);
-                }
-                crowdSource = crowd;
-            }
-            else
-            {
-                var replica = new CrowdReplica(CrowdCapacity);
-                var receiver = new CrowdReplicationReceiver(session, replica);
-                _disposables.Add(receiver);
-                loop.Register(TickPhase.Presentation, receiver);
-                crowdSource = replica;
-                deaths = replica.Deaths;
-            }
+            IHitClaimSink claims = session.IsAuthority ? BuildHost(ref parts, loop, benchmark, seed) : BuildClient(ref parts, loop);
 
+            // Local player: raw sticks → aim resolver → motor + weapon (TDD_01 §3.1).
+            ISaveService save = AppServices.Get<ISaveService>();
+            parts.Aim = new AimResolver(_input, players, parts.Crowd, parts.Nav, _weapon)
+            {
+                Mode = DevAutomation.ForceAutoFire ? Core.Input.ControlMode.AutoAimAutoFire : (Core.Input.ControlMode)save.Settings.ControlMode,
+                AssistLevel = save.Settings.AimAssist * 0.5f,
+            };
             loop.Register(TickPhase.Input, _input);
+            loop.Register(TickPhase.Input, parts.Aim);
+            parts.Weapon = new WeaponController(players, parts.Aim, _weapon, parts.Crowd, parts.Nav, seed, claims, parts.Shots,
+                session.IsAuthority ? null : parts.Crowd as CrowdReplica, _walker.MaxHealth);
+            parts.Aim.Ignore = parts.Weapon.PresumedDeadMask;
             if (benchmark)
             {
                 // The benchmark player stands still at the centre of the horde.
@@ -117,29 +132,28 @@ namespace LastGround.App
             }
             else
             {
-                loop.Register(TickPhase.LocalPlayer, Gate(new PlayerMotor(players, _input, worldSize, me.Value * 3f - 4.5f, -3f, nav)));
+                PlayerId me = session.LocalPlayer;
+                loop.Register(TickPhase.LocalPlayer, Gate(new PlayerMotor(players, parts.Aim, _playerDefinition, worldSize,
+                    me.Value * 3f - 4.5f, -3f, parts.Nav, parts.Crowd)));
+                loop.Register(TickPhase.LocalPlayer, Gate(parts.Weapon));
             }
             loop.Register(TickPhase.NetSend, sync);
+            loop.Register(TickPhase.NetSend, vitals);
             loop.Register(TickPhase.Presentation, new TickAction(_ => sync.Interpolate()));
-            loop.Register(TickPhase.Presentation, new FollowCamera(_camera, players));
 
-            _disposables.Add(new LightingGrid(new Vector2(nav.Origin.x, nav.Origin.y), worldSize, 256, LightingGrid.GreyboxLamps()));
-            var crowdRenderer = new ZombieRenderSystem(crowdSource, _crowdCatalog, _camera, preset, deaths);
-            _disposables.Add(crowdRenderer);
-            loop.Register(TickPhase.Presentation, crowdRenderer);
+            BuildPresentation(parts, loop);
+            _combatHud.Bind(players, parts.Weapon, parts.Aim, _playerDefinition.MaxHealth, _playerDefinition.RespawnDelay, mode =>
             {
-                var blood = new BloodSystem(deaths, preset, _worldRoot, _bloodParticleMaterial, _bloodSplatMaterial);
-                _disposables.Add(blood);
-                loop.Register(TickPhase.Presentation, blood);
-            }
-            loop.Register(TickPhase.Presentation, new PlayerViews(players, _worldRoot, _playerMesh, _playerMaterial));
-
-            _hud.Bind(_service, crowdSource);
+                save.Settings.ControlMode = (int)mode;
+                save.RequestSave();
+            });
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            gameObject.AddComponent<RunTelemetry>().Bind(session, crowdSource, zombieWorld);
-            if (benchmarkDriver != null)
+            var telemetry = gameObject.AddComponent<RunTelemetry>();
+            telemetry.Bind(session, parts.Crowd, parts.World);
+            telemetry.BindCombat(players, parts.Weapon, parts.Authority, parts.Health);
+            if (parts.Benchmark != null)
             {
-                gameObject.AddComponent<PerfBenchmarkRunner>().Bind(benchmarkDriver, crowdRenderer, AppServices.Get<QualityService>(),
+                gameObject.AddComponent<PerfBenchmarkRunner>().Bind(parts.Benchmark, _crowdRenderer, AppServices.Get<QualityService>(),
                     _service.CurrentRun.BenchmarkStepSeconds, _service.CurrentRun.QuitAfterBenchmark);
             }
 #endif
@@ -147,6 +161,67 @@ namespace LastGround.App
             _started = _service.RunStarted;
             session.AcceptingPlayers = false;
             _service.NotifyRunSceneReady();
+        }
+
+        /// <summary>Host/offline: authoritative simulation, combat and health.</summary>
+        IHitClaimSink BuildHost(ref RunParts parts, TickLoop loop, bool benchmark, uint seed)
+        {
+            var crowd = new CrowdState(CrowdCapacity);
+            parts.Crowd = crowd;
+            parts.Deaths = crowd.Deaths;
+            parts.Hits = crowd.Hits;
+            parts.Health = new PlayerHealthSystem(parts.Players, _playerDefinition);
+            loop.Register(TickPhase.Combat, Gate(parts.Health));
+
+            if (benchmark)
+            {
+                parts.Benchmark = new BenchmarkCrowdDriver(crowd, seed);
+                loop.Register(TickPhase.ZombieSim, parts.Benchmark);
+                return new DiscardClaims();
+            }
+
+            var world = parts.World = new ZombieWorld(crowd, parts.Players, parts.Nav, new ZombieTuning(), _walker, seed);
+            _disposables.Add(world);
+            world.DamageSink = parts.Health;
+            world.Respawns = parts.Health.Respawns;
+            var spawner = new TestHordeSpawner(world, parts.Players, seed) { Population = HordePopulation, KillsPerSecond = 0f };
+            loop.Register(TickPhase.Director, Gate(spawner));
+            loop.Register(TickPhase.ZombieSim, Gate(world));
+
+            parts.Authority = new CombatAuthority(world, parts.Players, parts.Nav, WeaponTable(), seed);
+            loop.Register(TickPhase.Combat, Gate(parts.Authority));
+            var claimSync = new HitClaimSync(parts.Session, parts.Authority);
+            _disposables.Add(claimSync);
+
+            var sender = new CrowdReplicationSender(parts.Session, crowd, parts.Players, new ReplicationTuning());
+            _disposables.Add(sender);
+            loop.Register(TickPhase.NetSend, sender);
+            return parts.Authority;
+        }
+
+        /// <summary>Client: replica of the host's crowd; hit claims go to the host.</summary>
+        IHitClaimSink BuildClient(ref RunParts parts, TickLoop loop)
+        {
+            var replica = new CrowdReplica(CrowdCapacity);
+            var receiver = new CrowdReplicationReceiver(parts.Session, replica);
+            _disposables.Add(receiver);
+            loop.Register(TickPhase.Presentation, receiver);
+            parts.Crowd = replica;
+            parts.Deaths = replica.Deaths;
+            parts.Hits = replica.Hits;
+
+            var claimSync = new HitClaimSync(parts.Session, null);
+            _disposables.Add(claimSync);
+            loop.Register(TickPhase.NetSend, claimSync);
+            return claimSync;
+        }
+
+        /// <summary>Weapons indexed by their wire id (M4: the assault rifle only).</summary>
+        WeaponDefinition[] WeaponTable()
+        {
+            var table = new WeaponDefinition[_weapon.NetIndex + 1];
+            table[_weapon.NetIndex] = _weapon;
+            return table;
         }
 
         void OnDestroy()
@@ -163,5 +238,11 @@ namespace LastGround.App
         {
             if (_started) inner.Tick(dt, _scheduler.Loop.SimTick);
         });
+
+        /// <summary>Benchmark runs have no combat authority; the idle weapon's claims go nowhere.</summary>
+        sealed class DiscardClaims : IHitClaimSink
+        {
+            public void Submit(in HitClaim claim) { }
+        }
     }
 }

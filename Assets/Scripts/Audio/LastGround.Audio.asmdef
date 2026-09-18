@@ -3,7 +3,8 @@
     "rootNamespace": "LastGround.Audio",
     "references": [
         "LastGround.Core",
-        "LastGround.Data"
+        "LastGround.Data",
+        "LastGround.Gameplay"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -56,8 +56,8 @@ namespace LastGround.Tests
 
             rig.Crowd = new CrowdState(512);
             rig.Sim = new DummyCrowdSim(rig.Crowd, entities, 140f, 7u);
-            rig.HostSync = new PlayerSync(rig.Host, rig.HostPlayers, PlayerMotor.MoveSpeed);
-            rig.ClientSync = new PlayerSync(rig.Client, rig.ClientPlayers, PlayerMotor.MoveSpeed);
+            rig.HostSync = new PlayerSync(rig.Host, rig.HostPlayers, 5f);
+            rig.ClientSync = new PlayerSync(rig.Client, rig.ClientPlayers, 5f);
             rig.Sender = new CrowdReplicationSender(rig.Host, rig.Crowd, rig.HostPlayers, new ReplicationTuning());
             rig.Replica = new CrowdReplica(512);
             rig.Receiver = new CrowdReplicationReceiver(rig.Client, rig.Replica);

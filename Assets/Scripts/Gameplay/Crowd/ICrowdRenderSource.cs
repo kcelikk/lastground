@@ -17,5 +17,11 @@ namespace LastGround.Gameplay.Crowd
 
         /// <summary>Animation state per slot (values of Data.Crowd.CrowdClipId / snapshot animState).</summary>
         byte[] AnimState { get; }
+
+        /// <summary>Snapshot flag bits per slot (<see cref="CrowdFlags"/>).</summary>
+        byte[] FlagBits { get; }
+
+        /// <summary>Slot generation: a hit claim names (slot, generation) so a reused slot is never hit by mistake.</summary>
+        byte GenerationOf(int slot);
     }
 }

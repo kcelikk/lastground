@@ -1,3 +1,4 @@
+using LastGround.Core.Events;
 using LastGround.Core.Ids;
 using LastGround.Gameplay.Crowd;
 
@@ -21,6 +22,20 @@ namespace LastGround.Gameplay.Players
 
         /// <summary>Local time of the last accepted update (host: movement validation).</summary>
         public readonly double[] LastUpdate = new double[Max];
+
+        /// <summary>Trigger held recently (remote tracers; replicated with the player state).</summary>
+        public readonly bool[] Firing = new bool[Max];
+
+        /// <summary>Vitals: host-authoritative, replicated to clients on change (PlayerVitals).</summary>
+        public readonly float[] Health = new float[Max];
+        public readonly bool[] Dead = new bool[Max];
+        public readonly bool[] Invulnerable = new bool[Max];
+
+        /// <summary>Damage taken, on every device (camera shake, haptics, sound).</summary>
+        public readonly EventChannel<PlayerHurt> Hurt = new EventChannel<PlayerHurt>(64);
+
+        /// <summary>True for players zombies can target and hurt.</summary>
+        public bool IsTargetable(int index) => Active[index] && !Dead[index];
 
         readonly CrowdReplica _display = new CrowdReplica(Max);
 
@@ -64,6 +79,8 @@ namespace LastGround.Gameplay.Players
         {
             if (!id.IsValid || id.Value >= Max) return;
             Active[id.Value] = false;
+            Firing[id.Value] = false;
+            Dead[id.Value] = false;
             _display.Exit(id.Value);
         }
 

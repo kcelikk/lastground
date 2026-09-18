@@ -78,11 +78,37 @@ namespace LastGround.EditorTools.Tools
             long direct = own - childBytes + SumGcAllocChildren(view, kids);
             if (direct > 0 && item != view.GetRootItemID())
             {
+                // With allocation call stacks recorded, name the managed caller(s) too.
+                string stack = AllocationStack(view, kids);
+                if (stack.Length > 0) here += "  ⇐ " + stack;
                 totals.TryGetValue(here, out var t);
                 t.bytes += direct;
                 if (seen.Add(here)) t.frames++;
                 totals[here] = t;
             }
+        }
+
+        static string AllocationStack(HierarchyFrameDataView view, List<int> kids)
+        {
+            foreach (int child in kids)
+            {
+                if (view.GetItemName(child) != "GC.Alloc") continue;
+                string callstack;
+                try { callstack = view.ResolveItemMergedSampleCallstack(child, 0); }
+                catch (Exception) { callstack = null; }
+                if (string.IsNullOrEmpty(callstack)) continue;
+                string[] lines = callstack.Split('\n');
+                var picked = new List<string>();
+                foreach (string line in lines)
+                {
+                    string trimmed = line.Trim();
+                    if (trimmed.Length == 0 || trimmed.StartsWith("UnityEngine.", StringComparison.Ordinal)) continue;
+                    picked.Add(trimmed.Length > 90 ? trimmed.Substring(0, 90) : trimmed);
+                    if (picked.Count == 4) break;
+                }
+                return string.Join(" < ", picked);
+            }
+            return string.Empty;
         }
 
         static long SumGcAllocChildren(HierarchyFrameDataView view, List<int> kids)

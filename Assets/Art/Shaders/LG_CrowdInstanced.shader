@@ -1,5 +1,5 @@
 // Crowd bodies: GPU skinning from a bone-matrix texture + GPU instancing (TDD_02 §21.3, D-018).
-// Per instance: _Anim = (frameA, frameB, blend, tint index). Bone texture: x = bone*3 + row, y = frame.
+// Per instance: _Anim = (frameA, frameB, blend, tint index + hit flash 0..0.99 in the fraction). Bone texture: x = bone*3 + row, y = frame.
 // Lighting: main light (Lambert) + ambient SH + optional rim, no shadows (blob shadows come later).
 Shader "LG/CrowdInstanced"
 {
@@ -107,7 +107,7 @@ Shader "LG/CrowdInstanced"
                 output.positionCS = TransformWorldToHClip(output.positionWS);
                 output.normalWS = TransformObjectToWorldNormal(normalOS);
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
-                output.tint = _LGCrowdTints[(uint)anim.w & 7];
+                output.tint = float4(_LGCrowdTints[(uint)anim.w & 7].rgb, frac(anim.w));
                 return output;
             }
 
@@ -123,6 +123,8 @@ Shader "LG/CrowdInstanced"
                 float3 view = normalize(GetWorldSpaceViewDir(input.positionWS));
                 color += _RimColor.rgb * pow(1.0 - saturate(dot(normal, view)), _RimPower);
             #endif
+                // Hit flash (TDD_01 §5.7): tint.a carries the per-instance flash amount.
+                color = lerp(color, half3(1.2, 1.0, 0.9), input.tint.a * 0.8);
                 return half4(color, 1.0);
             }
             ENDHLSL

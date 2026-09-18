@@ -24,5 +24,11 @@ namespace LastGround.Save
 
         /// <summary>Last address typed in Join by IP.</summary>
         public string LastJoinAddress;
+
+        /// <summary>Core.Input.ControlMode: 0 manual twin-stick, 1 auto aim + fire.</summary>
+        public int ControlMode;
+
+        /// <summary>Soft aim assist in manual mode: 0 off, 1 low, 2 high (TDD_01 §3.3).</summary>
+        public int AimAssist = 1;
     }
 }

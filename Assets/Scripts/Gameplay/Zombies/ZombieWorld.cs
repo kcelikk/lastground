@@ -1,6 +1,7 @@
 using System;
 using LastGround.Core.Random;
 using LastGround.Core.Tick;
+using LastGround.Data.Zombies;
 using LastGround.Gameplay.Crowd;
 using LastGround.Gameplay.Navigation;
 using LastGround.Gameplay.Players;
@@ -15,8 +16,9 @@ namespace LastGround.Gameplay.Zombies
     /// spatial grid and steering, flow fields per player, surround slots, AI LOD and anti-stuck. Results are
     /// mirrored into <see cref="CrowdState"/>, which replication and rendering already consume.
     /// No GameObject, NavMeshAgent, Rigidbody or Collider per zombie.
+    /// Partials: <c>.Targeting</c> (target selection, anti-stuck), <c>.Combat</c> (health, attacks, knockback).
     /// </summary>
-    public sealed class ZombieWorld : ITickable, IDisposable
+    public sealed partial class ZombieWorld : ITickable, IDisposable
     {
         const float GridCellSize = 2f;
 
@@ -24,6 +26,7 @@ namespace LastGround.Gameplay.Zombies
         readonly PlayerStateTable _players;
         readonly NavGrid _nav;
         readonly ZombieTuning _tuning;
+        readonly ZombieDefinition _walker;
         readonly FlowFieldSet _flow;
         readonly SurroundSlotSolver _surround;
         readonly int _capacity;
@@ -43,12 +46,13 @@ namespace LastGround.Gameplay.Zombies
         float _surroundTimer;
         float _stuckTimer;
 
-        public ZombieWorld(CrowdState crowd, PlayerStateTable players, NavGrid nav, ZombieTuning tuning, uint seed)
+        public ZombieWorld(CrowdState crowd, PlayerStateTable players, NavGrid nav, ZombieTuning tuning, ZombieDefinition walker, uint seed)
         {
             _crowd = crowd;
             _players = players;
             _nav = nav;
             _tuning = tuning;
+            _walker = walker;
             _capacity = crowd.Capacity;
             _flow = new FlowFieldSet(nav);
             _surround = new SurroundSlotSolver(tuning.Sectors, _capacity, tuning.RingMin, tuning.RingSpacing);
@@ -59,6 +63,7 @@ namespace LastGround.Gameplay.Zombies
             _alive = Alloc<byte>(); _target = Alloc<byte>(); _outState = Alloc<byte>();
             _cellOf = Alloc<int>(); _sorted = Alloc<int>();
             _stuckAnchor = new float2[_capacity];
+            AllocateCombat();
 
             _gridWidth = math.max(1, (int)math.ceil(nav.Width * nav.CellSize / GridCellSize));
             _gridHeight = math.max(1, (int)math.ceil(nav.Height * nav.CellSize / GridCellSize));
@@ -87,13 +92,14 @@ namespace LastGround.Gameplay.Zombies
             _position[slot] = position;
             _velocity[slot] = float2.zero;
             _heading[slot] = heading;
-            _speed[slot] = _rng.Range(_tuning.MinSpeed, _tuning.MaxSpeed);
+            _speed[slot] = _rng.Range(_walker.MinSpeed, _walker.MaxSpeed);
             _slotAngle[slot] = _rng.Range(-math.PI, math.PI);
             _slotRing[slot] = _tuning.SurroundRange;
             _target[slot] = ZombieSteeringJob.NoTarget;
             _alive[slot] = 1;
             _stuckAnchor[slot] = position;
             _crowd.Anim[slot] = ZombieSteeringJob.StateWalk;
+            ResetCombat(slot);
             return slot;
         }
 
@@ -122,6 +128,7 @@ namespace LastGround.Gameplay.Zombies
         {
             long started = System.Diagnostics.Stopwatch.GetTimestamp();
             SyncPlayers();
+            ApplyRespawnPushes();
 
             _targetTimer -= dt;
             if (_targetTimer <= 0f)
@@ -164,6 +171,7 @@ namespace LastGround.Gameplay.Zombies
                 SlotRing = _slotRing,
                 Target = _target,
                 Alive = _alive,
+                Stagger = _stagger,
                 PlayerPosition = _playerPosition,
                 PlayerActive = _playerActive,
                 CellStart = _cellStart,
@@ -197,6 +205,7 @@ namespace LastGround.Gameplay.Zombies
             Swap(ref _velocity, ref _outVelocity);
             Swap(ref _heading, ref _outHeading);
             WriteBack();
+            TickCombat(dt);
 
             _stuckTimer -= dt;
             if (_stuckTimer <= 0f)
@@ -212,7 +221,7 @@ namespace LastGround.Gameplay.Zombies
             _flow.Dispose();
             _position.Dispose(); _velocity.Dispose(); _outPosition.Dispose(); _outVelocity.Dispose();
             _heading.Dispose(); _outHeading.Dispose(); _speed.Dispose(); _slotAngle.Dispose(); _slotRing.Dispose();
-            _alive.Dispose(); _target.Dispose(); _outState.Dispose();
+            _alive.Dispose(); _target.Dispose(); _outState.Dispose(); _stagger.Dispose();
             _cellStart.Dispose(); _cellCount.Dispose(); _sorted.Dispose(); _cellOf.Dispose();
             _playerPosition.Dispose(); _playerActive.Dispose();
         }
@@ -221,7 +230,7 @@ namespace LastGround.Gameplay.Zombies
         {
             for (int p = 0; p < PlayerStateTable.Max; p++)
             {
-                bool active = _players.Active[p];
+                bool active = _players.IsTargetable(p);
                 _playerActive[p] = active ? (byte)1 : (byte)0;
                 if (!active)
                 {
@@ -231,35 +240,6 @@ namespace LastGround.Gameplay.Zombies
                 var position = new float2(_players.X[p], _players.Z[p]);
                 _playerPosition[p] = position;
                 _flow.SetTarget(p, position);
-            }
-        }
-
-        /// <summary>Nearest active player, with hysteresis so zombies do not flip between two players.</summary>
-        void SelectTargets()
-        {
-            for (int i = 0; i < _capacity; i++)
-            {
-                if (_alive[i] == 0) continue;
-                float2 p = _position[i];
-                int best = ZombieSteeringJob.NoTarget;
-                float bestDistance = float.MaxValue;
-                for (int k = 0; k < PlayerStateTable.Max; k++)
-                {
-                    if (_playerActive[k] == 0) continue;
-                    float d = math.distancesq(p, _playerPosition[k]);
-                    if (d < bestDistance)
-                    {
-                        bestDistance = d;
-                        best = k;
-                    }
-                }
-                byte current = _target[i];
-                if (current != ZombieSteeringJob.NoTarget && _playerActive[current] != 0 && best != current)
-                {
-                    float currentDistance = math.distancesq(p, _playerPosition[current]);
-                    if (bestDistance > currentDistance * 0.64f) best = current; // switch only when 20 % closer
-                }
-                _target[i] = (byte)best;
             }
         }
 
@@ -273,31 +253,6 @@ namespace LastGround.Gameplay.Zombies
                 _crowd.Heading[i] = _heading[i];
                 _crowd.Anim[i] = _outState[i];
             }
-        }
-
-        /// <summary>Zombies that made no progress while walking get a sideways nudge (TDD_01 §8.4 anti-stuck).</summary>
-        void ResolveStuck()
-        {
-            for (int i = 0; i < _capacity; i++)
-            {
-                if (_alive[i] == 0) continue;
-                float2 p = _position[i];
-                bool walking = _outState[i] == ZombieSteeringJob.StateWalk;
-                // Only zombies on their way count: those queueing in the surround rings are supposed to wait.
-                if (walking && math.distance(p, _stuckAnchor[i]) < _tuning.StuckDistance && IsFarFromTarget(i, _tuning.SurroundRange))
-                {
-                    float angle = _rng.Range(-math.PI, math.PI);
-                    _velocity[i] = new float2(math.cos(angle), math.sin(angle)) * _speed[i] * 1.5f;
-                    Unstuck++;
-                }
-                _stuckAnchor[i] = p;
-            }
-        }
-
-        bool IsFarFromTarget(int i, float distance)
-        {
-            byte t = _target[i];
-            return t == ZombieSteeringJob.NoTarget || math.distance(_position[i], _playerPosition[t]) > distance;
         }
 
         static void Swap<T>(ref NativeArray<T> a, ref NativeArray<T> b) where T : struct
