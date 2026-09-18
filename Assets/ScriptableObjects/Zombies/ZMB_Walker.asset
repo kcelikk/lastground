@@ -17,8 +17,8 @@ MonoBehaviour:
   MaxHealth: 45
   MinSpeed: 1.3
   MaxSpeed: 2.1
-  AttackDamage: 8
+  AttackDamage: 5
   AttackWindup: 0.45
-  AttackCooldown: 1.4
+  AttackCooldown: 1.6
   AttackReachGrace: 0.35
   KnockbackScale: 1

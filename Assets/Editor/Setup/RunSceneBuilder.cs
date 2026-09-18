@@ -125,10 +125,13 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Place(ammo.rectTransform, new Vector2(0f, 1f), new Vector2(74f, -72f), new Vector2(400f, 50f));
             Image reloadRing = BuildReloadRing(safe);
 
+            // Dev stats sit at the bottom centre above the PerfHud rows (development builds only).
             TMP_Text net = UiFactory.Label("NetStats", safe, null, 22, FontStyles.Normal, new Color(0.55f, 1f, 0.55f, 0.9f));
-            UiFactory.Place(net.rectTransform, new Vector2(0f, 1f), new Vector2(12f, -128f), new Vector2(900f, 30f));
+            UiFactory.Place(net.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 86f), new Vector2(900f, 26f));
+            net.alignment = TextAlignmentOptions.Bottom;
             TMP_Text crowd = UiFactory.Label("CrowdStats", safe, null, 22, FontStyles.Normal, new Color(0.55f, 1f, 0.55f, 0.9f));
-            UiFactory.Place(crowd.rectTransform, new Vector2(0f, 1f), new Vector2(12f, -154f), new Vector2(900f, 30f));
+            UiFactory.Place(crowd.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 60f), new Vector2(900f, 26f));
+            crowd.alignment = TextAlignmentOptions.Bottom;
 
             Button leave = UiFactory.Button("Leave", safe, "run.leave", new Vector2(240f, 84f), out _);
             UiFactory.Place((RectTransform)leave.transform, new Vector2(1f, 1f), new Vector2(-24f, -24f), new Vector2(240f, 84f));

@@ -19,10 +19,10 @@ namespace LastGround.Data.Zombies
         public float MaxSpeed = 2.1f;
 
         [Header("Attack (TDD_01 §5.5)")]
-        public float AttackDamage = 8f;
+        public float AttackDamage = 5f;
         /// <summary>Telegraph before the hit lands; moving out of reach during it dodges the attack.</summary>
         public float AttackWindup = 0.45f;
-        public float AttackCooldown = 1.4f;
+        public float AttackCooldown = 1.6f;
         /// <summary>Extra distance beyond the attack start range within which the hit still lands.</summary>
         public float AttackReachGrace = 0.35f;
 
