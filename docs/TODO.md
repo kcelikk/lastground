@@ -3,8 +3,8 @@
 _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 
 ## Şu an neredeyiz
-- **Branch:** `m10-four-player` (merge/push edilmedi).
-- **M10 — 4 Oyuncu ve Host Yükü: onay bekliyor.** Rapor: `docs/reports/M10_REPORT.md`. 4P testleri: 2 telefon + 2 pencereli Linux botu (D-023; komut raporda).
+- **Branch:** `main` (M10 merge edildi ve push edildi).
+- **M10 — 4 Oyuncu ve Host Yükü: onaylandı (2026-09-19).** Rapor: `docs/reports/M10_REPORT.md`. 4P testleri: 2 telefon + 2 pencereli Linux botu (D-023; komut raporda).
 - **M9 — Meta İlerleme: onaylandı (2026-09-19).** Rapor: `docs/reports/M9_REPORT.md`. Vertical Slice playtest'i paralel sürüyor (D-022; `docs/playtest/`), formlar bekleniyor.
 - EditMode testleri: **186 / 186** geçiyor. OnePlus 30 FPS, Redmi 60 FPS, oyun kodu GC 0 B/kare.
 - Harita yeniden üretimi: `MinimapBaker.BakeBatch` (grafikli) → `RebuildScenesBatch`.
@@ -13,7 +13,7 @@ _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 - `ProjectSettings` (MSAA 2x, ışık ayarları) kullanıcı onayıyla tutuldu.
 
 ## Sonraki oturumda ilk adımlar
-1. Kullanıcıdan M10 onayını al. Onay gelince: `M10_REPORT.md` → "Onaylandı", commit, `git checkout main && git merge --no-ff m10-four-player`, `git push origin main m10-four-player`, sonra M11 (Visual Polish).
+1. M11 Visual Polish (TDD_03 §36): referans atmosferi.
 2. Playtest formları gelince özetle; denge (boss, fiyatlar, `ScrapPerCoin`, upgrade zaman aşımı) ayarlarını çıkar.
 
 ## Tamamlanan milestone'lar
@@ -25,7 +25,7 @@ _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 | M3 | Horde simulation (Burst ZombieWorld, flow field, katmanlı surround, AI LOD) | ✅ onaylı, main |
 | M4 | Shooting & Combat — MVP kapısı (twin-stick, host doğrulamalı hit claim, windup'lı zombi saldırısı, VFX, ses) | ✅ onaylı, main |
 | M5 | Endless loop (director, threat, downed/revive, XP + 12 upgrade, coin + instanced pickup, "Bölgeyi temizle", sonuç ekranı) | ✅ onaylı, main |
-| M10 | 4 oyuncu ve host yükü (kopma akışları, kısmi sonuç, izleme, 32 dk 4P soak, katılma yeniden denemesi) | ⏳ onay bekliyor, m10-four-player |
+| M10 | 4 oyuncu ve host yükü (kopma akışları, kısmi sonuç, izleme, 32 dk 4P soak, katılma yeniden denemesi) | ✅ onaylı, main |
 | M9 | Meta ilerleme (profil + migrasyon, Hurda, 2 Mixamo oyuncu karakteri, kıyafet, perk, teçhizat, silah açılımı, emote, unvan/rozet) | ✅ onaylı, main |
 | M8 | Boss ve tahliye (Mutant Brute, 4 saldırı + frenzy, iniş alanı, ödül dönüşümü, VirtualHorde) | ✅ onaylı, main |
 | M7 | Harita, olaylar, çevre (3 bölge, CC0 çevre, mini-harita, 6 olay, etkileşimliler, anti-kamp, bölge kartı) | ✅ onaylı, main |

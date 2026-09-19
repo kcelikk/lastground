@@ -1,6 +1,6 @@
 # M10 Raporu — 4 Oyuncu ve Host Yükü
 
-- **Tarih:** 2026-09-19 · **Branch:** `m10-four-player` · **Unity:** 6000.3.24f1 · **Durum:** ⏳ Onay bekliyor
+- **Tarih:** 2026-09-19 · **Branch:** `m10-four-player` · **Unity:** 6000.3.24f1 · **Durum:** ✅ Onaylandı (2026-09-19), `main`e merge edildi
 - **Cihazlar:** Redmi Pad Pro = MID (USB `368a7a72`, Wi-Fi 192.168.1.14) · OnePlus 5T = LOW (USB `3e415066`) · 3. ve 4. oyuncu: aynı LAN'daki PC'de iki Linux dev build'i (D-023)
 - **Kararlar:** D-023 (2 telefon + 2 PC botu)
 
