@@ -9,7 +9,8 @@ using UnityEngine.UI;
 namespace LastGround.UI.Menu
 {
     /// <summary>
-    /// Main menu: solo run, local co-op, language, quit. Settings arrives in a later milestone.
+    /// Main menu: solo run, local co-op, preparation (meta progression, M9), language, quit; Scrap in the corner.
+    /// Settings arrives in a later milestone.
     /// </summary>
     public sealed class MainMenuScreen : MonoBehaviour
     {
@@ -26,6 +27,9 @@ namespace LastGround.UI.Menu
         [SerializeField] TMP_Text _versionLabel;
         [SerializeField] ScreenRouter _router;
         [SerializeField] GameObject _coopScreen;
+        [SerializeField] Button _metaButton;
+        [SerializeField] GameObject _metaScreen;
+        [SerializeField] TMP_Text _scrapLabel;
 
         ILocalizationService _localization;
         ISessionService _sessions;
@@ -39,6 +43,7 @@ namespace LastGround.UI.Menu
 
             _soloButton.onClick.AddListener(_sessions.StartSolo);
             _coopButton.onClick.AddListener(() => _router.Show(_coopScreen));
+            if (_metaButton != null) _metaButton.onClick.AddListener(() => _router.Show(_metaScreen));
             _settingsButton.onClick.AddListener(ShowNotAvailable);
             _languageButton.onClick.AddListener(CycleLanguage);
             _quitButton.onClick.AddListener(Application.Quit);
@@ -49,6 +54,7 @@ namespace LastGround.UI.Menu
         {
             _localization.LanguageChanged += OnLanguageChanged;
             RefreshTexts();
+            RefreshScrap();
 
             // A run that ended by disconnect returns here; tell the player why.
             string reason = NetMessageKeys.For(_sessions.LastDisconnect, _sessions.LastReject);
@@ -57,6 +63,12 @@ namespace LastGround.UI.Menu
                 ShowStatus(reason, DisconnectStatusSeconds);
                 _sessions.ClearLastDisconnect();
             }
+        }
+
+        void RefreshScrap()
+        {
+            if (_scrapLabel == null || !AppServices.TryGet(out Meta.IMetaStore meta)) return;
+            _scrapLabel.text = string.Format(System.Globalization.CultureInfo.InvariantCulture, _localization.Get("meta.scrap"), meta.Profile.Scrap);
         }
 
         void OnDisable()

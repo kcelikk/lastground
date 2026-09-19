@@ -45,6 +45,9 @@ namespace LastGround.Gameplay.Players
         /// <summary>Damage taken, on every device (camera shake, haptics, sound).</summary>
         public readonly EventChannel<PlayerHurt> Hurt = new EventChannel<PlayerHurt>(64);
 
+        /// <summary>Emotes played (M9), on every device.</summary>
+        public readonly EventChannel<PlayerEmote> Emotes = new EventChannel<PlayerEmote>(16);
+
         /// <summary>Standing and able to move at full speed and shoot.</summary>
         public bool CanAct(int index) => Active[index] && Life[index] == PlayerLife.Alive;
 

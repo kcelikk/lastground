@@ -83,8 +83,20 @@ namespace LastGround.UI.Menu
                 if (!visible) continue;
                 LobbyPlayer p = players[i];
                 string key = p.IsHost ? "lobby.row_host" : "lobby.row";
-                _playerLabels[i].text = string.Format(CultureInfo.InvariantCulture, _localization.Get(key), p.Name, p.RttMs);
+                _playerLabels[i].text = string.Format(CultureInfo.InvariantCulture, _localization.Get(key), p.Name, p.RttMs) + MetaLine(p.Meta);
             }
+        }
+
+        /// <summary>Character and title under the name (M9 meta selection from the roster).</summary>
+        string MetaLine(ulong packed)
+        {
+            if (packed == 0UL || !AppServices.TryGet(out Meta.IMetaStore meta)) return string.Empty;
+            Gameplay.Meta.PlayerMeta selection = Gameplay.Meta.PlayerMeta.Unpack(packed);
+            Data.Meta.CharacterDefinition character = Data.Meta.MetaCatalog.At(meta.Catalog.Characters, selection.Character);
+            Data.Meta.TitleDefinition title = Data.Meta.MetaCatalog.At(meta.Catalog.Titles, selection.Title);
+            string line = character != null ? _localization.Get(character.NameKey) : string.Empty;
+            if (title != null) line += "  ·  " + _localization.Get(title.NameKey);
+            return line.Length > 0 ? "\n<size=70%><color=#B0B0B0>" + line + "</color>" : string.Empty;
         }
     }
 }

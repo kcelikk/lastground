@@ -24,6 +24,8 @@ namespace LastGround.Core.Net.Protocol
         // Players (20–29)
         public const byte PlayerInput = 20;
         public const byte PlayerStates = 21;
+        public const byte EmoteRequest = 22;
+        public const byte EmotePlayed = 23;
 
         // Zombie replication (30–39)
         public const byte ZombieEnter = 30;
