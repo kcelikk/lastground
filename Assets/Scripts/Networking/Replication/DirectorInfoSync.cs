@@ -78,7 +78,7 @@ namespace LastGround.Networking.Replication
             var kind = (AnnouncementKind)r.ReadByte();
             byte type = r.ReadByte();
             byte elite = r.ReadByte();
-            if (r.Failed || kind > AnnouncementKind.EliteSpawned) return;
+            if (r.Failed || kind > AnnouncementKind.BossArrived) return;
             _status.Announcements.Publish(new DirectorAnnouncement { Kind = kind, ZombieType = type, Elite = elite });
         }
 

@@ -44,6 +44,7 @@ namespace LastGround.Core.Net.Protocol
         // Director / run status (50–59)
         public const byte DirectorInfo = 50;
         public const byte DirectorAnnouncement = 51;
+        public const byte HordeSummary = 52;
 
         // Progression (60–69)
         public const byte TeamXp = 60;
@@ -59,6 +60,11 @@ namespace LastGround.Core.Net.Protocol
 
         // Objectives (80–89)
         public const byte ObjectiveState = 80;
+        public const byte ExtractionState = 81;
+
+        // Boss (90–99)
+        public const byte BossState = 90;
+        public const byte BossAttack = 91;
 
         public const int Count = 256;
     }
