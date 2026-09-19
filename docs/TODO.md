@@ -3,16 +3,16 @@
 _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 
 ## Şu an neredeyiz
-- **Branch:** `m8-boss-extraction` (M7 main'e merge edildi ve push edildi).
-- **M7 — Harita, Olaylar ve Çevre: onaylandı (2026-09-19).** Rapor: `docs/reports/M7_REPORT.md`. **M8 başladı.**
-- EditMode testleri: **163 / 163** geçiyor. OnePlus 30 FPS, Redmi 60 FPS, oyun kodu GC 0 B/kare.
+- **Branch:** `m8-boss-extraction` (M7 main'e merge edildi ve push edildi; M8 commit'leri yalnızca yerelde).
+- **M8 — Boss ve Tahliye: onay bekliyor.** Rapor: `docs/reports/M8_REPORT.md`. (M7 onaylandı.)
+- EditMode testleri: **173 / 173** geçiyor. OnePlus 30 FPS, Redmi 60 FPS, oyun kodu GC 0 B/kare.
 - Harita yeniden üretimi: `MinimapBaker.BakeBatch` (grafikli) → `RebuildScenesBatch`.
 - Zombiler artık gerçekçi Mixamo gövdeleri (8 karakter). Ham FBX'ler git dışında: yeniden bake için önce `MIXAMO_TOKEN=… python3 Tools/Mixamo/mixamo_fetch.py`, sonra `CrowdBaker.BakeAllBatch`. Görünüm kontrolü: `CrowdPreview.RenderBatch` (batchmode, `-nographics` olmadan).
 - **Paralel oturum:** Codex aynı repoda `docs/reference`, `docs/ASSET_SOURCES.md`, `docs/MIXAMO_*` ve `Assets/ThirdParty/Mixamo` README/meta üzerinde çalışabiliyor; o dosyalar ayrı commit'lenir. `git add -A` kullanma.
 - `ProjectSettings` (MSAA 2x, ışık ayarları) kullanıcı onayıyla tutuldu.
 
 ## Sonraki oturumda ilk adımlar
-1. **M8 — Boss & Extraction** (TDD_03 §36): Mutant Brute (fazlar, telegraph'lar), `ExtractionController` (periyodik tahliye pencereleri, hastane helipad'i = `hospital_extraction` çapası), Threat ile boss tekrarı, ödül dönüşümü; M7'den ertelenen VirtualHorde. Görsel hedef: `docs/reference/models/06-brute-boss.png`, `maps/04-hospital-extraction.png`.
+1. Kullanıcıdan M8 onayını al (rapor OPEN ISSUES: boss dengesi insan playtest'i). Onay gelince: `M8_REPORT.md` → "Onaylandı", commit, `git checkout main && git merge --no-ff m8-boss-extraction`, `git push origin main m8-boss-extraction`, sonra **Vertical Slice kontrol noktası** (TDD_03 §35: dış playtest, 2–4 telefon) ve M9 Meta Progression.
 
 ## Tamamlanan milestone'lar
 | M | Konu | Durum |
@@ -23,6 +23,7 @@ _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 | M3 | Horde simulation (Burst ZombieWorld, flow field, katmanlı surround, AI LOD) | ✅ onaylı, main |
 | M4 | Shooting & Combat — MVP kapısı (twin-stick, host doğrulamalı hit claim, windup'lı zombi saldırısı, VFX, ses) | ✅ onaylı, main |
 | M5 | Endless loop (director, threat, downed/revive, XP + 12 upgrade, coin + instanced pickup, "Bölgeyi temizle", sonuç ekranı) | ✅ onaylı, main |
+| M8 | Boss ve tahliye (Mutant Brute, 4 saldırı + frenzy, iniş alanı, ödül dönüşümü, VirtualHorde) | ⏳ onay bekliyor |
 | M7 | Harita, olaylar, çevre (3 bölge, CC0 çevre, mini-harita, 6 olay, etkileşimliler, anti-kamp, bölge kartı) | ✅ onaylı, main |
 | M6 | Combat Content I (6 silah, 2 slot, granat, Runner/Tank/Spitter/Exploder, elite, durum efektleri, spawn deck, gerçekçi Mixamo zombileri) | ✅ onaylı, main |
 
@@ -55,5 +56,5 @@ adb -s <redmi> shell "am start -S -n com.asgardgame.lastground/com.unity3d.playe
 adb -s 3e415066 shell "am start -S -n com.asgardgame.lastground/com.unity3d.player.UnityPlayerGameActivity -e lgargs '-lg-join <redmi-ip> -lg-wander -lg-autofire -lg-autopick -lg-quit-after 950'"
 # Log: adb -s <cihaz> logcat -s Unity | grep NetStats  (logcat -G 16M ile tamponu büyüt)
 ```
-Dev argümanları: `-lg-host`, `-lg-join IP`, `-lg-solo`, `-lg-start-at N`, `-lg-wander`, `-lg-autofire`, `-lg-autopick`, `-lg-quit-after S`, `-lg-bench [S]`, `-lg-quality N`, `-lg-gc-capture [S]`.
+Dev argümanları: `-lg-boss SEC`, `-lg-extract SEC`, `-lg-host`, `-lg-join IP`, `-lg-solo`, `-lg-start-at N`, `-lg-wander`, `-lg-autofire`, `-lg-autopick`, `-lg-quit-after S`, `-lg-bench [S]`, `-lg-quality N`, `-lg-gc-capture [S]`.
 Not: Android'de `Application.Quit` sonrası süreç açık kalabiliyor; bitişi `[NetStats]`/`quit-after reached` log satırından anla, gerekirse `am force-stop`.
