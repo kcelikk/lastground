@@ -99,6 +99,14 @@ namespace LastGround.UI.Run
             if (zombie == null) return;
             string name = _localization.Get(zombie.DisplayNameKey);
             string text;
+            if (a.Kind == AnnouncementKind.BossArrived)
+            {
+                // Boss banner: full-size name, the weak point hint under it.
+                _banner.text = name + "\n<size=55%>" + _localization.Get("hud.boss_hint");
+                _banner.gameObject.SetActive(true);
+                _bannerTimer = BannerTime;
+                return;
+            }
             if (a.Kind == AnnouncementKind.EliteSpawned)
             {
                 var elite = _catalog.Elite(a.Elite);
