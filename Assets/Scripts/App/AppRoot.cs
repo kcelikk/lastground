@@ -59,7 +59,11 @@ namespace LastGround.App
 
             ApplyQuality(settings);
             EnsureIdentity(settings);
+            var meta = new MetaService(_save, Resources.Load<Data.Meta.MetaCatalog>("Meta/META_Catalog"));
+            AppServices.Register(meta);
+            AppServices.Register<Meta.IMetaStore>(meta);
             CreateNetworking(settings);
+            meta.Attach(AppServices.Get<ISession>());
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             PerfHud.Create();

@@ -31,6 +31,8 @@ namespace LastGround.App
         {
             parts.Director.Summary = parts.Horde;
             parts.Referee.Rules = _extraction;
+            Gameplay.Boss.BossState bossState = parts.Boss;
+            parts.Referee.BossKills = () => bossState.Defeats;
             if (_boss != null && _boss.Zombie != null)
             {
                 var boss = new BossController(world, parts.Players, _boss, parts.Status, parts.Boss, seed)

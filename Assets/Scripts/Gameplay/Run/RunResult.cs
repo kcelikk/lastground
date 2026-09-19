@@ -8,6 +8,8 @@ namespace LastGround.Gameplay.Run
         public int Kills;
         public int Revives;
         public int Coins;
+        /// <summary>Bosses defeated this run (profile statistics, M9).</summary>
+        public int BossKills;
         public bool Extracted;
         /// <summary>Extraction bonus per player (threat-based, TDD_01 §2.2).</summary>
         public int ExtractionBonus;

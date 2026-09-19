@@ -44,6 +44,7 @@ namespace LastGround.Networking.Replication
             w.WriteByte(result.StandingMask);
             w.WriteVarUInt((uint)Math.Max(0, result.Banked));
             w.WriteVarUInt((uint)Math.Max(0, result.BankedLeftBehind));
+            w.WriteVarUInt((uint)Math.Max(0, result.BossKills));
             _session.SendToClients(NetChannel.Reliable);
         }
 
@@ -66,6 +67,7 @@ namespace LastGround.Networking.Replication
                 StandingMask = r.ReadByte(),
                 Banked = (int)r.ReadVarUInt(),
                 BankedLeftBehind = (int)r.ReadVarUInt(),
+                BossKills = (int)r.ReadVarUInt(),
             };
             if (!r.Failed) _outcome.End(result);
         }

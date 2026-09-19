@@ -31,7 +31,7 @@ namespace LastGround.Tests
             if (Directory.Exists(_dir)) Directory.Delete(_dir, true);
         }
 
-        static MetaCatalog Catalog() => AssetDatabase.LoadAssetAtPath<MetaCatalog>("Assets/ScriptableObjects/Meta/META_Catalog.asset");
+        static MetaCatalog Catalog() => AssetDatabase.LoadAssetAtPath<MetaCatalog>("Assets/Resources/Meta/META_Catalog.asset");
 
         [Test]
         public void EveryPerk_IsOneTradeOff_WithinItsCaps()

@@ -14,7 +14,8 @@ namespace LastGround.EditorTools.Setup
     static class MetaContentBuilder
     {
         const string Folder = "Assets/ScriptableObjects/Meta";
-        public const string CatalogPath = Folder + "/META_Catalog.asset";
+        /// <summary>In Resources: the app loads it at startup (the composition root has no scene fields).</summary>
+        public const string CatalogPath = "Assets/Resources/Meta/META_Catalog.asset";
         const string Weapons = "Assets/ScriptableObjects/Weapons/";
 
         public static MetaCatalog Build()
