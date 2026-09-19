@@ -4,8 +4,9 @@ _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 
 ## Şu an neredeyiz
 - **Branch:** `m7-map-events` (M6 main'e merge edildi ve push edildi).
-- **M6 — Combat Content I: onaylandı (2026-09-19).** Rapor: `docs/reports/M6_REPORT.md`. **M7 başladı.**
-- EditMode testleri: **154 / 154** geçiyor. OnePlus 30 FPS, Redmi 60 FPS, oyun kodu GC 0 B/kare.
+- **M7 — Harita, Olaylar ve Çevre: onay bekliyor** (branch `m7-map-events`, merge/push yok). Rapor: `docs/reports/M7_REPORT.md`.
+- EditMode testleri: **163 / 163** geçiyor. OnePlus 30 FPS, Redmi 60 FPS, oyun kodu GC 0 B/kare.
+- Harita yeniden üretimi: `MinimapBaker.BakeBatch` (grafikli) → `RebuildScenesBatch`. `ProjectSetup` QualitySettings MSAA'yı 0'a çekiyor; commit'lemeden `git checkout ProjectSettings/QualitySettings.asset`.
 - Zombiler artık gerçekçi Mixamo gövdeleri (8 karakter). Ham FBX'ler git dışında: yeniden bake için önce `MIXAMO_TOKEN=… python3 Tools/Mixamo/mixamo_fetch.py`, sonra `CrowdBaker.BakeAllBatch`. Görünüm kontrolü: `CrowdPreview.RenderBatch` (batchmode, `-nographics` olmadan).
 - **Paralel oturum:** Codex aynı repoda `docs/reference`, `docs/ASSET_SOURCES.md`, `docs/MIXAMO_*` ve `Assets/ThirdParty/Mixamo` README/meta üzerinde çalışıyor; kullanıcı bunları ayrı commit'liyor. `git add -A` kullanma.
 - `ProjectSettings` (MSAA 2x, ışık ayarları) kullanıcı onayıyla tutuldu.
@@ -24,6 +25,7 @@ _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 | M3 | Horde simulation (Burst ZombieWorld, flow field, katmanlı surround, AI LOD) | ✅ onaylı, main |
 | M4 | Shooting & Combat — MVP kapısı (twin-stick, host doğrulamalı hit claim, windup'lı zombi saldırısı, VFX, ses) | ✅ onaylı, main |
 | M5 | Endless loop (director, threat, downed/revive, XP + 12 upgrade, coin + instanced pickup, "Bölgeyi temizle", sonuç ekranı) | ✅ onaylı, main |
+| M7 | Harita, olaylar, çevre (3 bölge, CC0 çevre, mini-harita, 6 olay, etkileşimliler, anti-kamp, bölge kartı) | ⏳ onay bekliyor |
 | M6 | Combat Content I (6 silah, 2 slot, granat, Runner/Tank/Spitter/Exploder, elite, durum efektleri, spawn deck, gerçekçi Mixamo zombileri) | ✅ onaylı, main |
 
 ## M6'dan açık konular (rapordaki OPEN ISSUES)
