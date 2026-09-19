@@ -1,6 +1,6 @@
 # M6 Raporu — Combat Content I
 
-- **Tarih:** 2026-09-19 · **Branch:** `m6-combat-content` · **Unity:** 6000.3.24f1 · **Durum:** ⏳ Onay bekliyor
+- **Tarih:** 2026-09-19 · **Branch:** `m6-combat-content` · **Unity:** 6000.3.24f1 · **Durum:** ✅ Onaylandı (2026-09-19), `main`e merge edildi
 - **Cihazlar:** Redmi Pad Pro = MID (host, kablosuz ADB) · OnePlus 5T = LOW (USB) · Linux PC (yalnızca işlev testi)
 
 ## Çıkış kriterleri (TDD_03 §36 M6)
@@ -80,5 +80,5 @@ EditMode **154 / 154** (M5'e göre +25). Öne çıkanlar: Runner sıçraması, T
 3. Walker animasyon çeşitliliği 2 yürüyüş; ek varyant (topallama, sürünerek yürüme) ve Runner sıçrama klibi (`jump attack`) sonraki içerikte.
 4. Tabanca dahil tüm silahlar aynı prosedürel ses ailesini kullanıyor (M12).
 5. Önceki milestone'lardan: Mirror/kcp2k client ~27 B/f, hotspot testi (B5), Asset Store bütçesi (D1), dev telemetrisinin 5 s'lik ayırmaları.
-6. `ProjectSettings` (antiAliasing 0→2, ışık ayarları): grafikli editör önizlemesi sırasında Unity yazdı — commit'lenmedi, kullanıcı kararı bekliyor.
+6. `ProjectSettings` (MSAA 2x, ışık ayarları): grafikli editör önizlemesi sırasında Unity yazdı — kullanıcı onayıyla tutuldu.
 7. Sonraki: **M7 — Map, Events & Environment** (`docs/reference/maps` konseptleri: sanayi bölgesi, dökümhane, benzin istasyonu, hastane + tahliye).

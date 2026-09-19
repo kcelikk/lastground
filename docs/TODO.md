@@ -3,12 +3,12 @@
 _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 
 ## Şu an neredeyiz
-- **Branch:** `m6-combat-content` (main'e merge edilmedi, GitHub'a push edilmedi).
-- **M6 — Combat Content I: bitti, kullanıcı onayı bekliyor.** Rapor: `docs/reports/M6_REPORT.md`.
+- **Branch:** `m7-map-events` (M6 main'e merge edildi ve push edildi).
+- **M6 — Combat Content I: onaylandı (2026-09-19).** Rapor: `docs/reports/M6_REPORT.md`. **M7 başladı.**
 - EditMode testleri: **154 / 154** geçiyor. OnePlus 30 FPS, Redmi 60 FPS, oyun kodu GC 0 B/kare.
 - Zombiler artık gerçekçi Mixamo gövdeleri (8 karakter). Ham FBX'ler git dışında: yeniden bake için önce `MIXAMO_TOKEN=… python3 Tools/Mixamo/mixamo_fetch.py`, sonra `CrowdBaker.BakeAllBatch`. Görünüm kontrolü: `CrowdPreview.RenderBatch` (batchmode, `-nographics` olmadan).
 - **Paralel oturum:** Codex aynı repoda `docs/reference`, `docs/ASSET_SOURCES.md`, `docs/MIXAMO_*` ve `Assets/ThirdParty/Mixamo` README/meta üzerinde çalışıyor; kullanıcı bunları ayrı commit'liyor. `git add -A` kullanma.
-- Kullanıcı kararı bekleyen: `ProjectSettings` (antiAliasing 0→2, ışık ayarları) değişiklikleri commit'lenmedi.
+- `ProjectSettings` (MSAA 2x, ışık ayarları) kullanıcı onayıyla tutuldu.
 
 ## Sonraki oturumda ilk adımlar
 1. Kullanıcıdan M6 onayını al.
@@ -24,7 +24,7 @@ _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 | M3 | Horde simulation (Burst ZombieWorld, flow field, katmanlı surround, AI LOD) | ✅ onaylı, main |
 | M4 | Shooting & Combat — MVP kapısı (twin-stick, host doğrulamalı hit claim, windup'lı zombi saldırısı, VFX, ses) | ✅ onaylı, main |
 | M5 | Endless loop (director, threat, downed/revive, XP + 12 upgrade, coin + instanced pickup, "Bölgeyi temizle", sonuç ekranı) | ✅ onaylı, main |
-| M6 | Combat Content I (6 silah, 2 slot, granat, Runner/Tank/Spitter/Exploder, elite, durum efektleri, spawn deck, gerçekçi Mixamo zombileri) | ⏳ onay bekliyor, `m6-combat-content` |
+| M6 | Combat Content I (6 silah, 2 slot, granat, Runner/Tank/Spitter/Exploder, elite, durum efektleri, spawn deck, gerçekçi Mixamo zombileri) | ✅ onaylı, main |
 
 ## M6'dan açık konular (rapordaki OPEN ISSUES)
 - Denge (mermi, granat, elite, spawn deck) hipotez; insan playtest'i gerekli.
