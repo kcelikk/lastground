@@ -324,6 +324,7 @@ namespace LastGround.App
             telemetry.BindCombat(players, parts.Weapon, parts.Authority, parts.Health);
             telemetry.BindDirector(parts.Status, parts.Director);
             telemetry.BindProgress(parts.Xp, parts.Builds);
+            telemetry.BindBoss(parts.Boss, parts.BossHost, parts.Extraction);
             telemetry.BindLoot(parts.Wallet, parts.Registry);
             telemetry.BindContent(parts.LoadoutAuthority, parts.Explosions, parts.ProjectileSim);
             if (parts.Director != null) gameObject.AddComponent<DirectorLog>().Bind(parts.Status, parts.Director, _service.CurrentRun.Seed);
