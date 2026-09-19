@@ -16,6 +16,7 @@ Menüler, HUD ve dev araçları. Bağımlılık: Core, Localization, Gameplay, T
 - `Run/ObjectivePanel`, `Run/ObjectiveIndicator` — olay başlığı/sayacı ve ekran kenarı yön oku (çapalı olaylar).
 - `Run/BossHealthBar` — boss adı + can barı, faz işaretleri, sersemken yanıp söner.
 - `Run/ExtractionHud` — ikinci durum satırı (TAHLİYE süre/tutma → bölge), tutma çubuğu, mavi kenar oku.
+- `Run/SpectatorBar` — ölüyken "İZLENİYOR: isim" + sonraki (M10); `TeamPanel` ayrılan oyuncuda "BAĞLANTI KOPTU"; sonuç ekranında "BAĞLANTI KOPTU" başlığı.
 - `Run/EmoteBar`, `Run/EmoteBubbles` — emote düğmesi (kuşanılan 3 emote) ve oyuncunun üstünde balon.
 - `Menu/MetaScreen` — Hazırlık: karakter, kıyafet, perk, teçhizat, cephanelik, emote, unvan sekmeleri; Hurda ve istatistikler.
 - `Run/ResultsScreen` — run sonu istatistikleri, ana menü.
