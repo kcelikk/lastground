@@ -1,6 +1,6 @@
 # M9 Raporu — Meta İlerleme
 
-- **Tarih:** 2026-09-19 · **Branch:** `m9-meta` · **Unity:** 6000.3.24f1 · **Durum:** ⏳ Onay bekliyor
+- **Tarih:** 2026-09-19 · **Branch:** `m9-meta` · **Unity:** 6000.3.24f1 · **Durum:** ✅ Onaylandı (2026-09-19), `main`e merge edildi
 - **Cihazlar:** Redmi Pad Pro = MID (USB `368a7a72`) · OnePlus 5T = LOW (USB `3e415066`)
 - **Kararlar:** D-005 (kalıcı güç yok), D-022 (VS playtest'i paralel, Mixamo oyuncu karakterleri)
 

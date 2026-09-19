@@ -3,8 +3,8 @@
 _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 
 ## Şu an neredeyiz
-- **Branch:** `m9-meta` (merge/push edilmedi).
-- **M9 — Meta İlerleme: onay bekliyor.** Rapor: `docs/reports/M9_REPORT.md`. Vertical Slice playtest'i paralel sürüyor (D-022; `docs/playtest/`), formlar bekleniyor.
+- **Branch:** `main` (M9 merge edildi ve push edildi).
+- **M9 — Meta İlerleme: onaylandı (2026-09-19).** Rapor: `docs/reports/M9_REPORT.md`. Vertical Slice playtest'i paralel sürüyor (D-022; `docs/playtest/`), formlar bekleniyor.
 - EditMode testleri: **181 / 181** geçiyor. OnePlus 30 FPS, Redmi 60 FPS, oyun kodu GC 0 B/kare.
 - Harita yeniden üretimi: `MinimapBaker.BakeBatch` (grafikli) → `RebuildScenesBatch`.
 - Zombiler artık gerçekçi Mixamo gövdeleri (8 karakter). Ham FBX'ler git dışında: yeniden bake için önce `MIXAMO_TOKEN=… python3 Tools/Mixamo/mixamo_fetch.py`, sonra `CrowdBaker.BakeAllBatch`. Görünüm kontrolü: `CrowdPreview.RenderBatch` (batchmode, `-nographics` olmadan).
@@ -12,7 +12,7 @@ _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 - `ProjectSettings` (MSAA 2x, ışık ayarları) kullanıcı onayıyla tutuldu.
 
 ## Sonraki oturumda ilk adımlar
-1. Kullanıcıdan M9 onayını al. Onay gelince: `M9_REPORT.md` → "Onaylandı", commit, `git checkout main && git merge --no-ff m9-meta`, `git push origin main m9-meta`, sonra M10.
+1. M10 (branch `m10-…`): TDD_03 §36 M10 kapsamı.
 2. Playtest formları gelince özetle; denge (boss, fiyatlar, `ScrapPerCoin`, upgrade zaman aşımı) ayarlarını çıkar.
 
 ## Tamamlanan milestone'lar
@@ -24,7 +24,7 @@ _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 | M3 | Horde simulation (Burst ZombieWorld, flow field, katmanlı surround, AI LOD) | ✅ onaylı, main |
 | M4 | Shooting & Combat — MVP kapısı (twin-stick, host doğrulamalı hit claim, windup'lı zombi saldırısı, VFX, ses) | ✅ onaylı, main |
 | M5 | Endless loop (director, threat, downed/revive, XP + 12 upgrade, coin + instanced pickup, "Bölgeyi temizle", sonuç ekranı) | ✅ onaylı, main |
-| M9 | Meta ilerleme (profil + migrasyon, Hurda, 2 Mixamo oyuncu karakteri, kıyafet, perk, teçhizat, silah açılımı, emote, unvan/rozet) | ⏳ onay bekliyor, m9-meta |
+| M9 | Meta ilerleme (profil + migrasyon, Hurda, 2 Mixamo oyuncu karakteri, kıyafet, perk, teçhizat, silah açılımı, emote, unvan/rozet) | ✅ onaylı, main |
 | M8 | Boss ve tahliye (Mutant Brute, 4 saldırı + frenzy, iniş alanı, ödül dönüşümü, VirtualHorde) | ✅ onaylı, main |
 | M7 | Harita, olaylar, çevre (3 bölge, CC0 çevre, mini-harita, 6 olay, etkileşimliler, anti-kamp, bölge kartı) | ✅ onaylı, main |
 | M6 | Combat Content I (6 silah, 2 slot, granat, Runner/Tank/Spitter/Exploder, elite, durum efektleri, spawn deck, gerçekçi Mixamo zombileri) | ✅ onaylı, main |
