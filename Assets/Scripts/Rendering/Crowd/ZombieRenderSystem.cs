@@ -29,7 +29,6 @@ namespace LastGround.Rendering.Crowd
         static readonly int GlowId = Shader.PropertyToID("_Glow");
         static readonly int BoneTexId = Shader.PropertyToID("_BoneTex");
         static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
-        static readonly int TintsId = Shader.PropertyToID("_LGCrowdTints");
 
         struct Batch
         {
@@ -106,19 +105,13 @@ namespace LastGround.Rendering.Crowd
             }
             _candidates = new int[source.Capacity];
             _candidateDistance = new float[source.Capacity];
-            Shader.SetGlobalVectorArray(TintsId, TintPalette);
+            CrowdTints.Apply();
         }
 
         /// <summary>Instances drawn last frame (crowd + corpses), for stats and the benchmark.</summary>
         public int DrawnLastFrame { get; private set; }
         public int CorpseCount => _corpses.Count;
 
-        static readonly Vector4[] TintPalette =
-        {
-            new Vector4(1f, 1f, 1f, 1f), new Vector4(0.85f, 0.95f, 0.85f, 1f), new Vector4(0.9f, 0.85f, 0.8f, 1f),
-            new Vector4(0.75f, 0.8f, 0.9f, 1f), new Vector4(1f, 0.9f, 0.9f, 1f), new Vector4(0.8f, 0.8f, 0.75f, 1f),
-            new Vector4(0.95f, 1f, 0.8f, 1f), new Vector4(0.7f, 0.75f, 0.7f, 1f),
-        };
 
         public void Tick(float dt, uint tick)
         {

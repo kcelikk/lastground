@@ -13,6 +13,7 @@ namespace LastGround.Core.Net.Protocol
         public const byte LobbyRoster = 4;
         public const byte Ping = 5;
         public const byte Pong = 6;
+        public const byte PlayerMetaUpdate = 7;
 
         // Run flow (10–19)
         public const byte LoadRun = 10;
@@ -23,6 +24,8 @@ namespace LastGround.Core.Net.Protocol
         // Players (20–29)
         public const byte PlayerInput = 20;
         public const byte PlayerStates = 21;
+        public const byte EmoteRequest = 22;
+        public const byte EmotePlayed = 23;
 
         // Zombie replication (30–39)
         public const byte ZombieEnter = 30;

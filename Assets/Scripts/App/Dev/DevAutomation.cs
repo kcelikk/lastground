@@ -24,6 +24,8 @@ namespace LastGround.App.Dev
     ///   -lg-run-time SEC      host: start the run clock at SEC (unlocks later zombie types and elites at once)
     ///   -lg-boss SEC          host: the boss appears SEC seconds into the run (M8 tests)
     ///   -lg-extract SEC       host: an extraction window opens SEC seconds into the run; the bot walks to open zones
+    ///   -lg-character ID      own and equip a meta character for this device's profile (M9 tests)
+    ///   -lg-emote-every SEC   the bot plays its first emote every SEC seconds (M9 tests)
     ///   -lg-bench [SEC]       crowd rendering benchmark, SEC per step (default 60), quits when done
     ///   -lg-quality N         force quality tier 0/1/2 for this launch (benchmarks)
     ///   -lg-gc-capture [SEC]  record 300 profiler frames with allocation call stacks after SEC s (default 8; GcAllocReport)
@@ -56,6 +58,12 @@ namespace LastGround.App.Dev
         /// <summary>-lg-extract: seconds into the run at which a landing zone opens (-1 = normal); the bot seeks open zones.</summary>
         public static float ExtractAt { get; private set; } = -1f;
 
+        /// <summary>-lg-character: meta character id to own and equip (dev only).</summary>
+        public static string Character { get; private set; }
+
+        /// <summary>-lg-emote-every: seconds between bot emotes (-1 = off).</summary>
+        public static float EmoteEvery { get; private set; } = -1f;
+
         public static void Install(GameObject root, SessionService service)
         {
             List<string> args = ReadArguments();
@@ -78,6 +86,10 @@ namespace LastGround.App.Dev
                     case "-lg-autofire": ForceAutoFire = true; break;
                     case "-lg-boss" when i + 1 < args.Count:
                         if (float.TryParse(args[++i], NumberStyles.Float, CultureInfo.InvariantCulture, out float bossAt)) BossAt = bossAt;
+                        break;
+                    case "-lg-character" when i + 1 < args.Count: Character = args[++i]; break;
+                    case "-lg-emote-every" when i + 1 < args.Count:
+                        if (float.TryParse(args[++i], NumberStyles.Float, CultureInfo.InvariantCulture, out float every)) EmoteEvery = every;
                         break;
                     case "-lg-extract" when i + 1 < args.Count:
                         if (float.TryParse(args[++i], NumberStyles.Float, CultureInfo.InvariantCulture, out float extractAt)) ExtractAt = extractAt;

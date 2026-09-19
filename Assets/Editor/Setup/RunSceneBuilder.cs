@@ -39,6 +39,8 @@ namespace LastGround.EditorTools.Setup
         static RegionCard _regionCard;
         static BossHealthBar _bossBar;
         static ExtractionHud _extractionHud;
+        static EmoteBar _emoteBar;
+        static EmoteBubbles _emoteBubbles;
 
         public static void Build(string path)
         {
@@ -108,6 +110,8 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_regionCard", _regionCard);
             UiFactory.Assign(installer, "_bossBar", _bossBar);
             UiFactory.Assign(installer, "_extractionHud", _extractionHud);
+            UiFactory.Assign(installer, "_emoteBar", _emoteBar);
+            UiFactory.Assign(installer, "_emoteBubbles", _emoteBubbles);
             UiFactory.Assign(installer, "_bloodParticleMaterial", bloodParticle);
             UiFactory.Assign(installer, "_bloodSplatMaterial", bloodSplat);
             UiFactory.Assign(installer, "_tracerMaterial", tracer);
@@ -220,6 +224,8 @@ namespace LastGround.EditorTools.Setup
             _regionCard = BuildRegionCard(safe);
             _bossBar = BuildBossBar(safe);
             _extractionHud = BuildExtractionHud(safe, canvasGo.transform);
+            _emoteBar = BuildEmoteBar(safe);
+            _emoteBubbles = BuildEmoteBubbles(canvasGo.transform);
 
             var hud = canvasGo.AddComponent<RunHud>();
             UiFactory.Assign(hud, "_statusLabel", status);

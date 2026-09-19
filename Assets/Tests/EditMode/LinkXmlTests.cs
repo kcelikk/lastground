@@ -16,6 +16,9 @@ namespace LastGround.Tests
             typeof(LastGround.Localization.LanguageCatalog),
             typeof(LastGround.Localization.LanguageInfo),
             typeof(LastGround.Save.SettingsData),
+            typeof(LastGround.Save.ProfileData),
+            typeof(LastGround.Save.ProfileStats),
+            typeof(LastGround.Save.OutfitChoice),
         };
 
         static Dictionary<string, string> LoadPreserved()

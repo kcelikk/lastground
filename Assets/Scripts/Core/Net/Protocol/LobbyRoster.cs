@@ -20,6 +20,8 @@ namespace LastGround.Core.Net.Protocol
                 w.WriteString(Members[i].Name);
                 w.WriteBool(Members[i].IsHost);
                 w.WriteUShort(Members[i].RttMs);
+                w.WriteUInt((uint)Members[i].Meta);
+                w.WriteUInt((uint)(Members[i].Meta >> 32));
             }
         }
 
@@ -34,6 +36,7 @@ namespace LastGround.Core.Net.Protocol
                 Members[i].Name = r.ReadString();
                 Members[i].IsHost = r.ReadBool();
                 Members[i].RttMs = r.ReadUShort();
+                Members[i].Meta = r.ReadUInt() | ((ulong)r.ReadUInt() << 32);
             }
         }
     }
@@ -44,5 +47,6 @@ namespace LastGround.Core.Net.Protocol
         public string Name;
         public bool IsHost;
         public ushort RttMs;
+        public ulong Meta;
     }
 }

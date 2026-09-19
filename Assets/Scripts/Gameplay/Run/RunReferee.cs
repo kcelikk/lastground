@@ -26,6 +26,9 @@ namespace LastGround.Gameplay.Run
         /// <summary>Team kills so far (set by the installer from the combat authority).</summary>
         public System.Func<int> Kills { get; set; }
 
+        /// <summary>Bosses defeated so far (set by the installer from the boss state).</summary>
+        public System.Func<int> BossKills { get; set; }
+
         /// <summary>Team run coin (M5 wallet).</summary>
         public System.Func<int> Coins { get; set; }
 
@@ -64,6 +67,7 @@ namespace LastGround.Gameplay.Run
                 Kills = Kills != null ? Kills() : 0,
                 Revives = _health.Revives,
                 Coins = Coins != null ? Coins() : 0,
+                BossKills = BossKills != null ? BossKills() : 0,
                 Extracted = extracted,
             };
         }

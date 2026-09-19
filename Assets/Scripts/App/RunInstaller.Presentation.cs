@@ -63,7 +63,9 @@ namespace LastGround.App
             _disposables.Add(tracers);
             loop.Register(TickPhase.Presentation, tracers);
             loop.Register(TickPhase.Presentation, new DamageNumbers(parts.Hits, _camera, _worldRoot, parts.Preset.DamageNumberCap));
-            loop.Register(TickPhase.Presentation, new PlayerViews(parts.Players, _worldRoot, _playerMesh, _playerMaterial));
+            // Players: baked Mixamo bodies (M9); the capsule views stay for slots without a body (benchmark, no catalog).
+            if (!BuildPlayerBodies(parts, loop))
+                loop.Register(TickPhase.Presentation, new PlayerViews(parts.Players, _worldRoot, _playerMesh, _playerMaterial));
             loop.Register(TickPhase.Presentation, new PickupRenderSystem(parts.Pickups, parts.Players, PickupLooks()));
             Mesh sphere = Resources.GetBuiltinResource<Mesh>("Sphere.fbx");
             var projectiles = new ProjectileRenderSystem(parts.Projectiles, _camera, sphere, _grenadeMaterial, _tracerMaterial);

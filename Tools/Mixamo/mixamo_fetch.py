@@ -27,6 +27,9 @@ CHARACTERS = {
     'Mutant': 'cccc84b6-d072-4972-99da-75c5702e25f6',
     'Parasite_L_Starkie': '13c20d1a-c2b7-4725-99da-fe3bbeac2805',
     'Survivor_A_Lusth': '52dcdacb-b43e-4efc-ab6d-9d2d6e09bc95',
+    # Player characters (M9, D-022).
+    'Swat_Guy': 'cf73b862-b7ca-40e9-a156-1b95393d232e',
+    'Erika_Archer': 'd0496a75-08b9-4f4e-9f1d-f65820323cc2',
 }
 
 # Motion exports: FBX for Unity, without skin, 30 fps, in place. (file name, motion id, exported on character)
@@ -49,6 +52,16 @@ MOTIONS = [
     ('Mutant_Swipe', 'c9c93c1d-b96c-11e4-a802-0aaa78deedf9', 'Mutant'),
     ('Mutant_Death', 'c9c93d98-b96c-11e4-a802-0aaa78deedf9', 'Mutant'),
     ('Mutant_Roar', 'c9ccb4c2-b96c-11e4-a802-0aaa78deedf9', 'Mutant'),
+    # Player motions (M9): aimed rifle set, hit, death, emotes.
+    ('Rifle_Aiming_Idle', 'c9c84492-b96c-11e4-a802-0aaa78deedf9', 'Swat_Guy'),
+    ('Rifle_Run', 'c9c814a0-b96c-11e4-a802-0aaa78deedf9', 'Swat_Guy'),
+    ('Rifle_Run_Backwards', 'c9c86c17-b96c-11e4-a802-0aaa78deedf9', 'Swat_Guy'),
+    ('Rifle_Firing', 'c9c94dfa-b96c-11e4-a802-0aaa78deedf9', 'Swat_Guy'),
+    ('Rifle_Hit', 'c9c6bd18-b96c-11e4-a802-0aaa78deedf9', 'Swat_Guy'),
+    ('Rifle_Death', 'c9c871f6-b96c-11e4-a802-0aaa78deedf9', 'Swat_Guy'),
+    ('Emote_Waving', 'c9c5ed32-b96c-11e4-a802-0aaa78deedf9', 'Swat_Guy'),
+    ('Emote_Salute', 'c9cb0ab6-b96c-11e4-a802-0aaa78deedf9', 'Swat_Guy'),
+    ('Emote_Cheering', 'c9c66dfd-b96c-11e4-a802-0aaa78deedf9', 'Swat_Guy'),
 ]
 
 TOKEN = os.environ.get('MIXAMO_TOKEN', '')

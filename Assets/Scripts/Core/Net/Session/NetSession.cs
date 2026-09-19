@@ -110,6 +110,21 @@ namespace LastGround.Core.Net.Session
             _client.Connect(address, port);
         }
 
+        public void SetLocalMeta(ulong meta)
+        {
+            _config.LocalMeta = meta;
+            LobbyPlayer me = State == SessionState.Idle ? null : Find(LocalPlayer);
+            if (me == null || me.Meta == meta) return;
+            me.Meta = meta;
+            if (Role == RunRole.Client)
+            {
+                if (State == SessionState.Connected) SendToHost(new PlayerMetaUpdate { Meta = meta });
+                return;
+            }
+            BroadcastRoster();
+            RosterChanged?.Invoke();
+        }
+
         public void Leave()
         {
             Leave(raise: true);
@@ -160,7 +175,7 @@ namespace LastGround.Core.Net.Session
             LocalPlayer = new PlayerId(0);
             SessionName = string.IsNullOrEmpty(_config.SessionName) ? _config.PlayerName : _config.SessionName;
             _players.Clear();
-            _players.Add(new LobbyPlayer { Id = LocalPlayer, Name = SanitizeName(_config.PlayerName), IsHost = true });
+            _players.Add(new LobbyPlayer { Id = LocalPlayer, Name = SanitizeName(_config.PlayerName), IsHost = true, Meta = _config.LocalMeta });
             AcceptingPlayers = listening;
             SetState(SessionState.Hosting);
             RosterChanged?.Invoke();

@@ -7,7 +7,9 @@
         "LastGround.Gameplay",
         "Unity.TextMeshPro",
         "UnityEngine.UI",
-        "LastGround.Data"
+        "LastGround.Data",
+        "LastGround.Meta",
+        "LastGround.Save"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

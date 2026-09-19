@@ -210,6 +210,12 @@ namespace LastGround.App
             _disposables.Add(runEnd);
 
             IHitClaimSink claims = session.IsAuthority ? BuildHost(ref parts, loop, benchmark, seed) : BuildClient(ref parts, loop);
+            if (!benchmark)
+            {
+                ApplyMeta(ref parts);
+                BuildEmotes(parts, loop);
+                BankWhenEnded(loop, session.LocalPlayer.IsValid ? session.LocalPlayer.Value : 0);
+            }
             BuildBossSync(ref parts, loop);
             var objectiveSync = new ObjectiveSync(session, parts.Objective);
             _disposables.Add(objectiveSync);

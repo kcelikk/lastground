@@ -28,6 +28,7 @@ namespace LastGround.Core.Net.Session
                 ContentHash = _config.ContentHash,
                 PlayerName = SanitizeName(_config.PlayerName),
                 PlayerGuid = _config.PlayerGuid,
+                Meta = _config.LocalMeta,
             });
         }
 
@@ -88,7 +89,7 @@ namespace LastGround.Core.Net.Session
             for (int i = 0; i < roster.Count; i++)
             {
                 LobbyMember m = roster.Members[i];
-                _players.Add(new LobbyPlayer { Id = new PlayerId(m.PlayerId), Name = m.Name, IsHost = m.IsHost, RttMs = m.RttMs });
+                _players.Add(new LobbyPlayer { Id = new PlayerId(m.PlayerId), Name = m.Name, IsHost = m.IsHost, RttMs = m.RttMs, Meta = m.Meta });
             }
 
             for (int i = 0; i < previous.Count; i++)

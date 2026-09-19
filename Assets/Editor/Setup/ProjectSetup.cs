@@ -35,6 +35,7 @@ namespace LastGround.EditorTools.Setup
             WeaponContentBuilder.Build();
             ObjectiveContentBuilder.Build();
             BossContentBuilder.Build();
+            MetaContentBuilder.Build();
             UpgradeContentBuilder.Build();
             SceneBuilder.BuildAll();
             AssetDatabase.SaveAssets();

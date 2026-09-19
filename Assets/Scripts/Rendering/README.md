@@ -9,6 +9,7 @@
 | `Combat/` | `TracerSystem` — tracer + namlu alevi, instanced additive quad'lar, ring buffer (preset `TracerCap`) |
 | `Lighting/` | `LightingGrid` — tepeden ışık haritası (sürü shader'ı + `LG/LightPoolGround` örnekler). M7: lambalar `MapDefinition.Lamps`'ten (`FromMap`) |
 | `Boss/` | `BossView` — saldırı telegraph'ları (dolan daire + şok halkası, hücum şeridi, enkaz iniş dairesi + yay), parlayan tümör, kamera sarsıntısı; `ExtractionZoneView` — mavi iniş halkası, fişekler, iniş ışıkları, tutulurken rotor gölgesi |
+| `Players/` | `PlayerBodyRenderer` — Mixamo oyuncu gövdeleri (kalabalık GPU skinning shader'ı): nişana dönük, harekete göre ileri/geri koşu, ateş, düşme sürünmesi, ölüm, emote; kıyafet tonu (palet 8–11, `Crowd/CrowdTints`), takım rengi halkası |
 | `Interactables/` | `InteractableViews` — patlayan varil/tankı gizler, geri gelince gösterir (sahnedeki `Interactable_<id>` nesneleri) |
 | `Objectives/` | `ZoneMarker` — bölge kenarı (Bölgeyi temizle) veya çapalı olay halkası (instanced additive) |
 | `Quality/` | `QualityService` — kalite seviyesi + FPS hedefi + 1080 satır render sınırı; preset'ler `Resources/Quality` |

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9141a74ee1b09b22bb562217b7b1c141, type: 3}
+  m_Name: LOADOUT_suppressor
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Meta.LoadoutDefinition
+  Id: suppressor
+  NameKey: meta.suppressor
+  DescriptionKey: meta.suppressor.desc
+  Price: 0
+  OwnedByDefault: 1
+  Requires: 
+  Primary: {fileID: 11400000, guid: 166367269d2ebb2d386073b2bf4b84be, type: 2}
+  Grenades: 3

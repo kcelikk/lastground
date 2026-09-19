@@ -75,7 +75,7 @@ namespace LastGround.Gameplay.Combat
             get
             {
                 for (int s = 0; s < 2; s++)
-                    if (_weapon[s] != null && !_weapon[s].InfiniteReserve && _reserve[s] < _weapon[s].MaxReserveAmmo) return true;
+                    if (_weapon[s] != null && !_weapon[s].InfiniteReserve && _reserve[s] < ReserveCap(_weapon[s])) return true;
                 return false;
             }
         }
@@ -102,7 +102,7 @@ namespace LastGround.Gameplay.Combat
                 if (_weapon[s] == null) continue;
                 _stats[s] = WeaponStats.From(_weapon[s], Builds?.Of(me));
                 _ammo[s] = _stats[s].MagazineSize;
-                _reserve[s] = _weapon[s].MaxReserveAmmo;
+                _reserve[s] = ReserveCap(_weapon[s]);
                 if (s == _active) SwitchTo(me, s, draw: false);
             }
             if (_weapon[_active] == null && _weapon[1 - _active] != null) SwitchTo(me, 1 - _active, draw: false);
@@ -143,14 +143,22 @@ namespace LastGround.Gameplay.Combat
                 WeaponDefinition weapon = _weapon[s];
                 if (weapon == null || weapon.InfiniteReserve) continue;
                 int gain = (int)math.ceil(weapon.MaxReserveAmmo * weapon.AmmoPickupFraction);
-                _reserve[s] = math.min(weapon.MaxReserveAmmo, _reserve[s] + gain);
+                _reserve[s] = math.min(ReserveCap(weapon), _reserve[s] + gain);
             }
         }
 
         void Refill(int s)
         {
             _ammo[s] = _stats[s].MagazineSize;
-            _reserve[s] = _weapon[s].MaxReserveAmmo;
+            _reserve[s] = ReserveCap(_weapon[s]);
+        }
+
+        /// <summary>Reserve ammo limit after the player's perk (ReserveAmmoPct, M9).</summary>
+        int ReserveCap(WeaponDefinition weapon)
+        {
+            int me = _players.Local.IsValid ? _players.Local.Value : 0;
+            float pct = Builds != null ? Builds.Of(me).Get(Data.Upgrades.StatId.ReserveAmmoPct) : 0f;
+            return math.max(1, (int)math.round(weapon.MaxReserveAmmo * (1f + pct / 100f)));
         }
 
         void HandleSwitchAndGrenade(int me, in PlayerInputFrame frame)

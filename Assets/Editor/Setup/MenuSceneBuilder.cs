@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace LastGround.EditorTools.Setup
 {
     /// <summary>Menu scene: main panel, local co-op (find / join by IP / create) and lobby panels under one router.</summary>
-    static class MenuSceneBuilder
+    static partial class MenuSceneBuilder
     {
         public static void Build(string path)
         {
@@ -32,12 +32,15 @@ namespace LastGround.EditorTools.Setup
             RectTransform main = UiFactory.Panel("MainPanel", safe);
             RectTransform coop = UiFactory.Panel("CoopPanel", safe);
             RectTransform lobby = UiFactory.Panel("LobbyPanel", safe);
+            RectTransform meta = UiFactory.Panel("MetaPanel", safe);
 
-            BuildMain(main, router, coop.gameObject);
+            BuildMain(main, router, coop.gameObject, meta.gameObject);
+            BuildMeta(meta, router, main.gameObject);
             BuildCoop(coop, router, main.gameObject, lobby.gameObject);
             BuildLobby(lobby, router, coop.gameObject);
 
-            UiFactory.AssignArray(router, "_screens", new Object[] { main.gameObject, coop.gameObject, lobby.gameObject });
+            UiFactory.AssignArray(router, "_screens", new Object[] { main.gameObject, coop.gameObject, lobby.gameObject, meta.gameObject });
+            meta.gameObject.SetActive(false);
             coop.gameObject.SetActive(false);
             lobby.gameObject.SetActive(false);
             EditorSceneManager.SaveScene(scene, path);
@@ -60,7 +63,7 @@ namespace LastGround.EditorTools.Setup
             fitter.aspectRatio = (float)texture.width / texture.height;
         }
 
-        static void BuildMain(RectTransform panel, ScreenRouter router, GameObject coop)
+        static void BuildMain(RectTransform panel, ScreenRouter router, GameObject coop, GameObject meta)
         {
             TMP_Text title = UiFactory.Label("Title", panel, "menu.title", 120, FontStyles.Bold, Color.white);
             UiFactory.Place(title.rectTransform, new Vector2(0f, 1f), new Vector2(80f, -80f), new Vector2(1100f, 150f));
@@ -68,7 +71,7 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Place(tagline.rectTransform, new Vector2(0f, 1f), new Vector2(86f, -225f), new Vector2(1100f, 50f));
 
             RectTransform list = UiFactory.Rect("Buttons", panel);
-            UiFactory.Place(list, new Vector2(0f, 1f), new Vector2(80f, -320f), new Vector2(560f, 520f));
+            UiFactory.Place(list, new Vector2(0f, 1f), new Vector2(80f, -300f), new Vector2(560f, 620f));
             var layout = list.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 16f;
             layout.childControlHeight = false;
@@ -78,6 +81,7 @@ namespace LastGround.EditorTools.Setup
             var size = new Vector2(560f, 84f); // ≥ 56 dp at the 1080p reference (TDD_01 §0.9)
             Button solo = UiFactory.Button("Solo", list, "menu.solo", size, out _);
             Button coopButton = UiFactory.Button("LocalCoop", list, "menu.local_coop", size, out _);
+            Button metaButton = UiFactory.Button("Preparation", list, "menu.preparation", size, out _);
             Button settings = UiFactory.Button("Settings", list, "menu.settings", size, out _);
             Button language = UiFactory.Button("Language", list, null, size, out TMP_Text languageLabel);
             Button quit = UiFactory.Button("Quit", list, "menu.quit", size, out _);
@@ -99,6 +103,12 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(screen, "_versionLabel", version);
             UiFactory.Assign(screen, "_router", router);
             UiFactory.Assign(screen, "_coopScreen", coop);
+            UiFactory.Assign(screen, "_metaButton", metaButton);
+            UiFactory.Assign(screen, "_metaScreen", meta);
+            TMP_Text scrap = UiFactory.Label("Scrap", panel, null, 40, FontStyles.Bold, new Color(1f, 0.8f, 0.25f));
+            UiFactory.Place(scrap.rectTransform, new Vector2(1f, 1f), new Vector2(-60f, -60f), new Vector2(560f, 56f));
+            scrap.alignment = TextAlignmentOptions.Right;
+            UiFactory.Assign(screen, "_scrapLabel", scrap);
         }
 
         static void BuildCoop(RectTransform panel, ScreenRouter router, GameObject main, GameObject lobby)

@@ -43,8 +43,8 @@ Shader "LG/CrowdInstanced"
                 float _RimPower;
             CBUFFER_END
 
-            // Tint palette (8 entries), set globally by the render system.
-            float4 _LGCrowdTints[8];
+            // Tint palette (16 entries): 0–7 crowd variety, 8–11 player outfits (CrowdTints).
+            float4 _LGCrowdTints[16];
 
             // Lighting grid (TDD_02 §21.2): top-down light map; xy = world min XZ, zw = 1 / size.
             TEXTURE2D(_LGLightGrid);
@@ -110,7 +110,7 @@ Shader "LG/CrowdInstanced"
                 output.positionCS = TransformWorldToHClip(output.positionWS);
                 output.normalWS = TransformObjectToWorldNormal(normalOS);
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
-                output.tint = float4(_LGCrowdTints[(uint)anim.w & 7].rgb, frac(anim.w));
+                output.tint = float4(_LGCrowdTints[(uint)anim.w & 15].rgb, frac(anim.w));
                 output.glow = UNITY_ACCESS_INSTANCED_PROP(Props, _Glow);
                 return output;
             }

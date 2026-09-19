@@ -77,7 +77,7 @@ namespace LastGround.EditorTools.Crowd
                 SkinnedMeshRenderer[] renderers = root.GetComponentsInChildren<SkinnedMeshRenderer>();
                 var slots = new List<(Transform bone, Matrix4x4 bindToRoot)>();
                 int tiles = source.DiffuseTiles != null ? Mathf.Max(1, source.DiffuseTiles.Length) : 1;
-                Mesh combined = Combine(root.transform, renderers, slots, out float height, 1f / tiles);
+                Mesh combined = Combine(root.transform, renderers, slots, out float height, 1f / tiles, source.MaterialTiles);
                 float scale = source.TargetHeight / height;
                 ScaleMesh(combined, scale);
 
@@ -153,8 +153,9 @@ namespace LastGround.EditorTools.Crowd
 
         /// <summary>Merges all skinned meshes into root space. Bone slots are (bone, bind matrix) pairs.</summary>
         /// <param name="uScale">Horizontal UV scale: UDIM tiles packed side by side in one texture.</param>
+        /// <param name="materialTiles">Material-name fragments by tile (multi-material bodies); null = UDIM or one texture.</param>
         static Mesh Combine(Transform root, SkinnedMeshRenderer[] renderers, List<(Transform, Matrix4x4)> slots, out float height,
-            float uScale = 1f)
+            float uScale = 1f, string[] materialTiles = null)
         {
             var positions = new List<Vector3>();
             var normals = new List<Vector3>();
@@ -176,6 +177,24 @@ namespace LastGround.EditorTools.Crowd
                 }
 
                 int offset = positions.Count;
+                var tileOf = new int[mesh.vertexCount];
+                if (materialTiles != null)
+                {
+                    for (int s = 0; s < mesh.subMeshCount; s++)
+                    {
+                        Material material = s < smr.sharedMaterials.Length ? smr.sharedMaterials[s] : null;
+                        // Matched against "renderer/material" (Mixamo material names can be unrelated, e.g. Akai_MAT).
+                        string key = smr.name + "/" + (material != null ? material.name : string.Empty);
+                        int tile = materialTiles.Length - 1;
+                        for (int k = 0; k < materialTiles.Length; k++)
+                            if (key.IndexOf(materialTiles[k], StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                tile = k;
+                                break;
+                            }
+                        foreach (int index in mesh.GetTriangles(s)) tileOf[index] = tile;
+                    }
+                }
                 Vector3[] v = mesh.vertices;
                 Vector3[] n = mesh.normals;
                 Vector2[] uv = mesh.uv;
@@ -184,7 +203,7 @@ namespace LastGround.EditorTools.Crowd
                 {
                     positions.Add(meshToRoot.MultiplyPoint3x4(v[i]));
                     normals.Add(meshToRoot.MultiplyVector(n.Length > 0 ? n[i] : Vector3.up).normalized);
-                    uvs.Add(uv.Length > 0 ? new Vector2(uv[i].x * uScale, uv[i].y) : Vector2.zero);
+                    uvs.Add(uv.Length > 0 ? new Vector2((uv[i].x + tileOf[i]) * uScale, uv[i].y) : Vector2.zero);
                     BoneWeight bw = w[i];
                     bw.boneIndex0 = slotOf[bw.boneIndex0];
                     bw.boneIndex1 = slotOf[bw.boneIndex1];

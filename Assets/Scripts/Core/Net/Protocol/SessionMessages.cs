@@ -8,6 +8,8 @@ namespace LastGround.Core.Net.Protocol
         public uint ContentHash;
         public string PlayerName;
         public string PlayerGuid;
+        /// <summary>Opaque meta selection (character, outfit, perk, loadout, title, owned weapons; M9).</summary>
+        public ulong Meta;
 
         public byte Id => NetMsgId.JoinRequest;
         public NetChannel Channel => NetChannel.Reliable;
@@ -18,6 +20,8 @@ namespace LastGround.Core.Net.Protocol
             w.WriteUInt(ContentHash);
             w.WriteString(PlayerName);
             w.WriteString(PlayerGuid);
+            w.WriteUInt((uint)Meta);
+            w.WriteUInt((uint)(Meta >> 32));
         }
 
         public void Read(ref NetReader r)
@@ -26,6 +30,7 @@ namespace LastGround.Core.Net.Protocol
             ContentHash = r.ReadUInt();
             PlayerName = r.ReadString();
             PlayerGuid = r.ReadString();
+            Meta = r.ReadUInt() | ((ulong)r.ReadUInt() << 32);
         }
     }
 
@@ -100,6 +105,26 @@ namespace LastGround.Core.Net.Protocol
         {
             ClientTime = r.ReadDouble();
             HostTime = r.ReadDouble();
+        }
+    }
+
+    /// <summary>A player changed its meta selection in the lobby (client → host; the host re-sends the roster).</summary>
+    public struct PlayerMetaUpdate : INetMessage
+    {
+        public ulong Meta;
+
+        public byte Id => NetMsgId.PlayerMetaUpdate;
+        public NetChannel Channel => NetChannel.Reliable;
+
+        public void Write(NetWriter w)
+        {
+            w.WriteUInt((uint)Meta);
+            w.WriteUInt((uint)(Meta >> 32));
+        }
+
+        public void Read(ref NetReader r)
+        {
+            Meta = r.ReadUInt() | ((ulong)r.ReadUInt() << 32);
         }
     }
 }

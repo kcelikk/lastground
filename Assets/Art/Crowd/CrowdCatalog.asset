@@ -22,6 +22,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9b23668d6005da26cb31ad03d14e4e9f, type: 2}
   - {fileID: 11400000, guid: d22189bb107d76fb0adc48794b6345b7, type: 2}
   - {fileID: 11400000, guid: a686141c48585a9e891b58078eacb80e, type: 2}
+  - {fileID: 11400000, guid: d2b72d36f2c7e68efa432851dc1573f0, type: 2}
+  - {fileID: 11400000, guid: cc66e09c5d2252736a098f8ae0bb6b55, type: 2}
   Material: {fileID: 2100000, guid: 5c5b52e04ab10ba01b790d6ef8aeb593, type: 2}
   TargetHeight: 1.8
   ScaleVariation: 0.08
