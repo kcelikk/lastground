@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48a46792e8671bd40922cd2bf0353cf7, type: 3}
+  m_Name: EMOTE_cheer
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Meta.EmoteDefinition
+  Id: cheer
+  NameKey: meta.cheer
+  DescriptionKey: meta.cheer.desc
+  Price: 600
+  OwnedByDefault: 0
+  Requires: 
+  Clip: 10
+  Seconds: 2
+  BubbleKey: meta.cheer.bubble

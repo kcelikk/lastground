@@ -21,6 +21,12 @@ namespace LastGround.Data.Upgrades
         SlowOnHitPct = 13,
         /// <summary>Percent chance a hit stuns the zombie (M6).</summary>
         StunChancePct = 14,
-        Count = 15,
+        /// <summary>M9 perks: revive progress speed, %.</summary>
+        ReviveSpeedPct = 15,
+        /// <summary>M9 perks: extra grenades at the start of a run.</summary>
+        BonusGrenades = 16,
+        /// <summary>M9 perks: reserve ammo of new weapons, %.</summary>
+        ReserveAmmoPct = 17,
+        Count = 18,
     }
 }

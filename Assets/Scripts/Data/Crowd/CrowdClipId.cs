@@ -13,5 +13,9 @@ namespace LastGround.Data.Crowd
         Hit = 4,
         Crawl = 5,
         Death = 6,
+        // Player bodies only (M9 emotes); crowd snapshots never carry these (3-bit state).
+        EmoteWave = 8,
+        EmoteSalute = 9,
+        EmoteCheer = 10,
     }
 }

@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3f12f026c109facf9ca298a5fdb1ac5, type: 3}
+  m_Name: META_Catalog
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Meta.MetaCatalog
+  Characters:
+  - {fileID: 11400000, guid: f1ad6a734067db7a18ffd4ff960bad48, type: 2}
+  - {fileID: 11400000, guid: 24107ce1ab42268448a4464d1c5d072e, type: 2}
+  Perks:
+  - {fileID: 11400000, guid: f9bbede75b95150709eac068968fdd93, type: 2}
+  - {fileID: 11400000, guid: e67d7085f83500ab0b7b9b493a06b924, type: 2}
+  - {fileID: 11400000, guid: 7a08df8b93788fea3bbc884cb6e05aa5, type: 2}
+  - {fileID: 11400000, guid: 1f404be9cb94227da8d31f3ebfbd3b99, type: 2}
+  - {fileID: 11400000, guid: 4c4ad0ea82cc2800192fa8b5b79ee7a7, type: 2}
+  Loadouts:
+  - {fileID: 11400000, guid: 744e524f7d561aaacba830254fa72b6d, type: 2}
+  - {fileID: 11400000, guid: 3c9f99562f71729c699ebe67174979be, type: 2}
+  - {fileID: 11400000, guid: 6b26eada1651302a8b4e66c143b5ad69, type: 2}
+  - {fileID: 11400000, guid: fe1d2eae4131d278c962871d4323c8f1, type: 2}
+  - {fileID: 11400000, guid: b048d7be856493b3087342d82a523198, type: 2}
+  Weapons:
+  - {fileID: 11400000, guid: b4b14b7e85c27b7a985073b3b6ebd281, type: 2}
+  - {fileID: 11400000, guid: 6752709a2645c8026a1ff277a98b3d99, type: 2}
+  - {fileID: 11400000, guid: 35d56ad70b1a8739b81efca1b17e28fa, type: 2}
+  - {fileID: 11400000, guid: 19bb935064b5064d9b710d62d9f5f67e, type: 2}
+  - {fileID: 11400000, guid: 7d04406d56681f50e82e00db1752cdd1, type: 2}
+  Emotes:
+  - {fileID: 11400000, guid: c2eff9486ad6a34c7b119e97e8a29f0c, type: 2}
+  - {fileID: 11400000, guid: 6ce83a82519036b18881b57ad1b72a9f, type: 2}
+  - {fileID: 11400000, guid: 4717a1d1613e16b568e806bdfa9c0aa4, type: 2}
+  Titles:
+  - {fileID: 11400000, guid: 28f86a6d8b044354bb981f755916650b, type: 2}
+  - {fileID: 11400000, guid: 966dee6ad26e0ab2cbf2e15b3b14b676, type: 2}
+  - {fileID: 11400000, guid: 36a0c5b0ccfe186688f8765bcd1628b8, type: 2}
+  - {fileID: 11400000, guid: 533eb7451390110db85111bc30857612, type: 2}
+  - {fileID: 11400000, guid: 223da5e2232eaf4778f6c48dc181e1e8, type: 2}
+  - {fileID: 11400000, guid: 6de2cfa5a6cc36a5c893d0169e1efd25, type: 2}
+  - {fileID: 11400000, guid: 4b57fceab0d915796aca9581238585b8, type: 2}
+  ScrapPerCoin: 1
+  PerkCaps:
+  - Stat: 0
+    Max: 10
+  - Stat: 15
+    Max: 30
+  - Stat: 10
+    Max: 40
+  - Stat: 4
+    Max: 10
+  - Stat: 16
+    Max: 1
+  - Stat: 17
+    Max: 20
+  - Stat: 1
+    Max: 8
+  - Stat: 9
+    Max: 8
+  - Stat: 6
+    Max: 5
+  - Stat: 3
+    Max: 6

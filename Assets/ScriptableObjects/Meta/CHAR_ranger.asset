@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76d29046eba66f7d7a7f920b17d39340, type: 3}
+  m_Name: CHAR_ranger
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Meta.CharacterDefinition
+  Id: ranger
+  NameKey: meta.ranger
+  DescriptionKey: meta.ranger.desc
+  Price: 0
+  OwnedByDefault: 1
+  Requires: 
+  BodyId: player_ranger
+  Outfits:
+  - {fileID: 11400000, guid: 430cc0042ef33d1f5b77e8486eadc4c4, type: 2}
+  - {fileID: 11400000, guid: 5298db695e5db97c6aafc2a8fa21435c, type: 2}
+  - {fileID: 11400000, guid: 778b8a2c6c50bf15483f54105bb81e95, type: 2}
+  - {fileID: 11400000, guid: 253ec747c6bf79dd8a9a4d8505375292, type: 2}
+  DefaultPerk: {fileID: 11400000, guid: f9bbede75b95150709eac068968fdd93, type: 2}

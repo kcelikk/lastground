@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29295b85397a70f8da2eaea9430cdd52, type: 3}
+  m_Name: PERK_grenadier
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Meta.PerkDefinition
+  Id: grenadier
+  NameKey: meta.grenadier
+  DescriptionKey: meta.grenadier.desc
+  Price: 1000
+  OwnedByDefault: 0
+  Requires: 
+  Plus:
+    Stat: 16
+    Value: 1
+  Minus:
+    Stat: 17
+    Value: -20
