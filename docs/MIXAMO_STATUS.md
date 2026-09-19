@@ -2,6 +2,8 @@
 
 2026-09-19. Bu belge indirilmiş içerik ile hedeflenen içeriği ayırır. Milestone tamamlanma raporu değildir.
 
+> **Güncel durum (M6, onaylı):** indirilen 8 gövde ve 18 hareket oyuna bağlandı. Rol eşleşmesi: Walker = Yaku, Zombiegirl, Copzombie, Warzombie; Runner = Romero; Tank = Mutant; Spitter = Parasite; Exploder = Survivor. Aşağıdaki "bekliyor" ifadeleri indirme günündeki durumu anlatır. Güncel hat: `Assets/Editor/Crowd` (`CrowdBodySource`, `MixamoImport`, `PoseSampler`, `CrowdBaker`), rapor `docs/reports/M6_REPORT.md`.
+
 ## Envanter
 
 | İçerik | Hedef | İndirilen/doğrulanan |
