@@ -66,6 +66,20 @@ namespace LastGround.Data.Director
         public Vector2Int SurroundSectorSize = new Vector2Int(4, 6);
         public float PackSpreadDeg = 18f;
 
+        [Header("Virtual hordes (TDD_02 §17.7)")]
+        /// <summary>Chance that a Peak pack or surround starts far away as a marching group instead of off screen.</summary>
+        [Range(0f, 1f)] public float VirtualLaunchChance = 0.35f;
+        public int VirtualMinThreat = 2;
+        /// <summary>Distance from the team at which a launched group starts.</summary>
+        public Vector2 VirtualLaunchDistance = new Vector2(75f, 95f);
+        /// <summary>Launched groups are this much bigger than the pattern they replace (they arrive late).</summary>
+        public float VirtualSizeScale = 1.5f;
+        public float VirtualSpeed = 1.8f;
+        /// <summary>A group turns into zombies once this close to a player.</summary>
+        public float MaterializeDistance = 48f;
+        /// <summary>Zombies left far behind join a group within this distance instead of vanishing.</summary>
+        public float GroupMergeRadius = 25f;
+
         [Header("Anti-camping (TDD_01 §9.8)")]
         /// <summary>The team's centre counts as "in one spot" while it stays within this radius.</summary>
         public float CampRadius = 12f;

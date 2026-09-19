@@ -34,6 +34,13 @@ namespace LastGround.Gameplay.Director
 
             int player = RandomTargetablePlayer();
             if (player < 0) return;
+            if (TryLaunchVirtual(pattern, size, player))
+            {
+                _budget -= size;
+                LastPattern = pattern;
+                Patterns++;
+                return;
+            }
             float angle = _rng.Range(-math.PI, math.PI);
             float spread = math.radians(_profile.PackSpreadDeg);
             int sectors = pattern == HordePattern.Surround ? _rng.Range(_profile.SurroundSectors.x, _profile.SurroundSectors.y + 1) : 1;
@@ -173,8 +180,10 @@ namespace LastGround.Gameplay.Director
                 for (int k = 0; k < PlayerStateTable.Max && !near; k++)
                     near = _players.Active[k] && math.distancesq(p, new float2(_players.X[k], _players.Z[k])) < d2;
                 if (near) continue;
+                byte type = _world.TypeOf(i);
                 _world.Remove(i, false);
                 Despawned++;
+                Fold(p, type);
             }
         }
 

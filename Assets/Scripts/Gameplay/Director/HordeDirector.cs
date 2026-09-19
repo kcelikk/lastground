@@ -81,6 +81,9 @@ namespace LastGround.Gameplay.Director
 
         float _pressure;
 
+        /// <summary>Spawn rate multiplier set from outside (boss fight: 30–50 %, TDD_01 §10).</summary>
+        public float ExternalRateScale { get; set; } = 1f;
+
         /// <summary>An objective is being held under fire (generator, rescue signal): +60 % spawn rate this second.</summary>
         public void HoldPressure() => _pressure = 1f;
 
@@ -119,7 +122,7 @@ namespace LastGround.Gameplay.Director
             float governor = Governor.Multiplier;
             float rate = math.min(_profile.SpawnRateCap, _profile.SpawnRateStart + _profile.SpawnRatePerMinute * minutes)
                          * StateRate() * _scaling.SpawnRateFor(math.max(1, players)) * threatScale * governor * _rateScale
-                         * (_pressure > 0f ? PressureRate : 1f) * CampRate();
+                         * (_pressure > 0f ? PressureRate : 1f) * CampRate() * ExternalRateScale;
             float maxAlive = (_profile.MaxAliveStart + _profile.MaxAlivePerMinute * minutes)
                              * _scaling.HordeCountFor(math.max(1, players)) * threatScale;
             int cap = (int)math.min(_profile.MaxAliveCap * governor, maxAlive);
@@ -130,6 +133,7 @@ namespace LastGround.Gameplay.Director
             _budget = math.min(_profile.BudgetCarryCap, _budget + rate * dt);
             if (players > 0 && _queueCount == 0) PlanPattern(cap);
             SpawnQueued(cap);
+            TickVirtual(dt, cap);
 
             _despawnTimer -= dt;
             if (_despawnTimer <= 0f)
