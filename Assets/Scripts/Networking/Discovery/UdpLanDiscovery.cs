@@ -34,6 +34,9 @@ namespace LastGround.Networking.Discovery
         readonly IMulticastLock _multicastLock;
         readonly NetWriter _writer = new NetWriter(256);
         readonly byte[] _receiveBuffer = new byte[1500];
+        // ReceiveFrom replaces the ref argument with a new endpoint only when a packet arrives: polling an idle socket
+        // every frame (the host keeps advertising during a run) must not allocate.
+        readonly EndPoint _anyRemote = new IPEndPoint(IPAddress.Any, 0);
         readonly Dictionary<string, KnownHost> _hosts = new Dictionary<string, KnownHost>(StringComparer.Ordinal);
         readonly List<string> _expired = new List<string>();
         readonly List<IPEndPoint> _broadcastTargets = new List<IPEndPoint>();
@@ -141,7 +144,7 @@ namespace LastGround.Networking.Discovery
 
         void PollResponder()
         {
-            EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
+            EndPoint remote = _anyRemote;
             while (TryReceive(_responder, ref remote, out int length))
             {
                 if (DiscoveryPacket.ReadKind(new ArraySegment<byte>(_receiveBuffer, 0, length), out NetReader reader) != DiscoveryPacket.KindRequest)
@@ -185,7 +188,7 @@ namespace LastGround.Networking.Discovery
                     SendTo(_browser, _broadcastTargets[i]);
             }
 
-            EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
+            EndPoint remote = _anyRemote;
             while (TryReceive(_browser, ref remote, out int length))
             {
                 if (DiscoveryPacket.ReadKind(new ArraySegment<byte>(_receiveBuffer, 0, length), out NetReader reader) != DiscoveryPacket.KindResponse)
