@@ -101,6 +101,8 @@ namespace LastGround.EditorTools.Setup
             UiFactory.AssignArray(installer, "_objectives", ObjectiveContentBuilder.Build());
             UiFactory.Assign(installer, "_interactables", AssetDatabase.LoadAssetAtPath<LastGround.Data.Map.InteractableProfile>(ObjectiveContentBuilder.InteractablesPath));
             UiFactory.Assign(installer, "_minimap", _minimapHud);
+            UiFactory.Assign(installer, "_boss", BossContentBuilder.Build());
+            UiFactory.Assign(installer, "_extraction", BossContentBuilder.Rules());
             UiFactory.Assign(installer, "_regionCard", _regionCard);
             UiFactory.Assign(installer, "_bloodParticleMaterial", bloodParticle);
             UiFactory.Assign(installer, "_bloodSplatMaterial", bloodSplat);

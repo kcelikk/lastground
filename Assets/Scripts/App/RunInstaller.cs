@@ -157,6 +157,10 @@ namespace LastGround.App
             public TeamWallet Wallet;
             public PickupRegistry Registry;
             public ObjectiveState Objective;
+            public Gameplay.Boss.BossState Boss;
+            public Gameplay.Boss.BossController BossHost;
+            public Gameplay.Extraction.ExtractionState Extraction;
+            public HordeSummary Horde;
         }
 
         void Start()
@@ -188,6 +192,9 @@ namespace LastGround.App
                 Projectiles = new ProjectileTable(_combat.Projectiles),
                 Blasts = new EventChannel<ExplosionFx>(32),
                 Interactables = new InteractableTable(_map),
+                Boss = new Gameplay.Boss.BossState(),
+                Extraction = new Gameplay.Extraction.ExtractionState(),
+                Horde = new HordeSummary(),
             };
             _disposables.Add(parts.Nav);
             float worldSize = parts.Nav.Width * parts.Nav.CellSize;
@@ -203,6 +210,7 @@ namespace LastGround.App
             _disposables.Add(runEnd);
 
             IHitClaimSink claims = session.IsAuthority ? BuildHost(ref parts, loop, benchmark, seed) : BuildClient(ref parts, loop);
+            BuildBossSync(ref parts, loop);
             var objectiveSync = new ObjectiveSync(session, parts.Objective);
             _disposables.Add(objectiveSync);
             loop.Register(TickPhase.NetSend, objectiveSync);
@@ -241,7 +249,12 @@ namespace LastGround.App
             };
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             // Soak-test bot: walk to a downed teammate so revives happen without hands on the phones.
-            loop.Register(TickPhase.Input, new TickAction(_ => TouchTwinStickInput.DevSeek = DevReviveDirection(players)));
+            Gameplay.Extraction.ExtractionState extractionState = parts.Extraction;
+            loop.Register(TickPhase.Input, new TickAction(_ =>
+            {
+                Vector2 seek = DevReviveDirection(players);
+                TouchTwinStickInput.DevSeek = seek != Vector2.zero ? seek : DevExtractionDirection(players, extractionState);
+            }));
             if (DevAutomation.AutoGrenades) loop.Register(TickPhase.Input, new DevGrenadier(players, parts.Loadouts, parts.Crowd));
 #endif
             loop.Register(TickPhase.Input, _input);
@@ -414,6 +427,7 @@ namespace LastGround.App
             var sender = new CrowdReplicationSender(parts.Session, crowd, parts.Players, new ReplicationTuning());
             _disposables.Add(sender);
             loop.Register(TickPhase.NetSend, sender);
+            BuildBossHost(ref parts, loop, world, objectives, sender, seed);
             return parts.Authority;
         }
 
