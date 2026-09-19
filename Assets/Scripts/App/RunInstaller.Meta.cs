@@ -56,6 +56,36 @@ namespace LastGround.App
             if (_emoteBubbles != null) _emoteBubbles.Bind(parts.Players, meta.Catalog, _camera);
         }
 
+        /// <summary>Each roster player's character body and outfit tint from their lobby meta selection.</summary>
+        bool BuildPlayerBodies(in RunParts parts, TickLoop loop)
+        {
+            if (_crowdCatalog == null || !AppServices.TryGet(out MetaService meta) || meta.Catalog == null) return false;
+            var bodies = new Data.Crowd.CrowdAnimationSet[Gameplay.Players.PlayerStateTable.Max];
+            var tints = new UnityEngine.Color[bodies.Length];
+            for (int p = 0; p < tints.Length; p++) tints[p] = UnityEngine.Color.white;
+            IReadOnlyList<LobbyPlayer> roster = parts.Session.Players;
+            bool any = false;
+            for (int i = 0; i < roster.Count; i++)
+            {
+                int player = roster[i].Id.Value;
+                if ((uint)player >= (uint)bodies.Length) continue;
+                PlayerMeta selection = PlayerMeta.Unpack(roster[i].Meta);
+                CharacterDefinition character = MetaCatalog.At(meta.Catalog.Characters, selection.Character)
+                                                ?? MetaCatalog.At(meta.Catalog.Characters, 0);
+                if (character == null) continue;
+                foreach (Data.Crowd.CrowdAnimationSet body in _crowdCatalog.Bodies)
+                    if (body != null && body.Id == character.BodyId) bodies[player] = body;
+                OutfitDefinition outfit = MetaCatalog.At(character.Outfits, selection.Outfit);
+                if (outfit != null) tints[player] = outfit.Tint;
+                any |= bodies[player] != null;
+            }
+            if (!any) return false;
+            var renderer = new Rendering.Players.PlayerBodyRenderer(parts.Players, _crowdCatalog, bodies, tints, _tracerMaterial, meta.Catalog);
+            _disposables.Add(renderer);
+            loop.Register(TickPhase.Presentation, renderer);
+            return true;
+        }
+
         /// <summary>Banks the run into this player's profile when the outcome arrives (host or replicated).</summary>
         void BankWhenEnded(TickLoop loop, int localPlayer)
         {
