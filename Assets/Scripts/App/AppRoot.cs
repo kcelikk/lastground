@@ -124,7 +124,8 @@ namespace LastGround.App
             if (string.IsNullOrEmpty(settings.PlayerGuid)) settings.PlayerGuid = Guid.NewGuid().ToString("N");
             if (string.IsNullOrEmpty(settings.PlayerName))
             {
-                var rng = new DeterministicRandom((uint)Environment.TickCount);
+                // From the guid, not the clock: devices (or desktop bots) started together must not share a name.
+                var rng = new DeterministicRandom(Hash32.Of(settings.PlayerGuid));
                 settings.PlayerName = "Player-" + rng.Range(1000, 10000).ToString(CultureInfo.InvariantCulture);
             }
             _save.RequestSave();
