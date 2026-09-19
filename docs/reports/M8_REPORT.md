@@ -1,6 +1,6 @@
 # M8 Raporu — Boss ve Tahliye
 
-- **Tarih:** 2026-09-19 · **Branch:** `m8-boss-extraction` · **Unity:** 6000.3.24f1 · **Durum:** ⏳ Onay bekliyor
+- **Tarih:** 2026-09-19 · **Branch:** `m8-boss-extraction` · **Unity:** 6000.3.24f1 · **Durum:** ✅ Onaylandı (2026-09-19), `main`e merge edildi
 - **Cihazlar:** Redmi Pad Pro = MID (USB `368a7a72`) · OnePlus 5T = LOW (USB `3e415066`)
 - **Kararlar:** D-021 (boss = Mixamo Mutant 3.5×, helikoptersiz iniş alanı, VirtualHorde M8'de)
 

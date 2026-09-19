@@ -3,8 +3,8 @@
 _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 
 ## Şu an neredeyiz
-- **Branch:** `m8-boss-extraction` (M7 main'e merge edildi ve push edildi; M8 commit'leri yalnızca yerelde).
-- **M8 — Boss ve Tahliye: onay bekliyor.** Rapor: `docs/reports/M8_REPORT.md`. (M7 onaylandı.)
+- **Branch:** `main` (M8 merge edildi ve push edildi).
+- **M8 — Boss ve Tahliye: onaylandı (2026-09-19).** Rapor: `docs/reports/M8_REPORT.md`. Sırada Vertical Slice kontrol noktası.
 - EditMode testleri: **173 / 173** geçiyor. OnePlus 30 FPS, Redmi 60 FPS, oyun kodu GC 0 B/kare.
 - Harita yeniden üretimi: `MinimapBaker.BakeBatch` (grafikli) → `RebuildScenesBatch`.
 - Zombiler artık gerçekçi Mixamo gövdeleri (8 karakter). Ham FBX'ler git dışında: yeniden bake için önce `MIXAMO_TOKEN=… python3 Tools/Mixamo/mixamo_fetch.py`, sonra `CrowdBaker.BakeAllBatch`. Görünüm kontrolü: `CrowdPreview.RenderBatch` (batchmode, `-nographics` olmadan).
@@ -23,7 +23,7 @@ _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 | M3 | Horde simulation (Burst ZombieWorld, flow field, katmanlı surround, AI LOD) | ✅ onaylı, main |
 | M4 | Shooting & Combat — MVP kapısı (twin-stick, host doğrulamalı hit claim, windup'lı zombi saldırısı, VFX, ses) | ✅ onaylı, main |
 | M5 | Endless loop (director, threat, downed/revive, XP + 12 upgrade, coin + instanced pickup, "Bölgeyi temizle", sonuç ekranı) | ✅ onaylı, main |
-| M8 | Boss ve tahliye (Mutant Brute, 4 saldırı + frenzy, iniş alanı, ödül dönüşümü, VirtualHorde) | ⏳ onay bekliyor |
+| M8 | Boss ve tahliye (Mutant Brute, 4 saldırı + frenzy, iniş alanı, ödül dönüşümü, VirtualHorde) | ✅ onaylı, main |
 | M7 | Harita, olaylar, çevre (3 bölge, CC0 çevre, mini-harita, 6 olay, etkileşimliler, anti-kamp, bölge kartı) | ✅ onaylı, main |
 | M6 | Combat Content I (6 silah, 2 slot, granat, Runner/Tank/Spitter/Exploder, elite, durum efektleri, spawn deck, gerçekçi Mixamo zombileri) | ✅ onaylı, main |
 
