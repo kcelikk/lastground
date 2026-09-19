@@ -26,6 +26,8 @@ namespace LastGround.App.Dev
     ///   -lg-extract SEC       host: an extraction window opens SEC seconds into the run; the bot walks to open zones
     ///   -lg-character ID      own and equip a meta character for this device's profile (M9 tests)
     ///   -lg-emote-every SEC   the bot plays its first emote every SEC seconds (M9 tests)
+    ///   -lg-damage-scale X    host: players take X × damage (soak tests; 0.3 keeps downs and revives but rare wipes)
+    ///   -lg-save-slot NAME    use save/NAME instead of save/ (several desktop bots on one PC, each its own identity)
     ///   -lg-bench [SEC]       crowd rendering benchmark, SEC per step (default 60), quits when done
     ///   -lg-quality N         force quality tier 0/1/2 for this launch (benchmarks)
     ///   -lg-gc-capture [SEC]  record 300 profiler frames with allocation call stacks after SEC s (default 8; GcAllocReport)
@@ -64,6 +66,18 @@ namespace LastGround.App.Dev
         /// <summary>-lg-emote-every: seconds between bot emotes (-1 = off).</summary>
         public static float EmoteEvery { get; private set; } = -1f;
 
+        /// <summary>-lg-damage-scale: host damage multiplier for players (-1 = normal).</summary>
+        public static float DamageScale { get; private set; } = -1f;
+
+        /// <summary>-lg-save-slot: save sub-folder, read before the save service exists (null = default).</summary>
+        public static string SaveSlot()
+        {
+            List<string> args = ReadArguments();
+            for (int i = 0; i + 1 < args.Count; i++)
+                if (args[i] == "-lg-save-slot") return args[i + 1];
+            return null;
+        }
+
         public static void Install(GameObject root, SessionService service)
         {
             List<string> args = ReadArguments();
@@ -93,6 +107,9 @@ namespace LastGround.App.Dev
                         break;
                     case "-lg-extract" when i + 1 < args.Count:
                         if (float.TryParse(args[++i], NumberStyles.Float, CultureInfo.InvariantCulture, out float extractAt)) ExtractAt = extractAt;
+                        break;
+                    case "-lg-damage-scale" when i + 1 < args.Count:
+                        if (float.TryParse(args[++i], NumberStyles.Float, CultureInfo.InvariantCulture, out float scale)) DamageScale = scale;
                         break;
                     case "-lg-autopick": LastGround.UI.Run.LevelUpPanel.DevAutoPick = true; break;
                     case "-lg-grenades": AutoGrenades = true; break;

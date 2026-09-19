@@ -303,6 +303,7 @@ namespace LastGround.App
             loop.Register(TickPhase.NetSend, runEnd);
             loop.Register(TickPhase.Presentation, new TickAction(_ => sync.Interpolate()));
 
+            BuildSessionFlow(ref parts, loop);
             BuildPresentation(parts, loop);
             _statusHud.Bind(parts.Status, _combat);
             _weaponHud.Bind(parts.Weapon, parts.Collector, parts.Pickups, parts.Loadouts);
@@ -458,6 +459,7 @@ namespace LastGround.App
 
         void OnDestroy()
         {
+            EndSessionFlow();
             if (_service != null) _service.RunStartedEvent -= OnRunStarted;
             for (int i = 0; i < _disposables.Count; i++) _disposables[i].Dispose();
             _disposables.Clear();

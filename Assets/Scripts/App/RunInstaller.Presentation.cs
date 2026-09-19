@@ -38,7 +38,10 @@ namespace LastGround.App
             GameObject mapRoot = GameObject.Find(MapRootName);
             loop.Register(TickPhase.Presentation, new InteractableViews(parts.Interactables, mapRoot != null ? mapRoot.transform : null, InteractablePrefix));
             // The camera looks ahead with the raw sticks: auto-aim target switches must not swing it around.
-            var cameraRig = new TopDownCameraRig(_camera, parts.Players, _input, _cameraProfile) { Weapon = parts.Weapon };
+            var cameraRig = new TopDownCameraRig(_camera, parts.Players, _input, _cameraProfile)
+            {
+                Weapon = parts.Weapon, Spectator = _spectator,
+            };
             loop.Register(TickPhase.Presentation, cameraRig);
             BuildBossPresentation(parts, loop, cameraRig);
 

@@ -188,6 +188,8 @@ namespace LastGround.Tests
             int clientIndex = rig.Client.LocalPlayer.Value;
             rig.Client.Leave();
             rig.Net.Step(0.3, perTick: rig.Tick);
+            Assert.IsTrue(rig.HostPlayers.Disconnected[clientIndex], "M10: frozen avatar for the grace period first");
+            rig.Net.Step(PlayerSync.DisconnectGraceSeconds, perTick: rig.Tick);
             Assert.IsFalse(rig.HostPlayers.Active[clientIndex]);
         }
 

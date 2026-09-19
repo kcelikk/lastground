@@ -41,6 +41,7 @@ namespace LastGround.EditorTools.Setup
         static ExtractionHud _extractionHud;
         static EmoteBar _emoteBar;
         static EmoteBubbles _emoteBubbles;
+        static SpectatorBar _spectatorBar;
 
         public static void Build(string path)
         {
@@ -112,6 +113,7 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_extractionHud", _extractionHud);
             UiFactory.Assign(installer, "_emoteBar", _emoteBar);
             UiFactory.Assign(installer, "_emoteBubbles", _emoteBubbles);
+            UiFactory.Assign(installer, "_spectatorBar", _spectatorBar);
             UiFactory.Assign(installer, "_bloodParticleMaterial", bloodParticle);
             UiFactory.Assign(installer, "_bloodSplatMaterial", bloodSplat);
             UiFactory.Assign(installer, "_tracerMaterial", tracer);
@@ -226,6 +228,7 @@ namespace LastGround.EditorTools.Setup
             _extractionHud = BuildExtractionHud(safe, canvasGo.transform);
             _emoteBar = BuildEmoteBar(safe);
             _emoteBubbles = BuildEmoteBubbles(canvasGo.transform);
+            _spectatorBar = BuildSpectatorBar(safe);
 
             var hud = canvasGo.AddComponent<RunHud>();
             UiFactory.Assign(hud, "_statusLabel", status);

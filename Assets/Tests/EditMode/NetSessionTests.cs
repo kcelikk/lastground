@@ -99,7 +99,7 @@ namespace LastGround.Tests
             a.Join("loopback", NetProtocol.DefaultGamePort);
             net.Step(0.3);
             b.Join("loopback", NetProtocol.DefaultGamePort);
-            net.Step(1.0);
+            net.Step(2.0); // transport retries (M10) before giving up
 
             Assert.AreEqual(SessionState.Connected, a.State);
             Assert.AreEqual(SessionState.Idle, b.State);
@@ -126,7 +126,27 @@ namespace LastGround.Tests
             c.Disconnected += r => reason = r;
             c.Join("loopback", NetProtocol.DefaultGamePort);
             net.Step(0.1);
-            Assert.AreEqual(DisconnectReason.ConnectFailed, reason);
+            Assert.AreEqual(DisconnectReason.None, reason, "M10: the transport is tried again first");
+            Assert.AreEqual(SessionState.Connecting, c.State);
+            net.Step(2.0);
+            Assert.AreEqual(DisconnectReason.ConnectFailed, reason, "gives up after the configured attempts");
+        }
+
+        [Test]
+        public void FirstConnectFailure_IsRetried_AndJoinsWhenTheHostAnswers()
+        {
+            var net = new TestNet();
+            var c = net.CreateSession("C");
+            DisconnectReason reason = DisconnectReason.None;
+            c.Disconnected += r => reason = r;
+            c.Join("loopback", NetProtocol.DefaultGamePort);
+            net.Step(0.1);
+            var host = net.CreateSession("Host");
+            Assert.IsTrue(host.StartHost());
+            net.Step(1.0);
+            Assert.AreEqual(DisconnectReason.None, reason);
+            Assert.AreEqual(SessionState.Connected, c.State);
+            Assert.AreEqual(2, host.Players.Count);
         }
 
         [Test]
@@ -251,7 +271,7 @@ namespace LastGround.Tests
 
             var other = net.CreateSession("Other");
             other.Join("loopback", NetProtocol.DefaultGamePort);
-            net.Step(0.2);
+            net.Step(2.0); // transport retries (M10) before giving up
             Assert.AreEqual(SessionState.Idle, other.State);
         }
     }

@@ -49,6 +49,9 @@ namespace LastGround.Rendering
         public LastGround.Gameplay.Combat.IWeaponStatus Weapon { get; set; }
 
         /// <summary>Adds shake (blasts); clamped to 1.</summary>
+        /// <summary>Spectating while dead (M10): the camera follows the watched teammate. Optional.</summary>
+        public SpectatorTarget Spectator { get; set; }
+
         public void AddTrauma(float amount) => _trauma = Mathf.Min(1f, _trauma + Mathf.Max(0f, amount));
 
         public void Tick(float dt, uint tick)
@@ -60,6 +63,13 @@ namespace LastGround.Rendering
             if (me < 0 || !_table.Active[me]) return;
 
             var player = new Vector3(_table.X[me], 0f, _table.Z[me]);
+            Spectator?.Update();
+            int watched = Spectator != null ? Spectator.Target : -1;
+            if (watched >= 0)
+            {
+                _table.GetDisplay(watched, out float wx, out float wz, out _);
+                player = new Vector3(wx, 0f, wz);
+            }
             PlayerInputFrame frame = _input.Current;
             Vector3 ahead = Vector3.zero;
             if (_table.Life[me] != PlayerLife.Alive) ahead = Vector3.zero;

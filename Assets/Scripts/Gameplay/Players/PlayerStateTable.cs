@@ -42,6 +42,9 @@ namespace LastGround.Gameplay.Players
         /// <summary>Move speed multiplier from spit / toxic hits (1 = not slowed). Host-authoritative, replicated in vitals.</summary>
         public readonly float[] SlowMultiplier = { 1f, 1f, 1f, 1f };
 
+        /// <summary>Left the session mid-run (M10): the avatar stays frozen for a grace period, then it is removed.</summary>
+        public readonly bool[] Disconnected = new bool[Max];
+
         /// <summary>Damage taken, on every device (camera shake, haptics, sound).</summary>
         public readonly EventChannel<PlayerHurt> Hurt = new EventChannel<PlayerHurt>(64);
 
@@ -99,10 +102,21 @@ namespace LastGround.Gameplay.Players
         {
             if (!id.IsValid || id.Value >= Max) return;
             Active[id.Value] = false;
+            Disconnected[id.Value] = false;
             Firing[id.Value] = false;
             ActiveSlot[id.Value] = 0;
             Life[id.Value] = PlayerLife.Alive;
             _display.Exit(id.Value);
+        }
+
+        /// <summary>The player left: the avatar stops (no trigger, no velocity) and waits for removal.</summary>
+        public void MarkDisconnected(PlayerId id)
+        {
+            if (!id.IsValid || id.Value >= Max || !Active[id.Value]) return;
+            Disconnected[id.Value] = true;
+            Firing[id.Value] = false;
+            VelX[id.Value] = 0f;
+            VelZ[id.Value] = 0f;
         }
 
         public void Interpolate(double renderTime)
