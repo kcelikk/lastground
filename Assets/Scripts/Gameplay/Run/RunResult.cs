@@ -11,6 +11,8 @@ namespace LastGround.Gameplay.Run
         /// <summary>Bosses defeated this run (profile statistics, M9).</summary>
         public int BossKills;
         public bool Extracted;
+        /// <summary>This client lost the host mid-run (M10): a partial result built on this device, banked like a wipe.</summary>
+        public bool ConnectionLost;
         /// <summary>Extraction bonus per player (threat-based, TDD_01 §2.2).</summary>
         public int ExtractionBonus;
         /// <summary>Players standing in the landing zone at extraction (bit per player).</summary>

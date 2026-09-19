@@ -61,10 +61,14 @@ namespace LastGround.Gameplay.Players
         /// <summary>Set once when every active player is downed or dead.</summary>
         public bool TeamWiped { get; private set; }
 
+        /// <summary>Multiplies every hit (1 = normal). Dev soak tests only (-lg-damage-scale), so bots survive long runs.</summary>
+        public float DamageScale { get; set; } = 1f;
+
         public void Damage(int player, float amount)
         {
             if (player < 0 || player >= PlayerStateTable.Max || !_players.Active[player]) return;
             if (_players.Life[player] != PlayerLife.Alive || _players.Invulnerable[player] || amount <= 0f) return;
+            amount *= DamageScale;
             _sinceHurt[player] = 0f;
             if (_builds != null)
                 amount *= 1f - UnityEngine.Mathf.Min(0.6f, _builds.Of(player).Get(StatId.DamageReductionPct) / 100f);

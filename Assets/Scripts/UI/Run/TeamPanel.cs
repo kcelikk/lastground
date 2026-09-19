@@ -11,7 +11,7 @@ namespace LastGround.UI.Run
 {
     /// <summary>
     /// Teammate list under the local health bar (TDD_01 §14.3, board-2): colour swatch, name, health bar and state
-    /// (down + bleedout, reviving %, dead + return timer). Up to three rows; updated with allocation-free SetText.
+    /// (down + bleedout, reviving %, dead + return timer, disconnected). Up to three rows; updated with allocation-free SetText.
     /// </summary>
     public sealed class TeamPanel : MonoBehaviour
     {
@@ -27,7 +27,7 @@ namespace LastGround.UI.Run
         ISession _session;
         ILocalizationService _localization;
         float _maxHealth;
-        string _down, _dead, _deadWaiting, _reviving;
+        string _down, _dead, _deadWaiting, _reviving, _disconnected;
         int _shownRoster = -1;
 
         public void Bind(PlayerStateTable players, ISession session, float maxHealth)
@@ -60,10 +60,11 @@ namespace LastGround.UI.Run
                 PlayerLife life = _players.Life[p];
                 int countdown = Mathf.CeilToInt(_players.Countdown[p]);
                 int revive = Mathf.RoundToInt(_players.ReviveProgress[p] * 100f);
-                int key = life == PlayerLife.Alive ? -1 : (int)life * 100000 + (revive > 0 ? 50000 + revive : countdown);
+                int key = _players.Disconnected[p] ? -2 : life == PlayerLife.Alive ? -1 : (int)life * 100000 + (revive > 0 ? 50000 + revive : countdown);
                 if (key == _shownKey[r]) continue;
                 _shownKey[r] = key;
-                if (life == PlayerLife.Alive) _states[r].SetText(string.Empty);
+                if (key == -2) _states[r].SetText(_disconnected);
+                else if (life == PlayerLife.Alive) _states[r].SetText(string.Empty);
                 else if (life == PlayerLife.Downed && revive > 0) _states[r].SetText(_reviving, revive);
                 else if (life == PlayerLife.Downed) _states[r].SetText(_down, countdown);
                 else if (countdown > 0) _states[r].SetText(_dead, countdown);
@@ -117,6 +118,7 @@ namespace LastGround.UI.Run
             _dead = _localization.Get("hud.team.dead");
             _deadWaiting = _localization.Get("hud.team.dead_waiting");
             _reviving = _localization.Get("hud.team.reviving");
+            _disconnected = _localization.Get("hud.team.disconnected");
         }
     }
 }

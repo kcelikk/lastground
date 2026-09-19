@@ -59,7 +59,7 @@ namespace LastGround.UI.Run
             if (_shown || _outcome == null || !_outcome.Ended) return;
             _shown = true;
             RunResult r = _outcome.Result;
-            _title.text = _localization.Get(r.Extracted ? "results.title_extracted" : "results.title");
+            _title.text = _localization.Get(r.ConnectionLost ? "results.title_connection_lost" : r.Extracted ? "results.title_extracted" : "results.title");
             _text.Clear()
                 .Append(_localization.Get("results.survival")).Append("   ").AppendClock((int)r.SurvivalSeconds).Append('\n')
                 .Append(_localization.Get("results.threat")).Append("   ").AppendRoman(r.MaxThreat).Append('\n')

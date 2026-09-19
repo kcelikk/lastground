@@ -13,6 +13,8 @@ namespace LastGround.Networking.Replication
     /// Player movement sync (TDD_02 §15.5, §16): clients send their own state to the host at 30 Hz; the host
     /// validates speed and broadcasts every player's state at 20 Hz. Remote players are displayed interpolated.
     /// A flags byte carries the trigger state and the weapon slot in hand so other devices draw that player's tracers.
+    /// A player who leaves mid-run stays as a frozen avatar for <see cref="DisconnectGraceSeconds"/>, then is removed
+    /// (TDD_02 §19.5), on every device.
     /// </summary>
     public sealed class PlayerSync : ITickable, IDisposable
     {
@@ -22,11 +24,15 @@ namespace LastGround.Networking.Replication
         const byte FlagFiring = 1 << 0;
         const byte FlagSidearm = 1 << 1;
 
+        /// <summary>How long a disconnected player's avatar stays in the run (TDD_02 §19.5).</summary>
+        public const float DisconnectGraceSeconds = 10f;
+
         readonly ISession _session;
         readonly PlayerStateTable _table;
         readonly float _maxSpeed;
         readonly NetRawHandler _onInput;
         readonly NetRawHandler _onStates;
+        readonly float[] _graceLeft = new float[PlayerStateTable.Max];
         float _broadcastTimer;
         ushort _sequence;
         double _localTime;
@@ -53,6 +59,7 @@ namespace LastGround.Networking.Replication
         public void Tick(float dt, uint tick)
         {
             _localTime += dt;
+            TickGrace(dt);
             if (_session.IsAuthority)
             {
                 _broadcastTimer += dt;
@@ -163,6 +170,8 @@ namespace LastGround.Networking.Replication
                 float yaw = Quantize.Yaw(r.ReadByte(), 8);
                 byte flags = r.ReadByte();
                 if (r.Failed || id == _table.Local || id.Value >= PlayerStateTable.Max) continue;
+                // A player who left is not brought back by the host's last states for them.
+                if (!_table.Active[id.Value] && !InRoster(id)) continue;
                 _table.PushRemote(id, x, z, yaw, vx, vz, time, _localTime);
                 _table.Firing[id.Value] = (flags & FlagFiring) != 0;
                 _table.ActiveSlot[id.Value] = (flags & FlagSidearm) != 0 ? (byte)1 : (byte)0;
@@ -173,7 +182,27 @@ namespace LastGround.Networking.Replication
 
         void OnPlayerLeft(PlayerId player)
         {
-            _table.Remove(player);
+            if (!player.IsValid || player.Value >= PlayerStateTable.Max) return;
+            _table.MarkDisconnected(player);
+            _graceLeft[player.Value] = DisconnectGraceSeconds;
+        }
+
+        bool InRoster(PlayerId id)
+        {
+            var roster = _session.Players;
+            for (int i = 0; i < roster.Count; i++)
+                if (roster[i].Id == id) return true;
+            return false;
+        }
+
+        void TickGrace(float dt)
+        {
+            for (int p = 0; p < PlayerStateTable.Max; p++)
+            {
+                if (!_table.Disconnected[p]) continue;
+                _graceLeft[p] -= dt;
+                if (_graceLeft[p] <= 0f) _table.Remove(new PlayerId((byte)p));
+            }
         }
     }
 }

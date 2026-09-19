@@ -154,7 +154,7 @@ namespace LastGround.Rendering.Players
             if (_additive == null) return;
             Color c = PlayerSlotColors.Of(p);
             _matrix[0] = Matrix4x4.TRS(new Vector3(x, RingHeight, z), Quaternion.identity, new Vector3(0.75f, 1f, 0.75f));
-            _ringColor[0] = new Vector4(c.r, c.g, c.b, _players.IsDead(p) ? 0.3f : 1.2f);
+            _ringColor[0] = new Vector4(c.r, c.g, c.b, _players.IsDead(p) || _players.Disconnected[p] ? 0.3f : 1.2f);
             _ringProps.SetVectorArray(FxColorId, _ringColor);
             var rp = new RenderParams(_additive)
             {

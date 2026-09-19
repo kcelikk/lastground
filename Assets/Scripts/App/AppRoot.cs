@@ -41,7 +41,12 @@ namespace LastGround.App
         {
             AppServices.Clear();
 
-            var store = new JsonFileSaveStore(Path.Combine(Application.persistentDataPath, "save"));
+            string saveDir = Path.Combine(Application.persistentDataPath, "save");
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            string slot = DevAutomation.SaveSlot();
+            if (!string.IsNullOrEmpty(slot)) saveDir = Path.Combine(saveDir, slot);
+#endif
+            var store = new JsonFileSaveStore(saveDir);
             _save = new SaveService(store);
             AppServices.Register(_save);
 

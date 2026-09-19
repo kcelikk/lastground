@@ -53,6 +53,12 @@ namespace LastGround.App
         public JoinRejectReason LastReject { get; private set; }
         public event Action RunStartedEvent;
 
+        /// <summary>
+        /// Client lost the host during a started run (M10): the run scene shows a partial result instead of the
+        /// menu loading at once. Without a subscriber the menu loads as before.
+        /// </summary>
+        public event Action<DisconnectReason> RunConnectionLost;
+
         public void Tick(double now)
         {
             _now = now;
@@ -240,6 +246,12 @@ namespace LastGround.App
             LastDisconnect = reason;
             LastReject = _session.LastRejectReason;
             _discovery.StopAdvertising();
+            if (RunStarted && RunConnectionLost != null && SceneManager.GetActiveScene().name == SceneNames.Run)
+            {
+                Log.Info(LogCategory.App, "Connection lost mid-run (" + reason + "): partial result");
+                RunConnectionLost(reason);
+                return;
+            }
             ResetRun();
             if (SceneManager.GetActiveScene().name != SceneNames.Menu) LoadMenu();
         }
