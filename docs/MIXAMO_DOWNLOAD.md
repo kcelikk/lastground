@@ -9,7 +9,7 @@ Lisans: Mixamo karakter ve animasyonları oyuna gömülü olarak ticari kullanı
 Assets/ThirdParty/Mixamo/Characters/   ← karakter FBX'leri
 Assets/ThirdParty/Mixamo/Animations/   ← animasyon FBX'leri
 ```
-Klasörleri ben oluşturmadım; dosyaları dosya yöneticisiyle bu yollara kopyalaman yeterli (Unity açık olmasa da olur).
+Klasörler ve Unity `.meta` dosyaları 2026-09-19 tarihinde oluşturuldu. Henüz karakter/animasyon FBX'i yok. Aynı gün Playwright + sistem Chromium ile etkileşimli tarayıcı erişimi kuruldu; Adobe hesap adımının kullanıcı tarafından tamamlanması bekleniyor. Dosyalar edinildikten sonra bu yollara kopyalanabilir (Unity açık olmasa da olur). Gerçek durum: [MIXAMO_STATUS.md](MIXAMO_STATUS.md).
 
 ## 1. Karakterler — mixamo.com → Characters → aramaya `zombie`, sonra `mutant`
 İndirme ayarı: **Format: FBX for Unity (.fbx) · Pose: T-pose**
@@ -40,4 +40,4 @@ Emin olmadığın modelleri de indir; ben referansa ve mobil bütçeye (poligon,
 | Runner lunge | `zombie biting` veya `jump attack` | Sıçrayarak saldırı |
 | Spitter | `zombie scream` veya `throw` | Tükürme telegraph'ı |
 
-Bitince bana haber ver; import ayarlarını, bake'i (kemik texture'ı + LOD + texture array) ve doğrulamayı ben yaparım.
+Dosyalar geldikten sonra import, iskelet/retarget eşleşmesi, ayrı FBX klip bağlama, kaplama birleştirme ve kemik texture + LOD bake doğrulanmalıdır. Mevcut `CrowdBaker` yalnızca karakter FBX'inin içindeki klipleri okur; `CrowdCatalogBuilder` Quaternius atlasına sabittir. Texture array desteği bu belgede tamamlanmış kabul edilmez. Sadece dosya kopyalamak gerçekçi karakterleri oyuna bağlamaz.
