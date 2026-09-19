@@ -1,6 +1,9 @@
 using LastGround.Audio;
 using LastGround.Core.Tick;
+using LastGround.Data.Combat;
 using LastGround.Gameplay.Combat;
+using LastGround.Gameplay.Loot;
+using LastGround.Gameplay.Players;
 using LastGround.Rendering;
 using LastGround.Rendering.Carnage;
 using LastGround.Rendering.Combat;
@@ -23,13 +26,17 @@ namespace LastGround.App
         /// </summary>
         void BuildPresentation(RunParts parts, TickLoop loop)
         {
-            loop.Register(TickPhase.Presentation, new RemoteShotEmitter(parts.Players, parts.Crowd, parts.Nav, _weapon, parts.Shots));
+            loop.Register(TickPhase.Presentation, new RemoteShotEmitter(parts.Players, parts.Crowd, parts.Nav, parts.Loadouts, parts.Shots));
             // The camera looks ahead with the raw sticks: auto-aim target switches must not swing it around.
-            loop.Register(TickPhase.Presentation, new TopDownCameraRig(_camera, parts.Players, _input, _cameraProfile));
+            var cameraRig = new TopDownCameraRig(_camera, parts.Players, _input, _cameraProfile) { Weapon = parts.Weapon };
+            loop.Register(TickPhase.Presentation, cameraRig);
 
             float worldSize = parts.Nav.Width * parts.Nav.CellSize;
             _disposables.Add(new LightingGrid(new Vector2(parts.Nav.Origin.x, parts.Nav.Origin.y), worldSize, 256, LightingGrid.GreyboxLamps()));
-            _crowdRenderer = new ZombieRenderSystem(parts.Crowd, _crowdCatalog, _camera, parts.Preset, parts.Deaths, parts.Hits);
+            _crowdRenderer = new ZombieRenderSystem(parts.Crowd, _crowdCatalog, _camera, parts.Preset, parts.Deaths, parts.Hits)
+            {
+                EliteGlows = EliteGlows(),
+            };
             _disposables.Add(_crowdRenderer);
             loop.Register(TickPhase.Presentation, _crowdRenderer);
 
@@ -45,14 +52,62 @@ namespace LastGround.App
             loop.Register(TickPhase.Presentation, tracers);
             loop.Register(TickPhase.Presentation, new DamageNumbers(parts.Hits, _camera, _worldRoot, parts.Preset.DamageNumberCap));
             loop.Register(TickPhase.Presentation, new PlayerViews(parts.Players, _worldRoot, _playerMesh, _playerMaterial));
-            loop.Register(TickPhase.Presentation, new PickupRenderSystem(parts.Pickups, parts.Players,
-                Resources.GetBuiltinResource<Mesh>("Cylinder.fbx"), _coinMaterial, Resources.GetBuiltinResource<Mesh>("Cube.fbx"), _medkitMaterial));
+            loop.Register(TickPhase.Presentation, new PickupRenderSystem(parts.Pickups, parts.Players, PickupLooks()));
+            Mesh sphere = Resources.GetBuiltinResource<Mesh>("Sphere.fbx");
+            var projectiles = new ProjectileRenderSystem(parts.Projectiles, _camera, sphere, _grenadeMaterial, _tracerMaterial);
+            _disposables.Add(projectiles);
+            loop.Register(TickPhase.Presentation, projectiles);
+            PlayerStateTable players = parts.Players;
+            var blasts = new ExplosionEffects(parts.Blasts, parts.Projectiles, cameraRig, () => LocalPosition(players), parts.Preset,
+                _worldRoot, _tracerMaterial, _bloodParticleMaterial);
+            _disposables.Add(blasts);
+            loop.Register(TickPhase.Presentation, blasts);
+            float blastRadius = _combat.Grenade != null ? _combat.Grenade.Explosion.Radius : 4f;
+            var aimMarker = new GrenadeAimMarker(parts.Players, () => _input.GrenadeAiming ? _input.GrenadeAimOffset : (Vector2?)null,
+                blastRadius, _tracerMaterial);
+            _disposables.Add(aimMarker);
+            loop.Register(TickPhase.Presentation, aimMarker);
 
             var sfx = new SfxPlayer(transform, parts.Preset.AudioVoices, ProceduralSfx.CreateAll());
             _disposables.Add(sfx);
-            loop.Register(TickPhase.Presentation, new CombatAudio(sfx, parts.Players, parts.Shots, parts.Hits, parts.Deaths));
+            loop.Register(TickPhase.Presentation, new CombatAudio(sfx, parts.Players, parts.Shots, parts.Hits, parts.Deaths)
+            {
+                Weapons = _combat.Weapons, Crowd = parts.Crowd, LocalWeapon = parts.Weapon, Blasts = parts.Blasts, Projectiles = parts.Projectiles,
+            });
 
             _hud.Bind(_service, parts.Crowd);
+        }
+
+        PickupLook[] PickupLooks()
+        {
+            Mesh cube = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+            var looks = new PickupLook[5];
+            looks[(int)PickupType.Coin] = new PickupLook
+            {
+                Mesh = Resources.GetBuiltinResource<Mesh>("Cylinder.fbx"), Material = _coinMaterial, Size = new Vector3(0.4f, 0.06f, 0.4f), Flat = true,
+            };
+            looks[(int)PickupType.Medkit] = new PickupLook { Mesh = cube, Material = _medkitMaterial, Size = new Vector3(0.45f, 0.3f, 0.45f) };
+            looks[(int)PickupType.Ammo] = new PickupLook { Mesh = cube, Material = _ammoMaterial, Size = new Vector3(0.5f, 0.28f, 0.32f) };
+            looks[(int)PickupType.Grenade] = new PickupLook
+            {
+                Mesh = Resources.GetBuiltinResource<Mesh>("Sphere.fbx"), Material = _grenadeMaterial, Size = new Vector3(0.3f, 0.36f, 0.3f),
+            };
+            looks[(int)PickupType.Weapon] = new PickupLook { Mesh = cube, Material = _weaponPickupMaterial, Size = new Vector3(0.18f, 0.18f, 1f) };
+            return looks;
+        }
+
+        Color[] EliteGlows()
+        {
+            var glows = new Color[_combat.Elites.Length + 1];
+            foreach (EliteModifierDefinition elite in _combat.Elites) glows[elite.NetIndex] = elite.Glow;
+            return glows;
+        }
+
+        static Vector2 LocalPosition(PlayerStateTable players)
+        {
+            if (!players.Local.IsValid) return Vector2.zero;
+            int me = players.Local.Value;
+            return new Vector2(players.X[me], players.Z[me]);
         }
     }
 }

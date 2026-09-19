@@ -10,10 +10,12 @@ namespace LastGround.Input
     /// <summary>
     /// Local twin-stick input (TDD_01 §3.2–3.3): floating move stick on the lower-left, floating aim stick on the
     /// lower-right. Aim stick past 0.25 aims, past 0.55 fires; after release the last aim is kept for 0.15 s
-    /// (flick shots). Keyboard/mouse fallback for editor and desktop: WASD/arrows move, IJKL aim + fire, or hold the
-    /// left mouse button to fire towards the cursor. Runs in the Input tick phase.
+    /// (flick shots). Buttons around the aim stick (TDD_01 §3.5) are hit-tested here, not by UI raycasts: weapon swap
+    /// (tap) and grenade (tap: along the aim, hold and drag: aim the throw, release: throw). Keyboard/mouse fallback for
+    /// editor and desktop: WASD/arrows move, IJKL aim + fire, or hold the left mouse button to fire towards the cursor;
+    /// Q swaps, G throws. Runs in the Input tick phase.
     /// </summary>
-    public sealed class TouchTwinStickInput : MonoBehaviour, IPlayerInputSource, ITickable
+    public sealed partial class TouchTwinStickInput : MonoBehaviour, IPlayerInputSource, ITickable
     {
         const float RadiusDp = 65f;
         const float AimThreshold = 0.25f;
@@ -26,17 +28,14 @@ namespace LastGround.Input
         [SerializeField] RectTransform _aimBase;
         [SerializeField] RectTransform _aimKnob;
         [SerializeField] UnityEngine.UI.Image _aimKnobImage;
-
-        /// <summary>UI areas where a new touch belongs to the UI, not to a stick (e.g. the level-up panel).</summary>
-        public System.Func<RectTransform> Blocker { get; set; }
-
         readonly FloatingJoystick _move = new FloatingJoystick();
         readonly FloatingJoystick _aim = new FloatingJoystick();
         int _moveFinger = -1;
         int _aimFinger = -1;
         float _flickTimer;
-        Vector2 _lastAim;
+        Vector2 _lastAim = Vector2.up;
         PlayerInputFrame _frame;
+
 
         public PlayerInputFrame Current => _frame;
 
@@ -46,6 +45,9 @@ namespace LastGround.Input
 
         /// <summary>Dev soak tests: when non-zero, the wander bot walks this way instead (e.g. to a downed teammate).</summary>
         public static Vector2 DevSeek;
+
+        /// <summary>Dev soak tests: when non-zero, throw a grenade at this offset once, then clear.</summary>
+        public static Vector2 DevThrow;
         float _wanderTime;
 #endif
 
@@ -101,6 +103,20 @@ namespace LastGround.Input
             _frame.AimX = aiming ? _lastAim.x : 0f;
             _frame.AimY = aiming ? _lastAim.y : 0f;
             _frame.FireHeld = aiming && fire;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (DevThrow != Vector2.zero)
+            {
+                _throwPressed = true;
+                _throwOffset = DevThrow;
+                DevThrow = Vector2.zero;
+            }
+#endif
+            _frame.SwitchWeapon = _switchPressed;
+            _frame.ThrowGrenade = _throwPressed;
+            _frame.GrenadeX = _throwOffset.x;
+            _frame.GrenadeY = _throwOffset.y;
+            _switchPressed = false;
+            _throwPressed = false;
             UpdateView(_move, _moveBase, _moveKnob);
             UpdateView(_aim, _aimBase, _aimKnob);
             if (_aimKnobImage != null) _aimKnobImage.color = fire ? new Color(1f, 0.35f, 0.25f, 0.8f) : new Color(1f, 1f, 1f, 0.5f);
@@ -111,6 +127,8 @@ namespace LastGround.Input
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null)
             {
+                if (keyboard.qKey.wasPressedThisFrame) _switchPressed = true;
+                if (keyboard.gKey.wasPressedThisFrame) ThrowAlongAim();
                 if (move == Vector2.zero)
                 {
                     if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) move.x -= 1f;
@@ -163,6 +181,11 @@ namespace LastGround.Input
                     else _move.Drag(touch.screenPosition, radius);
                     continue;
                 }
+                if (finger == _grenadeFinger)
+                {
+                    DragGrenade(touch.screenPosition, radius, ended);
+                    continue;
+                }
                 if (finger == _aimFinger)
                 {
                     aimSeen = true;
@@ -173,9 +196,22 @@ namespace LastGround.Input
                 if (touch.phase != UnityEngine.InputSystem.TouchPhase.Began) continue;
 
                 Vector2 p = touch.screenPosition;
+                if (Contains(_switchButton, p))
+                {
+                    _switchPressed = true;
+                    continue;
+                }
+                if (Contains(_grenadeButton, p) && _grenadeFinger < 0)
+                {
+                    _grenadeFinger = finger;
+                    _grenadeStart = p;
+                    _grenadeDragged = false;
+                    continue;
+                }
                 if (p.y > Screen.height * ZoneTop) continue;
                 RectTransform blocker = Blocker?.Invoke();
                 if (blocker != null && RectTransformUtility.RectangleContainsScreenPoint(blocker, p, null)) continue;
+                if (IsBlocked(p)) continue;
                 if (p.x < Screen.width * 0.5f)
                 {
                     if (_moveFinger >= 0) continue;
@@ -192,6 +228,7 @@ namespace LastGround.Input
                 }
             }
 
+            if (_grenadeFinger >= 0 && !FingerActive(touches, _grenadeFinger)) _grenadeFinger = -1;
             if (!moveSeen && _moveFinger >= 0) { _move.End(); _moveFinger = -1; }
             if (!aimSeen && _aimFinger >= 0) { _aim.End(); _aimFinger = -1; }
         }

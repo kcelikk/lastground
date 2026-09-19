@@ -22,7 +22,7 @@ namespace LastGround.Gameplay.Combat
         readonly PlayerStateTable _players;
         readonly ICrowdRenderSource _crowd;
         readonly NavGrid _nav;
-        readonly WeaponDefinition _weapon;
+        WeaponDefinition _weapon;
         PlayerInputFrame _frame;
         float _selectTimer;
         int _autoTarget = -1;
@@ -37,6 +37,13 @@ namespace LastGround.Gameplay.Combat
         }
 
         public ControlMode Mode { get; set; }
+
+        /// <summary>The weapon in hand (range and assist cone); the weapon controller updates it on swaps.</summary>
+        public WeaponDefinition Weapon
+        {
+            get => _weapon;
+            set { if (value != null) _weapon = value; }
+        }
 
         /// <summary>0 = off, 0.5 = low, 1 = high (Settings → aim assist).</summary>
         public float AssistLevel { get; set; } = 0.5f;

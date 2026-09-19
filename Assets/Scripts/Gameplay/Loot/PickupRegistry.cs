@@ -12,10 +12,11 @@ using Unity.Mathematics;
 namespace LastGround.Gameplay.Loot
 {
     /// <summary>
-    /// Host loot (TDD_01 §13.2 LootService + PickupRegistry): kills roll coin and medkit drops; coin drops in the same
-    /// cell within a short window merge into one pile. Claims are checked (owner bit, distance, alive); a coin pile pays
-    /// the team wallet, a medkit heals only the claimer and stays for the others. Pickups expire. Kill ownership never
-    /// matters (D-002). Allocation-free.
+    /// Host loot (TDD_01 §13.2 LootService + PickupRegistry): kills roll coin, medkit, ammo, grenade and weapon drops
+    /// (elites always drop a weapon); coin drops in the same cell within a short window merge into one pile. Claims are
+    /// checked (owner bit, distance, alive); a coin pile pays the team wallet, the rest is instanced: a medkit heals only
+    /// the claimer, a grenade or weapon changes only their loadout, ammo is applied on their own device, and the
+    /// pickup stays for the others. Pickups expire. Kill ownership never matters (D-002). Allocation-free.
     /// </summary>
     public sealed class PickupRegistry : ITickable, IPickupClaimSink
     {
@@ -60,6 +61,15 @@ namespace LastGround.Gameplay.Loot
 
         /// <summary>Medkit healing and "full health" checks.</summary>
         public PlayerHealthSystem Health { get; set; }
+
+        /// <summary>Per-type coin drops (M6). Null = the walker's values for every kill.</summary>
+        public ZombieDefinition[] ZombieTypes { get; set; }
+
+        /// <summary>Grenade and weapon pickups change loadouts; null = those drops are off.</summary>
+        public Combat.LoadoutAuthority Loadouts { get; set; }
+
+        /// <summary>Weapons a weapon drop may be (primaries by NetIndex); null = no weapon drops.</summary>
+        public Data.Weapons.WeaponDefinition[] Weapons { get; set; }
 
         /// <summary>Scavenger upgrades widen the pickup radius.</summary>
         public TeamBuilds Builds { get; set; }
@@ -113,6 +123,20 @@ namespace LastGround.Gameplay.Loot
                         return false;
                     }
                     break;
+                case PickupType.Grenade:
+                    if (Loadouts == null || !Loadouts.AddGrenade(player))
+                    {
+                        Rejected++;
+                        return false;
+                    }
+                    break;
+                case PickupType.Weapon:
+                    if (Loadouts == null || !Loadouts.GiveWeapon(player, _table.Value[id]))
+                    {
+                        Rejected++;
+                        return false;
+                    }
+                    break;
             }
             Claimed++;
             _table.Take(id, player);
@@ -134,9 +158,33 @@ namespace LastGround.Gameplay.Loot
 
         void OnDeath(in CrowdDeath death)
         {
-            if (_rng.NextFloat() < _walker.CoinChance) AddCoin(new float2(death.X, death.Z), _walker.CoinValue);
-            if (_rng.NextFloat() < _loot.MedkitChance) Spawn(PickupType.Medkit, new float2(death.X, death.Z), 1, _loot.MedkitLifetime, AllPlayersMask());
+            ZombieDefinition zombie = ZombieTypes != null && death.Type < ZombieTypes.Length ? ZombieTypes[death.Type] : _walker;
+            var at = new float2(death.X, death.Z);
+            if (_rng.NextFloat() < zombie.CoinChance) AddCoin(at, zombie.CoinValue);
+            if (_rng.NextFloat() < _loot.MedkitChance) Spawn(PickupType.Medkit, at, 1, _loot.MedkitLifetime, AllPlayersMask());
+            if (Loadouts == null) return;
+            // Instanced drops land a little apart so several pickups at one corpse stay readable.
+            if (_rng.NextFloat() < _loot.AmmoChance) Spawn(PickupType.Ammo, at + new float2(0.6f, 0f), 1, _loot.AmmoLifetime, AllPlayersMask());
+            if (_rng.NextFloat() < _loot.GrenadeChance) Spawn(PickupType.Grenade, at + new float2(-0.6f, 0f), 1, _loot.GrenadeLifetime, AllPlayersMask());
+            if (death.Elite != 0 || _rng.NextFloat() < _loot.WeaponChance) DropWeapon(at + new float2(0f, 0.7f));
         }
+
+        void DropWeapon(float2 at)
+        {
+            if (Weapons == null) return;
+            int primaries = 0;
+            for (int i = 0; i < Weapons.Length; i++) if (IsPrimary(i)) primaries++;
+            if (primaries == 0) return;
+            int pick = _rng.Range(0, primaries);
+            for (int i = 0; i < Weapons.Length; i++)
+            {
+                if (!IsPrimary(i) || pick-- > 0) continue;
+                Spawn(PickupType.Weapon, at, Weapons[i].NetIndex, _loot.WeaponLifetime, AllPlayersMask());
+                return;
+            }
+        }
+
+        bool IsPrimary(int i) => Weapons[i] != null && Weapons[i].Slot == Data.Weapons.WeaponSlot.Primary;
 
         void AddCoin(float2 position, int value)
         {

@@ -4,6 +4,8 @@ namespace LastGround.Gameplay.Combat
     public struct ShotFired
     {
         public byte Shooter;
+        /// <summary>Weapon NetIndex (sound and flash per weapon).</summary>
+        public byte Weapon;
         public float OriginX;
         public float OriginZ;
         public float EndX;

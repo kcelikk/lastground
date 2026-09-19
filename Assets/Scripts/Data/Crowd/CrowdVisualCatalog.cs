@@ -16,5 +16,8 @@ namespace LastGround.Data.Crowd
         public float TargetHeight = 1.8f;
 
         [Range(0f, 0.2f)] public float ScaleVariation = 0.08f;
+
+        /// <summary>Per zombie type (TypeIndex): bodies, size, glow. Missing entries use any body at scale 1.</summary>
+        public CrowdTypeLook[] TypeLooks;
     }
 }

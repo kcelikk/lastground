@@ -35,6 +35,7 @@ namespace LastGround.EditorTools.Setup
         static XpBar _xpBar;
         static ObjectivePanel _objectivePanel;
         static ObjectiveIndicator _objectiveIndicator;
+        static WeaponHud _weaponHud;
 
         public static void Build(string path)
         {
@@ -62,6 +63,13 @@ namespace LastGround.EditorTools.Setup
             Material medkit = CreateMaterial("M_PickupMedkit", new Color(0.9f, 0.15f, 0.12f));
             medkit.EnableKeyword("_EMISSION");
             medkit.SetColor("_EmissionColor", new Color(0.35f, 0.05f, 0.05f));
+            Material ammo = CreateMaterial("M_PickupAmmo", new Color(0.55f, 0.5f, 0.25f));
+            ammo.EnableKeyword("_EMISSION");
+            ammo.SetColor("_EmissionColor", new Color(0.25f, 0.2f, 0.05f));
+            Material grenade = CreateMaterial("M_Grenade", new Color(0.25f, 0.3f, 0.18f));
+            Material weaponPickup = CreateMaterial("M_PickupWeapon", new Color(0.15f, 0.15f, 0.16f));
+            weaponPickup.EnableKeyword("_EMISSION");
+            weaponPickup.SetColor("_EmissionColor", new Color(0.9f, 0.55f, 0.1f));
             var catalog = AssetDatabase.LoadAssetAtPath<CrowdVisualCatalog>("Assets/Art/Crowd/CrowdCatalog.asset");
             if (catalog == null) Debug.LogWarning("[Setup] Crowd catalog missing; run LastGround/Crowd/Bake Bodies first.");
             Material ground = CreateMaterial("M1_Ground", new Color(0.16f, 0.17f, 0.18f));
@@ -100,9 +108,13 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_tracerMaterial", tracer);
             UiFactory.Assign(installer, "_coinMaterial", coin);
             UiFactory.Assign(installer, "_medkitMaterial", medkit);
+            UiFactory.Assign(installer, "_ammoMaterial", ammo);
+            UiFactory.Assign(installer, "_grenadeMaterial", grenade);
+            UiFactory.Assign(installer, "_weaponPickupMaterial", weaponPickup);
+            UiFactory.Assign(installer, "_weaponHud", _weaponHud);
+            UiFactory.Assign(installer, "_combat", AssetDatabase.LoadAssetAtPath<LastGround.Data.Combat.CombatCatalog>(WeaponContentBuilder.CatalogPath));
+            UiFactory.Assign(installer, "_spawnDeck", AssetDatabase.LoadAssetAtPath<LastGround.Data.Director.SpawnDeckDefinition>(ZombieContentBuilder.DeckPath));
             UiFactory.Assign(installer, "_loot", AssetDatabase.LoadAssetAtPath<LastGround.Data.Loot.LootDefinition>(CombatContentBuilder.LootPath));
-            UiFactory.Assign(installer, "_weapon", AssetDatabase.LoadAssetAtPath<WeaponDefinition>(CombatContentBuilder.WeaponPath));
-            UiFactory.Assign(installer, "_walker", AssetDatabase.LoadAssetAtPath<ZombieDefinition>(CombatContentBuilder.WalkerPath));
             UiFactory.Assign(installer, "_playerDefinition", AssetDatabase.LoadAssetAtPath<PlayerDefinition>(CombatContentBuilder.PlayerPath));
             UiFactory.Assign(installer, "_cameraProfile", AssetDatabase.LoadAssetAtPath<CameraProfile>(CombatContentBuilder.CameraPath));
             UiFactory.Assign(installer, "_playerMesh", capsule);
@@ -197,6 +209,7 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(input, "_aimBase", aimBase);
             UiFactory.Assign(input, "_aimKnob", aimKnob);
             UiFactory.Assign(input, "_aimKnobImage", aimKnobImage);
+            _weaponHud = BuildWeaponHud(safe, canvasGo, input);
 
             var hud = canvasGo.AddComponent<RunHud>();
             UiFactory.Assign(hud, "_statusLabel", status);

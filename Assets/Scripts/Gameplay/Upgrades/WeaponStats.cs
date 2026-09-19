@@ -22,6 +22,10 @@ namespace LastGround.Gameplay.Upgrades
         public int PelletCount;
         public float Knockback;
         public byte NetIndex;
+        /// <summary>On-hit status effects from upgrades (M6): burn damage per second, slow percent, stun chance 0..1.</summary>
+        public float BurnDps;
+        public float SlowPct;
+        public float StunChance;
 
         public float ShotInterval => FireRate > 0f ? 1f / FireRate : 1f;
         public int MaxClaimsPerShot => Mathf.Max(1, PelletCount) * (Mathf.Max(0, Penetration) + 1);
@@ -43,6 +47,9 @@ namespace LastGround.Gameplay.Upgrades
                 PelletCount = weapon.PelletCount,
                 Knockback = weapon.Knockback,
                 NetIndex = weapon.NetIndex,
+                BurnDps = build != null ? build.Get(StatId.BurnDps) : 0f,
+                SlowPct = build != null ? Mathf.Min(90f, build.Get(StatId.SlowOnHitPct)) : 0f,
+                StunChance = Mathf.Clamp01(Pct(StatId.StunChancePct)),
             };
         }
     }

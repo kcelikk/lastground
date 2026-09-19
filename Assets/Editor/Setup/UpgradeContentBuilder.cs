@@ -5,7 +5,7 @@ using UnityEngine;
 namespace LastGround.EditorTools.Setup
 {
     /// <summary>
-    /// The M5 run upgrades (TDD_01 §7.8: 12 for MVP) and the level curve, under Assets/ScriptableObjects/Upgrades.
+    /// The run upgrades (TDD_01 §7.8: 12 in M5, three on-hit effects in M6) and the level curve, under Assets/ScriptableObjects/Upgrades.
     /// Catalog order is the network id: append new upgrades, never reorder. Existing assets keep their tuned values;
     /// only missing ones are created.
     /// </summary>
@@ -37,6 +37,10 @@ namespace LastGround.EditorTools.Setup
             new Spec { Id = "kevlar", Stat = StatId.DamageReductionPct, Values = new[] { 5f, 7f, 10f, 13f }, MaxStacks = 4 },
             new Spec { Id = "scavenger", Stat = StatId.PickupRadiusPct, Values = new[] { 25f, 40f, 55f, 75f }, MaxStacks = 3 },
             new Spec { Id = "bloodthirst", Stat = StatId.HealOnKill, Values = new[] { 0.5f, 0.8f, 1.2f, 1.6f }, MaxStacks = 4 },
+            // M6: on-hit status effects (TDD_01 §5.6).
+            new Spec { Id = "incendiary", Stat = StatId.BurnDps, Values = new[] { 4f, 6f, 9f, 12f }, MaxStacks = 3 },
+            new Spec { Id = "crippling", Stat = StatId.SlowOnHitPct, Values = new[] { 15f, 20f, 27f, 35f }, MaxStacks = 2 },
+            new Spec { Id = "concussive", Stat = StatId.StunChancePct, Values = new[] { 4f, 6f, 8f, 11f }, MaxStacks = 3 },
         };
 
         public static void Build()

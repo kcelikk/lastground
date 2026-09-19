@@ -19,6 +19,7 @@ namespace LastGround.Gameplay.Crowd
         readonly bool[] _alive;
         readonly byte[] _generation;
         readonly byte[] _type;
+        readonly byte[] _elite;
         readonly float[] _x;
         readonly float[] _z;
         readonly float[] _yaw;
@@ -46,6 +47,7 @@ namespace LastGround.Gameplay.Crowd
             _alive = new bool[capacity];
             _generation = new byte[capacity];
             _type = new byte[capacity];
+            _elite = new byte[capacity];
             _x = new float[capacity];
             _z = new float[capacity];
             _yaw = new float[capacity];
@@ -68,16 +70,19 @@ namespace LastGround.Gameplay.Crowd
         public float[] Yaw => _yaw;
         public byte[] AnimState => _anim;
         public byte[] FlagBits => _flags;
+        public byte[] Types => _type;
+        public byte[] Elites => _elite;
 
         public byte GenerationOf(int slot) => _generation[slot];
 
-        public void Enter(int slot, byte generation, byte type, float x, float z, float yaw, double time)
+        public void Enter(int slot, byte generation, byte type, float x, float z, float yaw, double time, byte elite = 0)
         {
             if ((uint)slot >= (uint)Capacity) return;
             if (!_alive[slot]) ActiveCount++;
             _alive[slot] = true;
             _generation[slot] = generation;
             _type[slot] = type;
+            _elite[slot] = elite;
             _anim[slot] = 1; // walk until the first snapshot says otherwise
             _flags[slot] = 0;
             _localHitAt[slot] = double.MinValue;
@@ -122,7 +127,7 @@ namespace LastGround.Gameplay.Crowd
         public void Die(int slot, float x, float z, float yaw)
         {
             Exit(slot);
-            if ((uint)slot < (uint)Capacity) Deaths.Publish(new CrowdDeath { Slot = slot, X = x, Z = z, Yaw = yaw });
+            if ((uint)slot < (uint)Capacity) Deaths.Publish(new CrowdDeath { Slot = slot, X = x, Z = z, Yaw = yaw, Type = _type[slot] });
         }
 
         public void Clear()

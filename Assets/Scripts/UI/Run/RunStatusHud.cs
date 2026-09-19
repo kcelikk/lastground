@@ -9,8 +9,9 @@ namespace LastGround.UI.Run
 {
     /// <summary>
     /// Top-centre run line (TDD_01 §9.11, D-003): <c>SURVIVAL 08:42 · HORDE: HIGH · THREAT III</c>, with the HORDE
-    /// word coloured by level, and a short banner when THREAT rises. No wave or remaining-zombie count by design.
-    /// Rebuilt only when a shown value changes, into a reused char buffer (no GC).
+    /// word coloured by level, and a short banner when THREAT rises, a new zombie type shows up ("Runners detected")
+    /// or an elite spawns. No wave or remaining-zombie count by design. The run line is rebuilt only when a shown value
+    /// changes, into a reused char buffer (no GC); announcement banners format once per event.
     /// </summary>
     public sealed class RunStatusHud : MonoBehaviour
     {
@@ -31,10 +32,16 @@ namespace LastGround.UI.Run
         HordeLevel _shownLevel;
         int _shownThreat;
         float _bannerTimer;
+        Core.Events.EventReader<DirectorAnnouncement> _announcements;
+        Data.Combat.CombatCatalog _catalog;
+        string _newZombie, _eliteSpawned;
 
-        public void Bind(RunStatus status)
+        /// <param name="catalog">Zombie and elite names for announcements; null = no announcement banners.</param>
+        public void Bind(RunStatus status, Data.Combat.CombatCatalog catalog = null)
         {
             _status = status;
+            _catalog = catalog;
+            _announcements = status.Announcements.CreateReader();
             _localization = AppServices.Get<ILocalizationService>();
             _localization.LanguageChanged += OnLanguageChanged;
             _banner.gameObject.SetActive(false);
@@ -60,6 +67,7 @@ namespace LastGround.UI.Run
                 Rebuild();
             }
 
+            while (_status.Announcements.TryRead(ref _announcements, out DirectorAnnouncement a)) ShowAnnouncement(a);
             if (_bannerTimer <= 0f) return;
             _bannerTimer -= Time.unscaledDeltaTime;
             Color c = _banner.color;
@@ -85,6 +93,27 @@ namespace LastGround.UI.Run
             _bannerTimer = BannerTime;
         }
 
+        void ShowAnnouncement(in DirectorAnnouncement a)
+        {
+            var zombie = _catalog != null ? _catalog.Zombie(a.ZombieType) : null;
+            if (zombie == null) return;
+            string name = _localization.Get(zombie.DisplayNameKey);
+            string text;
+            if (a.Kind == AnnouncementKind.EliteSpawned)
+            {
+                var elite = _catalog.Elite(a.Elite);
+                string modifier = elite != null ? _localization.Get(elite.DisplayNameKey) : string.Empty;
+                text = string.Format(System.Globalization.CultureInfo.InvariantCulture, _eliteSpawned, modifier, name);
+            }
+            else
+            {
+                text = string.Format(System.Globalization.CultureInfo.InvariantCulture, _newZombie, name);
+            }
+            _banner.text = "<size=70%>" + text;
+            _banner.gameObject.SetActive(true);
+            _bannerTimer = BannerTime;
+        }
+
         void OnLanguageChanged(string language)
         {
             LoadTexts();
@@ -97,6 +126,8 @@ namespace LastGround.UI.Run
             _horde = _localization.Get("hud.horde");
             _threat = _localization.Get("hud.threat");
             _threatUp = _localization.Get("hud.threat_up");
+            _newZombie = _localization.Get("hud.new_zombie");
+            _eliteSpawned = _localization.Get("hud.elite_spawned");
             for (int i = 0; i < LevelKeys.Length; i++) _levelWords[i] = _localization.Get(LevelKeys[i]);
         }
     }

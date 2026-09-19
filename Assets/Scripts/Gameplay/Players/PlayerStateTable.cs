@@ -26,6 +26,9 @@ namespace LastGround.Gameplay.Players
         /// <summary>Trigger held recently (remote tracers; replicated with the player state).</summary>
         public readonly bool[] Firing = new bool[Max];
 
+        /// <summary>0 = primary, 1 = sidearm (chosen on the owner's device, replicated with the player state).</summary>
+        public readonly byte[] ActiveSlot = new byte[Max];
+
         /// <summary>Vitals: host-authoritative, replicated to clients on change (PlayerVitals).</summary>
         public readonly float[] Health = new float[Max];
         /// <summary>Base plus upgrades (HP bar scale).</summary>
@@ -36,6 +39,8 @@ namespace LastGround.Gameplay.Players
         public readonly float[] Countdown = new float[Max];
         /// <summary>Downed: revive progress 0..1.</summary>
         public readonly float[] ReviveProgress = new float[Max];
+        /// <summary>Move speed multiplier from spit / toxic hits (1 = not slowed). Host-authoritative, replicated in vitals.</summary>
+        public readonly float[] SlowMultiplier = { 1f, 1f, 1f, 1f };
 
         /// <summary>Damage taken, on every device (camera shake, haptics, sound).</summary>
         public readonly EventChannel<PlayerHurt> Hurt = new EventChannel<PlayerHurt>(64);
@@ -92,6 +97,7 @@ namespace LastGround.Gameplay.Players
             if (!id.IsValid || id.Value >= Max) return;
             Active[id.Value] = false;
             Firing[id.Value] = false;
+            ActiveSlot[id.Value] = 0;
             Life[id.Value] = PlayerLife.Alive;
             _display.Exit(id.Value);
         }

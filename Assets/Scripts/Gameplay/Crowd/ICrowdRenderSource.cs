@@ -18,6 +18,12 @@ namespace LastGround.Gameplay.Crowd
         /// <summary>Animation state per slot (values of Data.Crowd.CrowdClipId / snapshot animState).</summary>
         byte[] AnimState { get; }
 
+        /// <summary>Zombie type per slot (ZombieDefinition.TypeIndex).</summary>
+        byte[] Types { get; }
+
+        /// <summary>Elite modifier per slot (EliteModifierDefinition.NetIndex, 0 = not elite).</summary>
+        byte[] Elites { get; }
+
         /// <summary>Snapshot flag bits per slot (<see cref="CrowdFlags"/>).</summary>
         byte[] FlagBits { get; }
 

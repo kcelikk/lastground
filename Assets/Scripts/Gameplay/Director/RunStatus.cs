@@ -7,6 +7,9 @@ namespace LastGround.Gameplay.Director
     /// </summary>
     public sealed class RunStatus
     {
+        /// <summary>HUD banners: new zombie types, elites (host director; clients via replication).</summary>
+        public readonly Core.Events.EventChannel<DirectorAnnouncement> Announcements = new Core.Events.EventChannel<DirectorAnnouncement>(16);
+
         public float RunSeconds;
         public HordeLevel Horde;
         public int Threat = 1;

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eeb437a464d923b9d9ed54f9cbbc2243, type: 3}
+  m_Name: PRJ_FragGrenade
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Combat.ProjectileDefinition
+  Id: frag_grenade
+  DisplayNameKey: projectile.frag_grenade
+  NetIndex: 0
+  Motion: 0
+  Speed: 14
+  FlightTime: {x: 0.35, y: 0.8}
+  ArcHeight: 2.5
+  MaxRange: 12
+  HitRadius: 0.5
+  FuseAfterLanding: 0.3
+  ImpactDamage: 8
+  SlowMultiplier: 0.6
+  SlowSeconds: 2
+  Explosion:
+    Radius: 4.5
+    Damage: 150
+    EdgeDamageScale: 0.3
+    Knockback: 7
+    StunSeconds: 1.2
+    PlayerDamageScale: 0.25
+  Color: {r: 0.25, g: 0.28, b: 0.2, a: 1}
+  Size: 0.25

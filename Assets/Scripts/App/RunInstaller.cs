@@ -6,6 +6,7 @@ using LastGround.Core.Net;
 using LastGround.Core.Net.Session;
 using LastGround.Core.Services;
 using LastGround.Core.Tick;
+using LastGround.Data.Combat;
 using LastGround.Data.Crowd;
 using LastGround.Data.Director;
 using LastGround.Data.Loot;
@@ -24,6 +25,7 @@ using LastGround.Gameplay.Director;
 using LastGround.Gameplay.Navigation;
 using LastGround.Gameplay.Objectives;
 using LastGround.Gameplay.Players;
+using LastGround.Gameplay.Projectiles;
 using LastGround.Gameplay.Run;
 using LastGround.Gameplay.Upgrades;
 using LastGround.Gameplay.Zombies;
@@ -54,8 +56,8 @@ namespace LastGround.App
         [SerializeField] Transform _worldRoot;
         [SerializeField] CrowdVisualCatalog _crowdCatalog;
         [SerializeField] NavGridAsset _navGrid;
-        [SerializeField] WeaponDefinition _weapon;
-        [SerializeField] ZombieDefinition _walker;
+        [SerializeField] CombatCatalog _combat;
+        [SerializeField] SpawnDeckDefinition _spawnDeck;
         [SerializeField] PlayerDefinition _playerDefinition;
         [SerializeField] CameraProfile _cameraProfile;
         [SerializeField] DirectorProfile _directorProfile;
@@ -68,6 +70,9 @@ namespace LastGround.App
         [SerializeField] ObjectiveDefinition _clearArea;
         [SerializeField] Material _coinMaterial;
         [SerializeField] Material _medkitMaterial;
+        [SerializeField] Material _ammoMaterial;
+        [SerializeField] Material _grenadeMaterial;
+        [SerializeField] Material _weaponPickupMaterial;
         [SerializeField] Material _bloodParticleMaterial;
         [SerializeField] Material _bloodSplatMaterial;
         [SerializeField] Material _tracerMaterial;
@@ -84,6 +89,7 @@ namespace LastGround.App
         [SerializeField] XpBar _xpBar;
         [SerializeField] ObjectivePanel _objectivePanel;
         [SerializeField] ObjectiveIndicator _objectiveIndicator;
+        [SerializeField] WeaponHud _weaponHud;
 
         readonly List<System.IDisposable> _disposables = new List<System.IDisposable>();
         SessionService _service;
@@ -105,6 +111,13 @@ namespace LastGround.App
             public EventChannel<ShotFired> Shots;
             public AimResolver Aim;
             public WeaponController Weapon;
+            public LoadoutTable Loadouts;
+            public LoadoutAuthority LoadoutAuthority;
+            public ProjectileTable Projectiles;
+            public EventChannel<ExplosionFx> Blasts;
+            public PickupCollector Collector;
+            public ExplosionSystem Explosions;
+            public ProjectileSystem ProjectileSim;
             public ZombieWorld World;
             public CombatAuthority Authority;
             public PlayerHealthSystem Health;
@@ -147,6 +160,9 @@ namespace LastGround.App
                 Pickups = new PickupTable(256),
                 Wallet = new TeamWallet(),
                 Objective = new ObjectiveState(),
+                Loadouts = new LoadoutTable(_combat.Weapons),
+                Projectiles = new ProjectileTable(_combat.Projectiles),
+                Blasts = new EventChannel<ExplosionFx>(32),
             };
             _disposables.Add(parts.Nav);
             float worldSize = parts.Nav.Width * parts.Nav.CellSize;
@@ -169,6 +185,12 @@ namespace LastGround.App
             _disposables.Add(lootSync);
             loop.Register(TickPhase.NetSend, lootSync);
             IPickupClaimSink pickupClaims = parts.Registry != null ? parts.Registry : (IPickupClaimSink)lootSync;
+            var loadoutSync = new LoadoutSync(session, parts.Loadouts, parts.LoadoutAuthority);
+            _disposables.Add(loadoutSync);
+            loop.Register(TickPhase.NetSend, loadoutSync);
+            var fxSync = new CombatFxSync(session, parts.Projectiles, parts.Blasts);
+            _disposables.Add(fxSync);
+            loop.Register(session.IsAuthority ? TickPhase.NetSend : TickPhase.Presentation, fxSync);
             var progression = new ProgressionSync(session, parts.Xp, parts.Builds, parts.Offers, parts.Progress);
             _disposables.Add(progression);
             loop.Register(TickPhase.NetSend, progression);
@@ -184,7 +206,7 @@ namespace LastGround.App
 
             // Local player: raw sticks → aim resolver → motor + weapon (TDD_01 §3.1).
             ISaveService save = AppServices.Get<ISaveService>();
-            parts.Aim = new AimResolver(_input, players, parts.Crowd, parts.Nav, _weapon)
+            parts.Aim = new AimResolver(_input, players, parts.Crowd, parts.Nav, _combat.StartPrimary)
             {
                 Mode = DevAutomation.ForceAutoFire ? Core.Input.ControlMode.AutoAimAutoFire : (Core.Input.ControlMode)save.Settings.ControlMode,
                 AssistLevel = save.Settings.AimAssist * 0.5f,
@@ -192,24 +214,36 @@ namespace LastGround.App
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             // Soak-test bot: walk to a downed teammate so revives happen without hands on the phones.
             loop.Register(TickPhase.Input, new TickAction(_ => TouchTwinStickInput.DevSeek = DevReviveDirection(players)));
+            if (DevAutomation.AutoGrenades) loop.Register(TickPhase.Input, new DevGrenadier(players, parts.Loadouts, parts.Crowd));
 #endif
             loop.Register(TickPhase.Input, _input);
             loop.Register(TickPhase.Input, parts.Aim);
-            parts.Weapon = new WeaponController(players, parts.Aim, _weapon, parts.Crowd, parts.Nav, seed, claims, parts.Shots,
-                session.IsAuthority ? null : parts.Crowd as CrowdReplica, _walker.MaxHealth) { Builds = parts.Builds };
+            parts.Weapon = new WeaponController(players, parts.Aim, parts.Loadouts, parts.Crowd, parts.Nav, seed, claims, parts.Shots,
+                session.IsAuthority ? null : parts.Crowd as CrowdReplica, _combat)
+            {
+                Builds = parts.Builds, Grenades = loadoutSync, Aim = parts.Aim, Pickups = parts.Pickups,
+            };
             parts.Aim.Ignore = parts.Weapon.PresumedDeadMask;
+            _input.GrenadeTapDistance = _combat.TapThrowDistance;
+            if (_combat.Grenade != null) _input.GrenadeMaxDistance = _combat.Grenade.MaxRange;
             if (benchmark)
             {
                 // The benchmark player stands still at the centre of the horde.
                 players.SetLocal(0f, 0f, 180f, 0f, 0f);
+                parts.Loadouts.Set(session.LocalPlayer.Value, _combat.StartPrimary.NetIndex, _combat.StartSidearm.NetIndex, 0);
             }
             else
             {
                 PlayerId me = session.LocalPlayer;
                 loop.Register(TickPhase.LocalPlayer, Gate(new PlayerMotor(players, parts.Aim, _playerDefinition, worldSize,
-                    me.Value * 3f - 4.5f, -3f, parts.Nav, parts.Crowd) { Builds = parts.Builds }));
+                    me.Value * 3f - 4.5f, -3f, parts.Nav, parts.Crowd) { Builds = parts.Builds, Weapon = parts.Weapon }));
                 loop.Register(TickPhase.LocalPlayer, Gate(parts.Weapon));
-                loop.Register(TickPhase.LocalPlayer, Gate(new PickupCollector(parts.Pickups, players, _loot, pickupClaims) { Builds = parts.Builds }));
+                WeaponController weapon = parts.Weapon;
+                parts.Collector = new PickupCollector(parts.Pickups, players, _loot, pickupClaims)
+                {
+                    Builds = parts.Builds, NeedsAmmo = () => weapon.NeedsAmmo, Loadouts = parts.Loadouts, MaxGrenades = _combat.MaxGrenades,
+                };
+                loop.Register(TickPhase.LocalPlayer, Gate(parts.Collector));
             }
             loop.Register(TickPhase.NetSend, sync);
             loop.Register(TickPhase.NetSend, vitals);
@@ -218,7 +252,9 @@ namespace LastGround.App
             loop.Register(TickPhase.Presentation, new TickAction(_ => sync.Interpolate()));
 
             BuildPresentation(parts, loop);
-            _statusHud.Bind(parts.Status);
+            _statusHud.Bind(parts.Status, _combat);
+            _weaponHud.Bind(parts.Weapon, parts.Collector, parts.Pickups, parts.Loadouts);
+            _input.Blockers.Add(_weaponHud.TakeButtonRect);
             _xpBar.Bind(parts.Xp);
             _objectivePanel.Bind(parts.Objective, _zones, _clearArea);
             _objectiveIndicator.Bind(parts.Objective, _zones, _camera);
@@ -242,6 +278,7 @@ namespace LastGround.App
             telemetry.BindDirector(parts.Status, parts.Director);
             telemetry.BindProgress(parts.Xp, parts.Builds);
             telemetry.BindLoot(parts.Wallet, parts.Registry);
+            telemetry.BindContent(parts.LoadoutAuthority, parts.Explosions, parts.ProjectileSim);
             if (parts.Director != null) gameObject.AddComponent<DirectorLog>().Bind(parts.Status, parts.Director, _service.CurrentRun.Seed);
             if (parts.Benchmark != null)
             {
@@ -275,29 +312,48 @@ namespace LastGround.App
                 return new DiscardClaims();
             }
 
-            var world = parts.World = new ZombieWorld(crowd, parts.Players, parts.Nav, new ZombieTuning(), _walker, seed);
+            var world = parts.World = new ZombieWorld(crowd, parts.Players, parts.Nav, new ZombieTuning(), _combat.Zombies, seed)
+            {
+                Elites = _combat.Elites, MinSlowMultiplier = _combat.MinSlowMultiplier,
+            };
             _disposables.Add(world);
             world.DamageSink = parts.Health;
             world.Respawns = parts.Health.Respawns;
+            var explosions = parts.Explosions = new ExplosionSystem(world, parts.Players, parts.Health, parts.Blasts);
+            var projectiles = parts.ProjectileSim = new ProjectileSystem(parts.Projectiles, _combat.Projectiles, parts.Players, parts.Nav,
+                parts.Health, explosions);
+            world.ExplosionSink = explosions;
+            world.ProjectileLauncher = projectiles;
+            parts.LoadoutAuthority = new LoadoutAuthority(parts.Loadouts, parts.Players, _combat, projectiles);
             var footprint = new CameraFootprint(_cameraProfile, 3f);
             parts.Director = new HordeDirector(world, parts.Players, _directorProfile, _threatCurve, _playerScaling, footprint,
                 _playerDefinition.MaxHealth, parts.Status, seed);
             parts.Director.Governor.TargetFrameSeconds = 1f / Mathf.Max(30, parts.Preset.TargetFps);
+            parts.Director.Deck = _spawnDeck;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (DevAutomation.RunTimeSkip > 0f) parts.Director.SkipTo(DevAutomation.RunTimeSkip);
+#endif
             HordeDirector director = parts.Director;
             loop.Register(TickPhase.Director, Gate(director));
             loop.Register(TickPhase.Presentation, new TickAction(_ => director.Governor.Report(Time.unscaledDeltaTime)));
             loop.Register(TickPhase.ZombieSim, Gate(world));
 
-            parts.Authority = new CombatAuthority(world, parts.Players, parts.Nav, WeaponTable(), seed);
-            CombatAuthority authority = parts.Authority;
-            authority.Builds = parts.Builds;
-            authority.Health = parts.Health;
-            parts.Referee.Kills = () => authority.Kills;
-            parts.Progress = new TeamProgress(crowd, parts.Players, parts.Builds, _levelCurve, _walker.Xp, seed);
-            loop.Register(TickPhase.Combat, Gate(parts.Progress));
-            parts.Registry = new PickupRegistry(parts.Pickups, crowd, parts.Players, _loot, _walker, parts.Wallet, seed)
+            parts.Authority = new CombatAuthority(world, parts.Players, parts.Nav, _combat.Weapons, seed)
             {
-                Health = parts.Health, Builds = parts.Builds,
+                Builds = parts.Builds, Loadouts = parts.Loadouts, Catalog = _combat,
+            };
+            CombatAuthority authority = parts.Authority;
+            world.KillSink = parts.Health;
+            parts.Referee.Kills = () => authority.Kills;
+            parts.Progress = new TeamProgress(crowd, parts.Players, parts.Builds, _levelCurve, _combat.Zombies[0].Xp, seed)
+            {
+                ZombieTypes = _combat.Zombies,
+            };
+            loop.Register(TickPhase.Combat, Gate(parts.Progress));
+            parts.Registry = new PickupRegistry(parts.Pickups, crowd, parts.Players, _loot, _combat.Zombies[0], parts.Wallet, seed)
+            {
+                Health = parts.Health, Builds = parts.Builds, ZombieTypes = _combat.Zombies, Loadouts = parts.LoadoutAuthority,
+                Weapons = _combat.Weapons,
             };
             loop.Register(TickPhase.LootEvents, Gate(parts.Registry));
             TeamWallet wallet = parts.Wallet;
@@ -307,7 +363,10 @@ namespace LastGround.App
                 Director = parts.Director, Loot = parts.Registry,
             };
             loop.Register(TickPhase.LootEvents, Gate(objectives));
+            loop.Register(TickPhase.Combat, Gate(parts.LoadoutAuthority));
             loop.Register(TickPhase.Combat, Gate(parts.Authority));
+            loop.Register(TickPhase.Combat, Gate(projectiles));
+            loop.Register(TickPhase.Combat, Gate(explosions));
             var claimSync = new HitClaimSync(parts.Session, parts.Authority);
             _disposables.Add(claimSync);
 
@@ -332,14 +391,6 @@ namespace LastGround.App
             _disposables.Add(claimSync);
             loop.Register(TickPhase.NetSend, claimSync);
             return claimSync;
-        }
-
-        /// <summary>Weapons indexed by their wire id (M4: the assault rifle only).</summary>
-        WeaponDefinition[] WeaponTable()
-        {
-            var table = new WeaponDefinition[_weapon.NetIndex + 1];
-            table[_weapon.NetIndex] = _weapon;
-            return table;
         }
 
         void OnDestroy()

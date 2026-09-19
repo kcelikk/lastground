@@ -33,6 +33,10 @@ namespace LastGround.App.Dev
         TeamBuilds _builds;
         LastGround.Gameplay.Loot.TeamWallet _wallet;
         LastGround.Gameplay.Loot.PickupRegistry _registry;
+        LastGround.Gameplay.Combat.LoadoutAuthority _loadouts;
+        LastGround.Gameplay.Projectiles.ExplosionSystem _explosions;
+        LastGround.Gameplay.Projectiles.ProjectileSystem _projectiles;
+        readonly int[] _typeCounts = new int[8];
         float _simMsSum;
         float _simMsMax;
         int _simSamples;
@@ -55,6 +59,15 @@ namespace LastGround.App.Dev
             _weapon = weapon;
             _authority = authority;
             _health = health;
+        }
+
+        /// <summary>Adds M6 counters (host): grenades, blasts, spit hits, zombie types alive, type actions, elites.</summary>
+        public void BindContent(LastGround.Gameplay.Combat.LoadoutAuthority loadouts, LastGround.Gameplay.Projectiles.ExplosionSystem explosions,
+            LastGround.Gameplay.Projectiles.ProjectileSystem projectiles)
+        {
+            _loadouts = loadouts;
+            _explosions = explosions;
+            _projectiles = projectiles;
         }
 
         /// <summary>Adds run status (all devices) and director internals (host) to the log line.</summary>
@@ -109,6 +122,28 @@ namespace LastGround.App.Dev
             _maxDt = 0f;
         }
 
+        string ContentStats(int me)
+        {
+            string line = string.Format(CultureInfo.InvariantCulture, " weapon={0} ammo={1}/{2}", _weapon.Active != null ? _weapon.Active.Id : "-",
+                _weapon.Ammo, _weapon.InfiniteReserve ? -1 : _weapon.Reserve);
+            if (_world == null) return line;
+            System.Array.Clear(_typeCounts, 0, _typeCounts.Length);
+            int elites = 0;
+            for (int i = 0; i < _world.Crowd.Capacity; i++)
+            {
+                if (!_world.Crowd.AliveSlots[i]) continue;
+                _typeCounts[_world.Crowd.Type[i] & 7]++;
+                if (_world.Crowd.Elite[i] != 0) elites++;
+            }
+            line += string.Format(CultureInfo.InvariantCulture, " types={0}/{1}/{2}/{3}/{4} elitesAlive={5} lunges={6} spits={7} detonations={8}",
+                _typeCounts[0], _typeCounts[1], _typeCounts[2], _typeCounts[3], _typeCounts[4], elites, _world.Lunges, _world.Spits, _world.Detonations);
+            if (_director != null) line += string.Format(CultureInfo.InvariantCulture, " elites={0}", _director.Elites);
+            if (_loadouts != null) line += string.Format(CultureInfo.InvariantCulture, " grenades={0} thrown={1}", ((LastGround.Gameplay.Combat.IWeaponStatus)_weapon).Grenades, _loadouts.Thrown);
+            if (_explosions != null) line += string.Format(CultureInfo.InvariantCulture, " blasts={0}", _explosions.Exploded);
+            if (_projectiles != null) line += string.Format(CultureInfo.InvariantCulture, " spitHits={0}", _projectiles.PlayerHits);
+            return line;
+        }
+
         string CombatStats()
         {
             if (_weapon == null) return string.Empty;
@@ -124,6 +159,7 @@ namespace LastGround.App.Dev
             }
             if (_health != null) line += string.Format(CultureInfo.InvariantCulture, " downs={0} playerDeaths={1} revives={2}", _health.Downs, _health.Deaths, _health.Revives);
             if (_world != null) line += string.Format(CultureInfo.InvariantCulture, " zAttacks={0} zDodged={1}", _world.AttacksLanded, _world.AttacksDodged);
+            line += ContentStats(me);
             if (_xp != null)
                 line += string.Format(CultureInfo.InvariantCulture, " level={0} xp={1}/{2} picks={3} tapped={4} autoPicked={5}", _xp.Level,
                     _xp.Xp, _xp.XpToNext, _builds.Of(me).Picks, LastGround.UI.Run.LevelUpPanel.TappedPicks, LastGround.UI.Run.LevelUpPanel.AutoPicks);

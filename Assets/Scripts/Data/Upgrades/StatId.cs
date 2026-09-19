@@ -15,6 +15,12 @@ namespace LastGround.Data.Upgrades
         DamageReductionPct = 9,
         PickupRadiusPct = 10,
         HealOnKill = 11,
-        Count = 12,
+        /// <summary>Hits set zombies on fire for this much damage per second (M6).</summary>
+        BurnDps = 12,
+        /// <summary>Hits slow zombies by this percentage (M6).</summary>
+        SlowOnHitPct = 13,
+        /// <summary>Percent chance a hit stuns the zombie (M6).</summary>
+        StunChancePct = 14,
+        Count = 15,
     }
 }

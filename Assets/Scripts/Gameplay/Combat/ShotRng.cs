@@ -12,6 +12,7 @@ namespace LastGround.Gameplay.Combat
     {
         const uint SpreadSalt = 0x5EED5u;
         const uint CritSalt = 0xC417u;
+        const uint StunSalt = 0x57u;
 
         public static uint Seed(uint runSeed, int player, ushort shotSeq)
         {
@@ -28,6 +29,12 @@ namespace LastGround.Gameplay.Combat
         public static bool IsCrit(uint shotSeed, int pellet, float chance)
         {
             return chance > 0f && Unit(Hash32.Combine(shotSeed, CritSalt, (uint)pellet)) < chance;
+        }
+
+        /// <summary>On-hit stun roll (Concussive upgrade), same on the shooter and the host.</summary>
+        public static bool IsStun(uint shotSeed, int pellet, int pierce, float chance)
+        {
+            return chance > 0f && Unit(Hash32.Combine(shotSeed, StunSalt + (uint)pierce, (uint)pellet)) < chance;
         }
 
         static float Unit(uint hash) => (hash >> 8) * (1f / 16777216f);

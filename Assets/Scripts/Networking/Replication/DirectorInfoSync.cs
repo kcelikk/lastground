@@ -1,4 +1,5 @@
 using System;
+using LastGround.Core.Events;
 using LastGround.Core.Ids;
 using LastGround.Core.Net.Protocol;
 using LastGround.Core.Net.Session;
@@ -11,7 +12,7 @@ namespace LastGround.Networking.Replication
     /// <summary>
     /// Run status host → clients (TDD_02 §15.5 DirectorInfo, unreliable 2 Hz, 5–7 B): survival time, HORDE label,
     /// THREAT level. Clients advance the clock locally every frame and ease towards the host's value, snapping only
-    /// when more than a second off.
+    /// when more than a second off. Director announcements (new zombie type, elite) go reliable as they happen (3 B).
     /// </summary>
     public sealed class DirectorInfoSync : ITickable, IDisposable
     {
@@ -21,6 +22,8 @@ namespace LastGround.Networking.Replication
         readonly ISession _session;
         readonly RunStatus _status;
         readonly NetRawHandler _onInfo;
+        readonly NetRawHandler _onAnnouncement;
+        EventReader<DirectorAnnouncement> _announcements;
         float _timer;
         bool _received;
 
@@ -29,7 +32,13 @@ namespace LastGround.Networking.Replication
             _session = session;
             _status = status;
             _onInfo = OnInfo;
-            if (!session.IsAuthority) session.Subscribe(NetMsgId.DirectorInfo, _onInfo);
+            _onAnnouncement = OnAnnouncement;
+            _announcements = status.Announcements.CreateReader();
+            if (!session.IsAuthority)
+            {
+                session.Subscribe(NetMsgId.DirectorInfo, _onInfo);
+                session.Subscribe(NetMsgId.DirectorAnnouncement, _onAnnouncement);
+            }
         }
 
         /// <summary>Host: NetSend phase. Client: Presentation phase (local clock).</summary>
@@ -39,6 +48,14 @@ namespace LastGround.Networking.Replication
             {
                 if (_received) _status.RunSeconds += dt;
                 return;
+            }
+            while (_status.Announcements.TryRead(ref _announcements, out DirectorAnnouncement a))
+            {
+                NetWriter aw = _session.Begin(NetMsgId.DirectorAnnouncement);
+                aw.WriteByte((byte)a.Kind);
+                aw.WriteByte(a.ZombieType);
+                aw.WriteByte(a.Elite);
+                _session.SendToClients(NetChannel.Reliable);
             }
             _timer -= dt;
             if (_timer > 0f) return;
@@ -53,6 +70,16 @@ namespace LastGround.Networking.Replication
         public void Dispose()
         {
             _session.Unsubscribe(NetMsgId.DirectorInfo, _onInfo);
+            _session.Unsubscribe(NetMsgId.DirectorAnnouncement, _onAnnouncement);
+        }
+
+        void OnAnnouncement(PlayerId sender, ref NetReader r)
+        {
+            var kind = (AnnouncementKind)r.ReadByte();
+            byte type = r.ReadByte();
+            byte elite = r.ReadByte();
+            if (r.Failed || kind > AnnouncementKind.EliteSpawned) return;
+            _status.Announcements.Publish(new DirectorAnnouncement { Kind = kind, ZombieType = type, Elite = elite });
         }
 
         void OnInfo(PlayerId sender, ref NetReader r)

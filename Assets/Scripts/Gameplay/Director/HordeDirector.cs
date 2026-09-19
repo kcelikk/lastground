@@ -30,7 +30,9 @@ namespace LastGround.Gameplay.Director
         readonly RunStatus _status;
         readonly IntensityTracker _intensity;
         readonly SpawnLocator _locator;
-        readonly float2[] _queue = new float2[QueueCapacity];
+        readonly QueuedSpawn[] _queue = new QueuedSpawn[QueueCapacity];
+        readonly bool[] _typeSeen = new bool[16];
+        SpawnDeck _deck;
         DeterministicRandom _rng;
         int _queueHead;
         int _queueCount;
@@ -67,6 +69,20 @@ namespace LastGround.Gameplay.Director
         }
 
         public PerformanceGovernor Governor { get; } = new PerformanceGovernor(1f / 60f);
+
+        /// <summary>Zombie types, costs, unlock times and elites (M6). Null = walkers only, one point each.</summary>
+        public SpawnDeckDefinition Deck
+        {
+            set => _deck = value != null && value.Cards != null && value.Cards.Length > 0 ? new SpawnDeck(value) : null;
+        }
+
+        public int Elites { get; private set; }
+
+        /// <summary>Dev: start the run clock later (unlock types and elites without waiting).</summary>
+        public void SkipTo(float runSeconds)
+        {
+            _status.RunSeconds = System.Math.Max(_status.RunSeconds, runSeconds);
+        }
         public int Spawned { get; private set; }
         public int Despawned { get; private set; }
         public int SpawnFailures => _locator.Rejected;

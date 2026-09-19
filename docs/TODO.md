@@ -1,17 +1,19 @@
 # Last Ground — Durum ve Yapılacaklar
 
-_Son güncelleme: 2026-09-18 · Sonraki oturum buradan devam eder._
+_Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 
 ## Şu an neredeyiz
-- **Branch:** `m5-loop` (main'e merge edilmedi, GitHub'a push edilmedi).
-- **M5 — Endless Loop Core: bitti, kullanıcı onayı bekliyor.** Rapor: `docs/reports/M5_REPORT.md`, director grafikleri: `docs/benchmarks/M5/`.
-- EditMode testleri: **129 / 129** geçiyor.
-- Kullanıcıya sorulan açık soru: son iki telefon testinde Redmi host otomatik seçim olmadan her level'da upgrade seçti — tablete dokunuldu mu? (Dokunarak/otomatik seçim sayaçları eklendi.)
+- **Branch:** `m7-map-events` (M6 main'e merge edildi ve push edildi).
+- **M6 — Combat Content I: onaylandı (2026-09-19).** Rapor: `docs/reports/M6_REPORT.md`. **M7 başladı.**
+- EditMode testleri: **154 / 154** geçiyor. OnePlus 30 FPS, Redmi 60 FPS, oyun kodu GC 0 B/kare.
+- Zombiler artık gerçekçi Mixamo gövdeleri (8 karakter). Ham FBX'ler git dışında: yeniden bake için önce `MIXAMO_TOKEN=… python3 Tools/Mixamo/mixamo_fetch.py`, sonra `CrowdBaker.BakeAllBatch`. Görünüm kontrolü: `CrowdPreview.RenderBatch` (batchmode, `-nographics` olmadan).
+- **Paralel oturum:** Codex aynı repoda `docs/reference`, `docs/ASSET_SOURCES.md`, `docs/MIXAMO_*` ve `Assets/ThirdParty/Mixamo` README/meta üzerinde çalışıyor; kullanıcı bunları ayrı commit'liyor. `git add -A` kullanma.
+- `ProjectSettings` (MSAA 2x, ışık ayarları) kullanıcı onayıyla tutuldu.
 
 ## Sonraki oturumda ilk adımlar
-1. Kullanıcıdan M5 onayını al (ve yukarıdaki soruyu netleştir).
-2. Onay gelince: `M5_REPORT.md` durumunu "Onaylandı" yap → commit → `git checkout main && git merge --no-ff m5-loop` → `git push origin main m5-loop` → `git checkout -b m6-combat-content`.
-3. **M6 — Combat Content I**'e başla (TDD_03 §36): 6 silah (Pistol, SMG, AR, Shotgun, Sniper, Machine Gun — değerler TDD_01 §6.4), pellet + `ProjectileSystem` (grenade), 2 silah slotu, mermi ekonomisi; Runner, Tank, Spitter, Exploder; elite modifier'lar; durum efektleri (burn/slow/stun). Çıkış: her tip gerçek cihazda bütçe içinde, ağda doğru.
+1. Kullanıcıdan M6 onayını al.
+2. Onay gelince: `M6_REPORT.md` durumunu "Onaylandı" yap → commit → `git checkout main && git merge --no-ff m6-combat-content` → `git push origin main m6-combat-content` → `git checkout -b m7-map-events`.
+3. **M7 — Map, Events & Environment** (TDD_03 §36): 3 bölge (sonra 7), portal grafı, bölge culling, mini-map, lighting grid bake, 6 event + görevler (D-019), çevre etkileşimlileri (varil, yakıt tankı). Görsel hedef: `docs/reference/maps` (sanayi bölgesi, dökümhane, benzin istasyonu, hastane + tahliye) ve `lastground-img-1.png` atmosferi.
 
 ## Tamamlanan milestone'lar
 | M | Konu | Durum |
@@ -22,6 +24,12 @@ _Son güncelleme: 2026-09-18 · Sonraki oturum buradan devam eder._
 | M3 | Horde simulation (Burst ZombieWorld, flow field, katmanlı surround, AI LOD) | ✅ onaylı, main |
 | M4 | Shooting & Combat — MVP kapısı (twin-stick, host doğrulamalı hit claim, windup'lı zombi saldırısı, VFX, ses) | ✅ onaylı, main |
 | M5 | Endless loop (director, threat, downed/revive, XP + 12 upgrade, coin + instanced pickup, "Bölgeyi temizle", sonuç ekranı) | ✅ onaylı, main |
+| M6 | Combat Content I (6 silah, 2 slot, granat, Runner/Tank/Spitter/Exploder, elite, durum efektleri, spawn deck, gerçekçi Mixamo zombileri) | ✅ onaylı, main |
+
+## M6'dan açık konular (rapordaki OPEN ISSUES)
+- Denge (mermi, granat, elite, spawn deck) hipotez; insan playtest'i gerekli.
+- Görsel: tablette üst satır can barıyla çakışıyor, coin'ler büyük, oyuncu kapsül, zombilerde normal map yok → M11.
+- Ek zombi animasyon varyantları ve Runner sıçrama klibi; silah sesleri prosedürel (M12).
 
 ## M5'ten açık konular (rapordaki OPEN ISSUES)
 - Denge: botlarla HORDE etiketi çoğunlukla LOW; insanla playtest gerek (`Assets/ScriptableObjects/Director/DIR_Default.asset`).

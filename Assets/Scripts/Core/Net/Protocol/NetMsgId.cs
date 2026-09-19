@@ -33,9 +33,15 @@ namespace LastGround.Core.Net.Protocol
         // Combat (40–49)
         public const byte HitClaimBatch = 40;
         public const byte PlayerVitals = 41;
+        public const byte ProjectileSpawn = 42;
+        public const byte ProjectileEnd = 43;
+        public const byte Explosion = 44;
+        public const byte ThrowGrenade = 45;
+        public const byte LoadoutState = 46;
 
         // Director / run status (50–59)
         public const byte DirectorInfo = 50;
+        public const byte DirectorAnnouncement = 51;
 
         // Progression (60–69)
         public const byte TeamXp = 60;

@@ -51,12 +51,15 @@ namespace LastGround.Tests
             public readonly List<HitClaim> Claims = new List<HitClaim>();
             public float Damage;
             public int Hits;
+            public float SlowMultiplier = 1f;
             public void Submit(in HitClaim claim) => Claims.Add(claim);
             void IPlayerDamageSink.Damage(int player, float amount)
             {
                 Damage += amount;
                 Hits++;
             }
+
+            void IPlayerDamageSink.Slow(int player, float multiplier, float seconds) => SlowMultiplier = multiplier;
         }
 
         T Asset<T>() where T : ScriptableObject

@@ -12,7 +12,9 @@ namespace LastGround.EditorTools.Crowd
     /// Bakes skinned models into GPU-animated crowd bodies (TDD_02 §21.3, D-018):
     /// all skinned meshes of a model → one mesh in root space (bone slot indices in UV1, weights in UV2),
     /// three LODs by quadric simplification, and a bone-matrix texture with every clip sampled at 30 fps.
-    /// Loop clips are made in-place by removing the root bone's horizontal travel.
+    /// Loop clips are made in-place by removing the root bone's horizontal travel. Humanoid bodies (Mixamo) sample
+    /// separate motion files through their avatar (<see cref="PoseSampler"/>) and get their own albedo
+    /// (<see cref="BodyTextureBaker"/>; UDIM tiles packed side by side, UVs remapped).
     /// Menu: LastGround/Crowd/Bake Bodies · CLI: -executeMethod LastGround.EditorTools.Crowd.CrowdBaker.BakeAllBatch
     /// </summary>
     public static class CrowdBaker
@@ -48,7 +50,15 @@ namespace LastGround.EditorTools.Crowd
 
         static CrowdAnimationSet Bake(CrowdBodySource source)
         {
-            EnsureReadable(source.ModelPath);
+            if (source.Humanoid)
+            {
+                if (!MixamoImport.PrepareCharacter(source.ModelPath))
+                    throw new FileNotFoundException(source.ModelPath + " (run Tools/Mixamo/mixamo_fetch.py)");
+            }
+            else
+            {
+                EnsureReadable(source.ModelPath);
+            }
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(source.ModelPath)
                         ?? throw new FileNotFoundException(source.ModelPath);
             GameObject root = UnityEngine.Object.Instantiate(model);
@@ -58,12 +68,16 @@ namespace LastGround.EditorTools.Crowd
                 root.transform.localScale = Vector3.one;
 
                 var clips = LoadClips(source);
+                var clipList = new List<AnimationClip>(clips.Count);
+                foreach (var entry in clips) clipList.Add(entry.clip);
+                using var sampler = new PoseSampler(root, clipList, source.Humanoid);
                 // Sample the first clip at t=0 so the bind geometry matches the animated skeleton scale.
-                clips[0].clip.SampleAnimation(root, 0f);
+                sampler.Sample(0, 0f);
 
                 SkinnedMeshRenderer[] renderers = root.GetComponentsInChildren<SkinnedMeshRenderer>();
                 var slots = new List<(Transform bone, Matrix4x4 bindToRoot)>();
-                Mesh combined = Combine(root.transform, renderers, slots, out float height);
+                int tiles = source.DiffuseTiles != null ? Mathf.Max(1, source.DiffuseTiles.Length) : 1;
+                Mesh combined = Combine(root.transform, renderers, slots, out float height, 1f / tiles);
                 float scale = source.TargetHeight / height;
                 ScaleMesh(combined, scale);
 
@@ -73,14 +87,18 @@ namespace LastGround.EditorTools.Crowd
                 set.FrameRate = FrameRate;
                 set.BoneCount = slots.Count;
                 set.Height = source.TargetHeight;
-                set.BoneTexture = BakeBones(root, clips, slots, motionBone, scale, out CrowdClip[] table, out int totalFrames, out List<Matrix4x4[]> frames);
-                float error = Validate(root, renderers, combined, clips, table, frames, scale);
+                set.BoneTexture = BakeBones(root, sampler, clips, slots, motionBone, scale, out CrowdClip[] table, out int totalFrames, out List<Matrix4x4[]> frames);
+                float error = Validate(root, sampler, renderers, combined, clips, table, frames, scale);
+                float upright = Upright(combined, frames[table[0].StartFrame]);
+                if (upright < 0.6f)
+                    throw new InvalidOperationException($"{source.Id}: walk pose is not upright (height {upright:0.00} of target)");
                 if (error > 0.02f)
                     throw new InvalidOperationException($"{source.Id}: GPU skinning differs from Unity skinning by {error * 100f:0.0} cm");
                 set.BoneTexture.name = source.Id + "_Bones";
                 set.Clips = table;
                 set.TotalFrames = totalFrames;
                 set.Lods = BuildLods(combined, source.Id);
+                if (source.DiffuseTiles != null) set.Albedo = BodyTextureBaker.Bake(source, OutputDir);
 
                 string path = OutputDir + "/" + source.Id + ".asset";
                 AssetDatabase.DeleteAsset(path);
@@ -92,7 +110,7 @@ namespace LastGround.EditorTools.Crowd
                 Debug.Log($"[CrowdBaker] {source.Id}: {slots.Count} bone slots, {totalFrames} frames, " +
                           $"texture {set.BoneTexture.width}x{set.BoneTexture.height}, LOD verts " +
                           $"{set.Lods[0].vertexCount}/{set.Lods[1].vertexCount}/{set.Lods[2].vertexCount}, scale {scale:0.###}, " +
-                          $"skinning error {error * 1000f:0.0} mm");
+                          $"skinning error {error * 1000f:0.0} mm, walk height {upright:0.00}");
                 return AssetDatabase.LoadAssetAtPath<CrowdAnimationSet>(path);
             }
             finally
@@ -103,6 +121,19 @@ namespace LastGround.EditorTools.Crowd
 
         static List<(CrowdBodySource.ClipSource source, AnimationClip clip)> LoadClips(CrowdBodySource source)
         {
+            if (source.Humanoid)
+            {
+                var motions = new List<(CrowdBodySource.ClipSource, AnimationClip)>();
+                foreach (CrowdBodySource.ClipSource clipSource in source.Clips)
+                {
+                    AnimationClip motion = MixamoImport.PrepareMotion(clipSource.Name, clipSource.Loop);
+                    if (motion != null) motions.Add((clipSource, motion));
+                    else Debug.LogWarning($"[CrowdBaker] {source.Id}: motion '{clipSource.Name}' missing, {clipSource.Id} falls back to Walk");
+                }
+                if (motions.Count == 0) throw new InvalidOperationException(source.Id + ": no motions found");
+                return motions;
+            }
+
             var byName = new Dictionary<string, AnimationClip>(StringComparer.Ordinal);
             foreach (UnityEngine.Object asset in AssetDatabase.LoadAllAssetsAtPath(source.ModelPath))
             {
@@ -121,7 +152,9 @@ namespace LastGround.EditorTools.Crowd
         }
 
         /// <summary>Merges all skinned meshes into root space. Bone slots are (bone, bind matrix) pairs.</summary>
-        static Mesh Combine(Transform root, SkinnedMeshRenderer[] renderers, List<(Transform, Matrix4x4)> slots, out float height)
+        /// <param name="uScale">Horizontal UV scale: UDIM tiles packed side by side in one texture.</param>
+        static Mesh Combine(Transform root, SkinnedMeshRenderer[] renderers, List<(Transform, Matrix4x4)> slots, out float height,
+            float uScale = 1f)
         {
             var positions = new List<Vector3>();
             var normals = new List<Vector3>();
@@ -151,7 +184,7 @@ namespace LastGround.EditorTools.Crowd
                 {
                     positions.Add(meshToRoot.MultiplyPoint3x4(v[i]));
                     normals.Add(meshToRoot.MultiplyVector(n.Length > 0 ? n[i] : Vector3.up).normalized);
-                    uvs.Add(uv.Length > 0 ? uv[i] : Vector2.zero);
+                    uvs.Add(uv.Length > 0 ? new Vector2(uv[i].x * uScale, uv[i].y) : Vector2.zero);
                     BoneWeight bw = w[i];
                     bw.boneIndex0 = slotOf[bw.boneIndex0];
                     bw.boneIndex1 = slotOf[bw.boneIndex1];
@@ -218,7 +251,7 @@ namespace LastGround.EditorTools.Crowd
         /// Texture layout: x = slot * 3 + row (rows 0..2 of the 3x4 skinning matrix), y = global frame.
         /// Skinning matrix in scaled root space: S · (root⁻¹ · bone · bind) · S⁻¹.
         /// </summary>
-        static Texture2D BakeBones(GameObject root, List<(CrowdBodySource.ClipSource source, AnimationClip clip)> clips,
+        static Texture2D BakeBones(GameObject root, PoseSampler sampler, List<(CrowdBodySource.ClipSource source, AnimationClip clip)> clips,
             List<(Transform bone, Matrix4x4 bind)> slots, Transform motionBone, float scale,
             out CrowdClip[] table, out int totalFrames, out List<Matrix4x4[]> frames)
         {
@@ -234,12 +267,12 @@ namespace LastGround.EditorTools.Crowd
                 int count = Mathf.Max(2, Mathf.RoundToInt(clip.length * FrameRate) + (source.Loop ? 0 : 1));
                 table[c] = new CrowdClip { Id = source.Id, StartFrame = frames.Count, FrameCount = count, Loop = source.Loop };
 
-                clip.SampleAnimation(root, 0f);
+                sampler.Sample(c, 0f);
                 Vector3 motionStart = motionBone != null ? rootInv.MultiplyPoint3x4(motionBone.position) : Vector3.zero;
                 for (int f = 0; f < count; f++)
                 {
                     float t = source.Loop ? clip.length * f / count : Mathf.Min(clip.length, f / FrameRate);
-                    clip.SampleAnimation(root, t);
+                    sampler.Sample(c, t);
 
                     // In-place: cancel horizontal root travel for locomotion loops; the simulation moves the entity.
                     Matrix4x4 inPlace = Matrix4x4.identity;
@@ -284,13 +317,13 @@ namespace LastGround.EditorTools.Crowd
         /// Compares our texture skinning against Unity's own skinning (SkinnedMeshRenderer.BakeMesh) on a mid frame of
         /// the death clip (not in-place adjusted). Returns the largest vertex distance in metres.
         /// </summary>
-        static float Validate(GameObject root, SkinnedMeshRenderer[] renderers, Mesh combined,
+        static float Validate(GameObject root, PoseSampler sampler, SkinnedMeshRenderer[] renderers, Mesh combined,
             List<(CrowdBodySource.ClipSource source, AnimationClip clip)> clips, CrowdClip[] table, List<Matrix4x4[]> frames, float scale)
         {
             int index = Array.FindIndex(table, c => !c.Loop);
             if (index < 0) return 0f;
             int local = table[index].FrameCount / 2;
-            clips[index].clip.SampleAnimation(root, local / FrameRate);
+            sampler.Sample(index, local / FrameRate);
             Matrix4x4[] matrices = frames[table[index].StartFrame + local];
 
             // Compare against Unity's 4-bone skinning; the active quality level may use fewer weights.
@@ -333,38 +366,127 @@ namespace LastGround.EditorTools.Crowd
             return maxError;
         }
 
+        /// <summary>Skinned height of the first walk frame relative to the bind height (≈ 1 when standing).</summary>
+        static float Upright(Mesh combined, Matrix4x4[] matrices)
+        {
+            Vector3[] bind = combined.vertices;
+            BoneWeight[] weights = combined.boneWeights;
+            float minY = float.MaxValue, maxY = float.MinValue, bindMin = float.MaxValue, bindMax = float.MinValue;
+            for (int i = 0; i < bind.Length; i += 7)
+            {
+                BoneWeight w = weights[i];
+                Vector3 p = matrices[w.boneIndex0].MultiplyPoint3x4(bind[i]) * w.weight0 + matrices[w.boneIndex1].MultiplyPoint3x4(bind[i]) * w.weight1
+                          + matrices[w.boneIndex2].MultiplyPoint3x4(bind[i]) * w.weight2 + matrices[w.boneIndex3].MultiplyPoint3x4(bind[i]) * w.weight3;
+                minY = Mathf.Min(minY, p.y);
+                maxY = Mathf.Max(maxY, p.y);
+                bindMin = Mathf.Min(bindMin, bind[i].y);
+                bindMax = Mathf.Max(bindMax, bind[i].y);
+            }
+            return (maxY - minY) / Mathf.Max(0.01f, bindMax - bindMin);
+        }
+
         static Mesh[] BuildLods(Mesh combined, string id)
         {
             var lods = new Mesh[LodVertexTargets.Length];
             for (int i = 0; i < lods.Length; i++)
             {
-                float quality = Mathf.Clamp01((float)LodVertexTargets[i] / combined.vertexCount);
-                Mesh lod;
-                if (quality >= 0.999f)
+                int target = LodVertexTargets[i];
+                Mesh lod = combined.vertexCount <= target ? UnityEngine.Object.Instantiate(combined) : Simplify(combined, target);
+                lods[i] = ToGpuSkinnedMesh(lod, id + "_LOD" + i);
+            }
+            return lods;
+        }
+
+        /// <summary>
+        /// Quadric simplification towards a vertex budget. UV seams split vertices, so the requested quality is lowered
+        /// until the result fits (at most 10 % over), or the simplifier stops making progress.
+        /// </summary>
+        static Mesh Simplify(Mesh source, int target)
+        {
+            // Dense scans cut into many UV islands tear apart when simplified island by island: weld by position
+            // first (UV seams may smear slightly), then simplify the connected surface.
+            if (source.vertexCount > target * 4) return SimplifyOnce(Weld(source), target);
+            Mesh result = SimplifyOnce(source, target);
+            if (result.vertexCount <= target * 1.5f) return result;
+            Mesh welded = SimplifyOnce(Weld(source), target);
+            return welded.vertexCount < result.vertexCount ? welded : result;
+        }
+
+        /// <summary>Merges vertices at the same position (keeping the first one's UV and weights); drops degenerate triangles.</summary>
+        static Mesh Weld(Mesh source)
+        {
+            Vector3[] v = source.vertices;
+            Vector3[] n = source.normals;
+            Vector2[] uv = source.uv;
+            BoneWeight[] w = source.boneWeights;
+            int[] tris = source.triangles;
+            var map = new int[v.Length];
+            var index = new Dictionary<Vector3Int, int>();
+            var pos = new List<Vector3>();
+            var nrm = new List<Vector3>();
+            var tex = new List<Vector2>();
+            var wts = new List<BoneWeight>();
+            for (int i = 0; i < v.Length; i++)
+            {
+                var key = Vector3Int.RoundToInt(v[i] * 2000f);
+                if (!index.TryGetValue(key, out int k))
                 {
-                    lod = UnityEngine.Object.Instantiate(combined);
+                    k = pos.Count;
+                    index[key] = k;
+                    pos.Add(v[i]);
+                    nrm.Add(n.Length > 0 ? n[i] : Vector3.up);
+                    tex.Add(uv.Length > 0 ? uv[i] : Vector2.zero);
+                    wts.Add(w[i]);
                 }
-                else
+                map[i] = k;
+            }
+            var outTris = new List<int>(tris.Length);
+            for (int t = 0; t < tris.Length; t += 3)
+            {
+                int a = map[tris[t]], b = map[tris[t + 1]], c = map[tris[t + 2]];
+                if (a == b || b == c || a == c) continue;
+                outTris.Add(a);
+                outTris.Add(b);
+                outTris.Add(c);
+            }
+            var mesh = new Mesh { indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
+            mesh.SetVertices(pos);
+            mesh.SetNormals(nrm);
+            mesh.SetUVs(0, tex);
+            mesh.SetTriangles(outTris, 0);
+            mesh.boneWeights = wts.ToArray();
+            mesh.bindposes = source.bindposes;
+            return mesh;
+        }
+
+        static Mesh SimplifyOnce(Mesh source, int target)
+        {
+            float quality = Mathf.Clamp01((float)target / source.vertexCount);
+            Mesh best = null;
+            for (int attempt = 0; attempt < 8; attempt++)
+            {
+                var simplifier = new MeshSimplifier
                 {
-                    var simplifier = new MeshSimplifier();
-                    simplifier.SimplificationOptions = new SimplificationOptions
+                    SimplificationOptions = new SimplificationOptions
                     {
                         PreserveBorderEdges = false,
                         PreserveUVSeamEdges = false,
                         PreserveUVFoldoverEdges = false,
                         PreserveSurfaceCurvature = false,
                         EnableSmartLink = true,
-                        VertexLinkDistance = double.Epsilon,
-                        MaxIterationCount = 100,
+                        VertexLinkDistance = 1e-4,
+                        MaxIterationCount = 200,
                         Agressiveness = 7.0,
-                    };
-                    simplifier.Initialize(combined);
-                    simplifier.SimplifyMesh(quality);
-                    lod = simplifier.ToMesh();
-                }
-                lods[i] = ToGpuSkinnedMesh(lod, id + "_LOD" + i);
+                    },
+                };
+                simplifier.Initialize(source);
+                simplifier.SimplifyMesh(quality);
+                Mesh result = simplifier.ToMesh();
+                if (best == null || result.vertexCount < best.vertexCount) best = result;
+                if (result.vertexCount <= target * 1.1f) break;
+                quality *= Mathf.Clamp((float)target / result.vertexCount, 0.3f, 0.9f);
             }
-            return lods;
+            return best;
         }
 
         /// <summary>Moves skin data into UV channels so the mesh draws as a static, instanceable mesh.</summary>
