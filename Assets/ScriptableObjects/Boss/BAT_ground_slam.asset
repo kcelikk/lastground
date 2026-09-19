@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d7ed4a565450b2ec98c5ca78aac366d, type: 3}
+  m_Name: BAT_ground_slam
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Boss.BossAttackDefinition
+  Id: ground_slam
+  Kind: 0
+  Shape: 0
+  Clip: 3
+  TelegraphSeconds: 1.1
+  ActiveSeconds: 0.3
+  RecoverySeconds: 0.9
+  Cooldown: 7
+  PhaseMask: 7
+  Weight: 1.2
+  Range: {x: 0, y: 7}
+  Damage: 35
+  Radius: 6
+  Knockback: 8
+  RingDamage: 15
+  RingMaxRadius: 12
+  RingSpeed: 10
+  RingWidth: 1.2
+  Length: 16
+  ChargeSpeed: 16
+  WallStunSeconds: 2
+  FlightSeconds: 0.9
+  SummonCount: 6
+  SummonType: 1

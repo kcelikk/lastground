@@ -16,5 +16,7 @@ namespace LastGround.Data.Crowd
         public float Scale;
         public Color Glow;
         [Range(0f, 1f)] public float GlowStrength;
+        /// <summary>Clips start when the animation state changes instead of looping from a random phase (boss telegraphs).</summary>
+        public bool ClipsFromStateStart;
     }
 }

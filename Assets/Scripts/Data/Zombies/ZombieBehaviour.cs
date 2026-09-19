@@ -8,5 +8,7 @@ namespace LastGround.Data.Zombies
         Tank = 2,
         Spitter = 3,
         Exploder = 4,
+        /// <summary>Boss body (M8): the steering job leaves it alone; <c>BossController</c> drives it.</summary>
+        Boss = 5,
     }
 }
