@@ -14,11 +14,14 @@ namespace LastGround.EditorTools.Setup
         {
             public readonly string Name;
             public readonly RenderPipelineAsset Pipeline;
+            /// <summary>Quality-level MSAA sample count (0 = off). MEDIUM keeps 2x (user decision, M7).</summary>
+            public readonly int Msaa;
 
-            public Level(string name, RenderPipelineAsset pipeline)
+            public Level(string name, RenderPipelineAsset pipeline, int msaa = 0)
             {
                 Name = name;
                 Pipeline = pipeline;
+                Msaa = msaa;
             }
         }
 
@@ -39,7 +42,7 @@ namespace LastGround.EditorTools.Setup
                 element.FindPropertyRelative("name").stringValue = levels[i].Name;
                 element.FindPropertyRelative("customRenderPipeline").objectReferenceValue = levels[i].Pipeline;
                 element.FindPropertyRelative("vSyncCount").intValue = 0;
-                element.FindPropertyRelative("antiAliasing").intValue = 0; // MSAA lives in the URP asset
+                element.FindPropertyRelative("antiAliasing").intValue = levels[i].Msaa;
                 element.FindPropertyRelative("pixelLightCount").intValue = 0;
                 element.FindPropertyRelative("realtimeReflectionProbes").boolValue = false;
                 element.FindPropertyRelative("softParticles").boolValue = false;

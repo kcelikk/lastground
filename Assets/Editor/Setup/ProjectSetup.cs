@@ -175,7 +175,7 @@ namespace LastGround.EditorTools.Setup
             QualityLevels.Apply(new[]
             {
                 new QualityLevels.Level("LOW", low),
-                new QualityLevels.Level("MEDIUM", medium),
+                new QualityLevels.Level("MEDIUM", medium, msaa: 2),
                 new QualityLevels.Level("HIGH", high),
             }, defaultIndex: 1);
         }
