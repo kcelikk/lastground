@@ -115,6 +115,7 @@ namespace LastGround.EditorTools.Scenery
             Anchor("foundry_supply", MapAnchorKind.SupplyDrop, Foundry, -33f, 24f);
             Anchor("foundry_generator", MapAnchorKind.Generator, Foundry, -49f, 14f);
             Anchor("foundry_cache", MapAnchorKind.WeaponCache, Foundry, -30f, 51f);
+            Anchor("foundry_extraction", MapAnchorKind.Extraction, Foundry, -20f, 24f);
         }
 
         /// <summary>Gas station (maps/03): two pump islands on an open wet asphalt apron, shop to the north, wrecks
@@ -157,6 +158,7 @@ namespace LastGround.EditorTools.Scenery
             Anchor("gas_supply", MapAnchorKind.SupplyDrop, GasStation, 20f, 20f);
             Anchor("gas_rescue", MapAnchorKind.RescueSignal, GasStation, 35f, 38f);
             Anchor("gas_cache", MapAnchorKind.WeaponCache, GasStation, 60f, 21f);
+            Anchor("gas_extraction", MapAnchorKind.Extraction, GasStation, 35f, 15f);
         }
 
         /// <summary>Hospital yard (maps/04): hospital block on the south edge, open yard with low barrier lines,
