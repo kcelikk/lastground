@@ -98,6 +98,7 @@ namespace LastGround.App
         [SerializeField] ObjectiveIndicator _objectiveIndicator;
         [SerializeField] WeaponHud _weaponHud;
         [SerializeField] MinimapHud _minimap;
+        [SerializeField] RegionCard _regionCard;
 
         /// <summary>The map's regions, or the M5 greybox zones when no map is assigned.</summary>
         MapZoneSet Zones => _map != null && _map.Regions != null ? _map.Regions : _zones;
@@ -290,6 +291,7 @@ namespace LastGround.App
             _objectivePanel.Bind(parts.Objective, Zones, Events);
             _objectiveIndicator.Bind(parts.Objective, Zones, _camera);
             if (_minimap != null && _map != null) _minimap.Bind(_map, players, parts.Crowd);
+            if (_regionCard != null) _regionCard.Bind(Zones, players);
             _levelUp.Bind(parts.Offers, _upgrades, () => CountActive(players) <= 1);
             _pause = _levelUp;
             _input.Blocker = () => _levelUp.BlockingRect;

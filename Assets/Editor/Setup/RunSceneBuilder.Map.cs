@@ -1,4 +1,5 @@
 using LastGround.UI.Run;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -44,6 +45,40 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(hud, "_dots", dots);
             UiFactory.Assign(hud, "_arrow", arrow);
             return hud;
+        }
+
+        /// <summary>Region card under the status line: concept art (docs/reference/maps), name and danger level.</summary>
+        static RegionCard BuildRegionCard(RectTransform safe)
+        {
+            RectTransform card = UiFactory.Rect("RegionCard", safe);
+            UiFactory.Place(card, new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(560f, 150f));
+            var background = card.gameObject.AddComponent<Image>();
+            background.color = UiFactory.PanelColor;
+            background.raycastTarget = false;
+            var group = card.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.blocksRaycasts = false;
+            group.interactable = false;
+
+            RectTransform artRect = UiFactory.Rect("Art", card);
+            artRect.anchorMin = artRect.anchorMax = new Vector2(0f, 0.5f);
+            artRect.pivot = new Vector2(0f, 0.5f);
+            artRect.anchoredPosition = new Vector2(8f, 0f);
+            artRect.sizeDelta = new Vector2(201f, 134f);
+            var art = artRect.gameObject.AddComponent<RawImage>();
+            art.raycastTarget = false;
+
+            TMP_Text name = UiFactory.Label("Name", card, null, 40, FontStyles.Bold, Color.white);
+            UiFactory.Place(name.rectTransform, new Vector2(0f, 0.5f), new Vector2(225f, 22f), new Vector2(325f, 56f));
+            TMP_Text danger = UiFactory.Label("Danger", card, null, 26, FontStyles.Normal, UiFactory.Warning);
+            UiFactory.Place(danger.rectTransform, new Vector2(0f, 0.5f), new Vector2(225f, -28f), new Vector2(325f, 40f));
+
+            var region = card.gameObject.AddComponent<RegionCard>();
+            UiFactory.Assign(region, "_group", group);
+            UiFactory.Assign(region, "_art", art);
+            UiFactory.Assign(region, "_name", name);
+            UiFactory.Assign(region, "_danger", danger);
+            return region;
         }
 
         static RawImage Raw(string name, RectTransform parent, Color color)

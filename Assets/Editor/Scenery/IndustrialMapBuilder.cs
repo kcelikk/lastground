@@ -237,7 +237,9 @@ namespace LastGround.EditorTools.Scenery
                 ProjectSetup.EnsureFolder(Path.GetDirectoryName(RegionsPath).Replace('\\', '/'));
                 AssetDatabase.CreateAsset(regions, RegionsPath);
             }
+            ConceptArtImport.Import();
             regions.Zones = RegionTable();
+            for (int i = 0; i < regions.Zones.Length; i++) regions.Zones[i].Concept = ConceptArtImport.RegionCard(regions.Zones[i].Id);
             EditorUtility.SetDirty(regions);
             return regions;
         }

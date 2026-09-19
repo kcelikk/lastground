@@ -25,6 +25,7 @@ namespace LastGround.EditorTools.Setup
             scaler.matchWidthOrHeight = 1f;
             var router = canvasGo.AddComponent<ScreenRouter>();
 
+            BuildBackground(canvasGo.transform);
             RectTransform safe = UiFactory.Panel("SafeArea", canvasGo.transform);
             safe.gameObject.AddComponent<SafeAreaFitter>();
 
@@ -40,6 +41,23 @@ namespace LastGround.EditorTools.Setup
             coop.gameObject.SetActive(false);
             lobby.gameObject.SetActive(false);
             EditorSceneManager.SaveScene(scene, path);
+        }
+
+        /// <summary>Darkened industrial district concept art behind the panels (D-020), cropped to fill the screen.</summary>
+        static void BuildBackground(Transform canvas)
+        {
+            LastGround.EditorTools.Scenery.ConceptArtImport.Import();
+            var texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(LastGround.EditorTools.Scenery.ConceptArtImport.MenuBackground);
+            if (texture == null) return;
+            RectTransform rect = UiFactory.Rect("Background", canvas);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            var image = rect.gameObject.AddComponent<RawImage>();
+            image.texture = texture;
+            image.color = new Color(0.42f, 0.42f, 0.45f);
+            image.raycastTarget = false;
+            var fitter = rect.gameObject.AddComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fitter.aspectRatio = (float)texture.width / texture.height;
         }
 
         static void BuildMain(RectTransform panel, ScreenRouter router, GameObject coop)

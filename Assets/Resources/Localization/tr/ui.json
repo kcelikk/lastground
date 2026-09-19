@@ -153,5 +153,6 @@
   "region.foundry_yard": "Dökümhane Avlusu",
   "region.gas_station": "Benzin İstasyonu",
   "region.hospital_yard": "Hastane Avlusu",
-  "map.industrial": "Sanayi Bölgesi"
+  "map.industrial": "Sanayi Bölgesi",
+  "region.danger": "Tehlike seviyesi {0}"
 }

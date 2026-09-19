@@ -36,6 +36,7 @@ namespace LastGround.EditorTools.Setup
         static ObjectiveIndicator _objectiveIndicator;
         static WeaponHud _weaponHud;
         static MinimapHud _minimapHud;
+        static RegionCard _regionCard;
 
         public static void Build(string path)
         {
@@ -100,6 +101,7 @@ namespace LastGround.EditorTools.Setup
             UiFactory.AssignArray(installer, "_objectives", ObjectiveContentBuilder.Build());
             UiFactory.Assign(installer, "_interactables", AssetDatabase.LoadAssetAtPath<LastGround.Data.Map.InteractableProfile>(ObjectiveContentBuilder.InteractablesPath));
             UiFactory.Assign(installer, "_minimap", _minimapHud);
+            UiFactory.Assign(installer, "_regionCard", _regionCard);
             UiFactory.Assign(installer, "_bloodParticleMaterial", bloodParticle);
             UiFactory.Assign(installer, "_bloodSplatMaterial", bloodSplat);
             UiFactory.Assign(installer, "_tracerMaterial", tracer);
@@ -208,6 +210,7 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(input, "_aimKnobImage", aimKnobImage);
             _weaponHud = BuildWeaponHud(safe, canvasGo, input);
             _minimapHud = BuildMinimap(safe);
+            _regionCard = BuildRegionCard(safe);
 
             var hud = canvasGo.AddComponent<RunHud>();
             UiFactory.Assign(hud, "_statusLabel", status);

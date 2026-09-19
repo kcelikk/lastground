@@ -153,5 +153,6 @@
   "region.foundry_yard": "Foundry Yard",
   "region.gas_station": "Gas Station",
   "region.hospital_yard": "Hospital Yard",
-  "map.industrial": "Industrial District"
+  "map.industrial": "Industrial District",
+  "region.danger": "Danger level {0}"
 }

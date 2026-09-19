@@ -18,16 +18,16 @@ MonoBehaviour:
     Center: {x: -35, y: 35}
     HalfSize: {x: 29, y: 29}
     DangerLevel: 2
-    Concept: {fileID: 0}
+    Concept: {fileID: 2800000, guid: 4dccc898dafc30488a2a5549b8d4b355, type: 3}
   - Id: gas_station
     NameKey: region.gas_station
     Center: {x: 35, y: 35}
     HalfSize: {x: 29, y: 29}
     DangerLevel: 2
-    Concept: {fileID: 0}
+    Concept: {fileID: 2800000, guid: 86dc03faffea6f1d48cc0bda211f2d96, type: 3}
   - Id: hospital_yard
     NameKey: region.hospital_yard
     Center: {x: 0, y: -35}
     HalfSize: {x: 64, y: 29}
     DangerLevel: 3
-    Concept: {fileID: 0}
+    Concept: {fileID: 2800000, guid: 33da44646aa89c171bff7bccbc6b8340, type: 3}
