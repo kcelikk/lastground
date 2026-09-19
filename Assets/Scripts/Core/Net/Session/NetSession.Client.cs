@@ -101,6 +101,16 @@ namespace LastGround.Core.Net.Session
 
         void OnClientDisconnected()
         {
+            // The first UDP packets to a phone can fail (Wi-Fi power save, ARP): try the transport again while
+            // the join window lasts. Retried from Tick, never inside the transport's callback.
+            if (!_transportConnected && LastRejectReason == JoinRejectReason.None && State == SessionState.Connecting &&
+                _connectAttempts < _config.ConnectAttempts && _now + _config.ConnectRetryDelay < _joinDeadline)
+            {
+                Log.Info(LogCategory.Net, "Connect attempt " + _connectAttempts + " failed; retrying");
+                DisposeClient();
+                _retryAt = _now + _config.ConnectRetryDelay;
+                return;
+            }
             DisconnectReason reason;
             if (LastRejectReason != JoinRejectReason.None) reason = DisconnectReason.Rejected;
             else if (!_transportConnected) reason = DisconnectReason.ConnectFailed;

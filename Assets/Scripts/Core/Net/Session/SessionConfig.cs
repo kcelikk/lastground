@@ -20,6 +20,12 @@ namespace LastGround.Core.Net.Session
         /// <summary>Seconds a client waits for JoinAccepted before giving up (TDD_02 §19.2).</summary>
         public double JoinTimeout = 5.0;
 
+        /// <summary>Transport connect attempts within the join window (a first UDP failure is retried).</summary>
+        public int ConnectAttempts = 3;
+
+        /// <summary>Seconds between transport connect attempts.</summary>
+        public double ConnectRetryDelay = 0.5;
+
         /// <summary>Seconds between client clock pings.</summary>
         public double PingInterval = 1.0;
 

@@ -41,6 +41,10 @@ namespace LastGround.Core.Net.Session
         double _nextRosterRefresh;
         bool _rosterDirty;
         bool _transportConnected;
+        string _joinAddress;
+        ushort _joinPort;
+        int _connectAttempts;
+        double _retryAt = -1;
 
         public NetSession(INetLinkFactory factory, SessionConfig config)
         {
@@ -101,13 +105,23 @@ namespace LastGround.Core.Net.Session
             Role = RunRole.Client;
             LastRejectReason = JoinRejectReason.None;
             _clock.Reset();
+            _joinAddress = address;
+            _joinPort = port;
+            _connectAttempts = 0;
+            _retryAt = -1;
+            _joinDeadline = _now + _config.JoinTimeout;
+            SetState(SessionState.Connecting);
+            ConnectTransport();
+        }
+
+        void ConnectTransport()
+        {
+            _connectAttempts++;
             _client = _factory.CreateClient();
             _client.Connected += OnClientConnected;
             _client.DataReceived += OnClientData;
             _client.Disconnected += OnClientDisconnected;
-            _joinDeadline = _now + _config.JoinTimeout;
-            SetState(SessionState.Connecting);
-            _client.Connect(address, port);
+            _client.Connect(_joinAddress, _joinPort);
         }
 
         public void SetLocalMeta(ulong meta)
@@ -150,6 +164,11 @@ namespace LastGround.Core.Net.Session
 
             if (Role == RunRole.Client)
             {
+                if (_retryAt >= 0 && now >= _retryAt && State == SessionState.Connecting)
+                {
+                    _retryAt = -1;
+                    ConnectTransport();
+                }
                 if (State == SessionState.Connecting && now >= _joinDeadline)
                 {
                     LastRejectReason = JoinRejectReason.Timeout;
