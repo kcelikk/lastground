@@ -154,5 +154,13 @@
   "region.gas_station": "Benzin İstasyonu",
   "region.hospital_yard": "Hastane Avlusu",
   "map.industrial": "Sanayi Bölgesi",
-  "region.danger": "Tehlike seviyesi {0}"
+  "region.danger": "Tehlike seviyesi {0}",
+  "boss.mutant_brute": "MUTANT BRUTE",
+  "hud.boss_hint": "Sırtındaki tümöre ateş et",
+  "hud.extraction": "TAHLİYE",
+  "hud.extraction_missed": "TAHLİYE KAÇTI — SÜRÜ BÜYÜYOR",
+  "hud.extraction_done": "TAHLİYE EDİLDİ!",
+  "hud.seconds_short": "sn",
+  "results.extraction_bonus": "Tahliye bonusu",
+  "results.banked": "Kasaya giren"
 }

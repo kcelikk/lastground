@@ -154,5 +154,13 @@
   "region.gas_station": "Gas Station",
   "region.hospital_yard": "Hospital Yard",
   "map.industrial": "Industrial District",
-  "region.danger": "Danger level {0}"
+  "region.danger": "Danger level {0}",
+  "boss.mutant_brute": "MUTANT BRUTE",
+  "hud.boss_hint": "Shoot the tumour on its back",
+  "hud.extraction": "EXTRACTION",
+  "hud.extraction_missed": "EXTRACTION MISSED — THE HORDE GROWS",
+  "hud.extraction_done": "EXTRACTED!",
+  "hud.seconds_short": "s",
+  "results.extraction_bonus": "Extraction bonus",
+  "results.banked": "Banked"
 }

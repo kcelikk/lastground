@@ -10,8 +10,9 @@ using UnityEngine.UI;
 namespace LastGround.UI.Run
 {
     /// <summary>
-    /// End-of-run panel (M5, simple): title, survival time, highest threat, kills, revives, coins, and a button back
-    /// to the main menu (leaves the session). Appears when the run outcome ends, on every device.
+    /// End-of-run panel: title (fallen / extracted), survival time, highest threat, kills, revives, run coins, the
+    /// extraction bonus and what this player banks (M8 reward conversion), and a button back to the main menu.
+    /// Appears when the run outcome ends, on every device.
     /// </summary>
     public sealed class ResultsScreen : MonoBehaviour
     {
@@ -25,9 +26,12 @@ namespace LastGround.UI.Run
         ISessionService _service;
         ILocalizationService _localization;
         bool _shown;
+        int _localPlayer;
 
-        public void Bind(RunOutcome outcome, ISessionService service)
+        /// <param name="localPlayer">Index of this device's player (its share of the reward conversion).</param>
+        public void Bind(RunOutcome outcome, ISessionService service, int localPlayer = 0)
         {
+            _localPlayer = localPlayer;
             _outcome = outcome;
             _service = service;
             _localization = AppServices.Get<ILocalizationService>();
@@ -46,7 +50,11 @@ namespace LastGround.UI.Run
                 .Append(_localization.Get("results.threat")).Append("   ").AppendRoman(r.MaxThreat).Append('\n')
                 .Append(_localization.Get("results.kills")).Append("   ").Append(r.Kills).Append('\n')
                 .Append(_localization.Get("results.revives")).Append("   ").Append(r.Revives).Append('\n')
-                .Append(_localization.Get("results.coins")).Append("   ").Append(r.Coins);
+                .Append(_localization.Get("results.coins")).Append("   ").Append(r.Coins).Append('\n');
+            // Reward conversion (TDD_01 §2.2): extraction bonus, then what this player banks.
+            if (r.Extracted && (r.StandingMask & (1 << _localPlayer)) != 0)
+                _text.Append(_localization.Get("results.extraction_bonus")).Append("   +").Append(r.ExtractionBonus).Append('\n');
+            _text.Append("<b>").Append(_localization.Get("results.banked")).Append("   ").Append(r.BankedFor(_localPlayer)).Append("</b>");
             _stats.SetCharArray(_text.Buffer, 0, _text.Length);
             _panel.SetActive(true);
         }

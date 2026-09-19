@@ -310,7 +310,7 @@ namespace LastGround.App
             _input.Blocker = () => _levelUp.BlockingRect;
             _teamPanel.Bind(players, session, _playerDefinition.MaxHealth);
             _teammateIndicators.Bind(players, _camera);
-            _results.Bind(_outcome, _service);
+            _results.Bind(_outcome, _service, session.LocalPlayer.IsValid ? session.LocalPlayer.Value : 0);
             _combatHud.SetOutcome(_outcome);
             _combatHud.SetWallet(parts.Wallet);
             _combatHud.Bind(players, parts.Weapon, parts.Aim, _playerDefinition.MaxHealth, () => CountActive(players) <= 1, mode =>

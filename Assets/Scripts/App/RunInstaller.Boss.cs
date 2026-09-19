@@ -20,6 +20,10 @@ namespace LastGround.App
     {
         [SerializeField] BossDefinition _boss;
         [SerializeField] ExtractionRulesDefinition _extraction;
+        [SerializeField] UI.Run.BossHealthBar _bossBar;
+        [SerializeField] UI.Run.ExtractionHud _extractionHud;
+        /// <summary>Boss Prop Throw debris (concrete).</summary>
+        [SerializeField] Material _debrisMaterial;
 
         /// <summary>Host: boss controller, extraction controller, director summary, boss priority in replication.</summary>
         void BuildBossHost(ref RunParts parts, TickLoop loop, ZombieWorld world, ObjectiveSystem objectives, CrowdReplicationSender sender,
@@ -77,6 +81,21 @@ namespace LastGround.App
             var hordeSync = new HordeSummarySync(parts.Session, parts.Horde);
             _disposables.Add(hordeSync);
             loop.Register(TickPhase.NetSend, hordeSync);
+        }
+
+        /// <summary>Every device: boss telegraphs and weak point, landing zone, boss bar, extraction line, horde ring.</summary>
+        void BuildBossPresentation(in RunParts parts, TickLoop loop, Rendering.TopDownCameraRig cameraRig)
+        {
+            var bossView = new Rendering.Boss.BossView(parts.Boss, _boss, parts.Crowd, cameraRig, _tracerMaterial, _debrisMaterial);
+            _disposables.Add(bossView);
+            loop.Register(TickPhase.Presentation, bossView);
+            var zoneView = new Rendering.Boss.ExtractionZoneView(parts.Extraction, _tracerMaterial, _bloodParticleMaterial);
+            _disposables.Add(zoneView);
+            loop.Register(TickPhase.Presentation, zoneView);
+            if (_bossBar != null) _bossBar.Bind(parts.Boss, _boss);
+            if (_extractionHud != null)
+                _extractionHud.Bind(parts.Extraction, Zones, _camera, (RectTransform)_extractionHud.GetComponentInParent<Canvas>().transform);
+            if (_minimap != null) _minimap.BindHorde(parts.Horde);
         }
 
         /// <summary>Dev bot (-lg-extract): walk to an open landing zone and stay in it.</summary>

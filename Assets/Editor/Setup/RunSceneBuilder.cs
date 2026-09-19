@@ -37,6 +37,8 @@ namespace LastGround.EditorTools.Setup
         static WeaponHud _weaponHud;
         static MinimapHud _minimapHud;
         static RegionCard _regionCard;
+        static BossHealthBar _bossBar;
+        static ExtractionHud _extractionHud;
 
         public static void Build(string path)
         {
@@ -104,9 +106,12 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_boss", BossContentBuilder.Build());
             UiFactory.Assign(installer, "_extraction", BossContentBuilder.Rules());
             UiFactory.Assign(installer, "_regionCard", _regionCard);
+            UiFactory.Assign(installer, "_bossBar", _bossBar);
+            UiFactory.Assign(installer, "_extractionHud", _extractionHud);
             UiFactory.Assign(installer, "_bloodParticleMaterial", bloodParticle);
             UiFactory.Assign(installer, "_bloodSplatMaterial", bloodSplat);
             UiFactory.Assign(installer, "_tracerMaterial", tracer);
+            UiFactory.Assign(installer, "_debrisMaterial", AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/Environment/Materials/SRF_Concrete034.mat"));
             UiFactory.Assign(installer, "_coinMaterial", coin);
             UiFactory.Assign(installer, "_medkitMaterial", medkit);
             UiFactory.Assign(installer, "_ammoMaterial", ammo);
@@ -213,6 +218,8 @@ namespace LastGround.EditorTools.Setup
             _weaponHud = BuildWeaponHud(safe, canvasGo, input);
             _minimapHud = BuildMinimap(safe);
             _regionCard = BuildRegionCard(safe);
+            _bossBar = BuildBossBar(safe);
+            _extractionHud = BuildExtractionHud(safe, canvasGo.transform);
 
             var hud = canvasGo.AddComponent<RunHud>();
             UiFactory.Assign(hud, "_statusLabel", status);
