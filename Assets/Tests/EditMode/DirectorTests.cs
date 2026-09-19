@@ -228,6 +228,10 @@ namespace LastGround.Tests
                 Assert.IsFalse(run.Director.Camping, "not before the camp time");
                 run.Run(10f);
                 Assert.IsTrue(run.Director.Camping, "standing still for longer than the camp time");
+                long before = System.GC.GetAllocatedBytesForCurrentThread();
+                run.Run(3f);
+                long allocated = System.GC.GetAllocatedBytesForCurrentThread() - before;
+                Debug.Log($"[Test] director + world while camping allocated {allocated} B in 90 ticks");
                 run.Players.SetLocal(profile.CampRadius + 5f, 0f, 0f, 0f, 0f);
                 run.Run(1f);
                 Assert.IsFalse(run.Director.Camping, "moving out of the circle resets it");

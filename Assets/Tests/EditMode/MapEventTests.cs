@@ -170,6 +170,25 @@ namespace LastGround.Tests
         }
 
         [Test]
+        public void Events_TickWithoutAllocating()
+        {
+            ObjectiveDefinition drop = Event(ObjectiveKind.SupplyDrop, MapAnchorKind.SupplyDrop);
+            drop.HoldSeconds = 60f;
+            ObjectiveDefinition generator = Event(ObjectiveKind.PowerGenerator, MapAnchorKind.Generator);
+            generator.HoldSeconds = 60f;
+            Rig rig = Create(drop, generator);
+            rig.Run(drop.ArriveSeconds + 1.5f);
+            rig.MoveTo(rig.State.AnchorX, rig.State.AnchorZ);
+            rig.Run(1f);
+            long before = System.GC.GetAllocatedBytesForCurrentThread();
+            rig.Run(3f);
+            long allocated = System.GC.GetAllocatedBytesForCurrentThread() - before;
+            Assert.AreEqual(ObjectivePhase.Active, rig.State.Phase);
+            Assert.Greater(rig.State.Current, 0, "holding during the window");
+            Assert.AreEqual(0, allocated, "event tick: 0 B (TDD_03 §34)");
+        }
+
+        [Test]
         public void IndustrialMap_AnchorsAndInteractables_SitOnWalkableGround_InTheirRegions()
         {
             var map = UnityEditor.AssetDatabase.LoadAssetAtPath<MapDefinition>("Assets/ScriptableObjects/Maps/MAP_Industrial.asset");

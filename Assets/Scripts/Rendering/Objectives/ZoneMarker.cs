@@ -22,6 +22,10 @@ namespace LastGround.Rendering.Objectives
         readonly Mesh _quad;
         readonly Matrix4x4[] _matrices = new Matrix4x4[4];
         readonly Vector4[] _colors = new Vector4[4];
+        // The ring draws one instance: arrays sized to the instance count keep RenderMeshInstanced allocation-free.
+        readonly Matrix4x4[] _ringMatrix = new Matrix4x4[1];
+        readonly Vector4[] _ringColor = new Vector4[1];
+        readonly MaterialPropertyBlock _ringProps = new MaterialPropertyBlock();
         readonly MaterialPropertyBlock _props = new MaterialPropertyBlock();
         readonly Mesh _ring;
         float _time;
@@ -71,19 +75,19 @@ namespace LastGround.Rendering.Objectives
         {
             bool done = _state.Phase == ObjectivePhase.Completed;
             float radius = Mathf.Max(1.2f, _state.Radius);
-            _matrices[0] = Matrix4x4.TRS(new Vector3(_state.AnchorX, Height, _state.AnchorZ), Quaternion.identity, new Vector3(radius, 1f, radius));
+            _ringMatrix[0] = Matrix4x4.TRS(new Vector3(_state.AnchorX, Height, _state.AnchorZ), Quaternion.identity, new Vector3(radius, 1f, radius));
             float pulse = 0.7f + 0.3f * Mathf.Sin(_time * 4f);
-            _colors[0] = done ? new Vector4(0.3f, 1f, 0.4f, 1.6f) : _state.Phase == ObjectivePhase.Announced
+            _ringColor[0] = done ? new Vector4(0.3f, 1f, 0.4f, 1.6f) : _state.Phase == ObjectivePhase.Announced
                 ? new Vector4(1f, 0.35f, 0.2f, 1.4f * pulse) : new Vector4(1f, 0.65f, 0.15f, 1.4f * pulse);
-            _props.SetVectorArray(ColorId, _colors);
+            _ringProps.SetVectorArray(ColorId, _ringColor);
             var rp = new RenderParams(_material)
             {
-                matProps = _props,
+                matProps = _ringProps,
                 shadowCastingMode = ShadowCastingMode.Off,
                 receiveShadows = false,
                 worldBounds = new Bounds(new Vector3(_state.AnchorX, 0f, _state.AnchorZ), new Vector3(radius * 3f, 2f, radius * 3f)),
             };
-            Graphics.RenderMeshInstanced(rp, _ring, 0, _matrices, 1);
+            Graphics.RenderMeshInstanced(rp, _ring, 0, _ringMatrix, 1);
         }
 
         public void Dispose()

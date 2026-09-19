@@ -148,6 +148,9 @@ namespace LastGround.Tests
             }
             Assert.LessOrEqual(system.Healed - healedBefore, profile.MedCharge + 30f * profile.MedRechargePerSecond + 1f, "pool limit");
             Assert.Less(table.Charge[0], 0.2f, "nearly empty");
+            long before = System.GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < 90; i++) system.Tick(1f / 30f, 0);
+            Assert.AreEqual(0, System.GC.GetAllocatedBytesForCurrentThread() - before, "station tick: 0 B");
             players.SetLocal(10f, 0f, 0f, 0f, 0f);
             for (int i = 0; i < 60; i++) system.Tick(1f, 0);
             Assert.Greater(table.Charge[0], 0.7f, "recharges while unused");
