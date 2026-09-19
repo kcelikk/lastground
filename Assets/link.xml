@@ -10,5 +10,8 @@
   </assembly>
   <assembly fullname="LastGround.Save">
     <type fullname="LastGround.Save.SettingsData" preserve="all" />
+    <type fullname="LastGround.Save.ProfileData" preserve="all" />
+    <type fullname="LastGround.Save.ProfileStats" preserve="all" />
+    <type fullname="LastGround.Save.OutfitChoice" preserve="all" />
   </assembly>
 </linker>
