@@ -11,6 +11,7 @@ Yalnızca Editor. Menü: **LastGround/…**
 - `Scenery/IndustrialMapBuilder` (+ `.Regions`) — 200 m sanayi haritası: yollar, 3 bölge, lambalar, çapalar, etkileşimliler, nav grid, `MAP_Industrial`. `SceneryKit` yapı taşları.
 - `Scenery/MinimapBaker` — mini-harita render'ı (grafik gerekir, `-nographics` olmadan); `-lgReview <klasör>` bölge görüntüleri.
 - `Scenery/ConceptArtImport` — `docs/reference/maps` görsellerini menü arka planı ve bölge kartlarına küçültür → `Assets/Art/UI/Concept`.
+- `Setup/BossContentBuilder` — `BOSS_MutantBrute`, 4 saldırı (`BAT_*`), `EXT_Rules`; boss gövdesi `ZMB_Brute` (`ZombieContentBuilder`, TypeIndex 5).
 - `Setup/ObjectiveContentBuilder` — `OBJ_*` olay tanımları ve `MAP_Interactables`.
 
 **Değiştirirsen etkilenenler:** harita düzeni değişince çapaların yürünebilir kalması `MapEventTests` ile doğrulanır; `MinimapBaker` ve `RebuildScenesBatch` yeniden çalıştırılmalı.
