@@ -1,7 +1,7 @@
 # Last Ground — Açık Sorular ve Bekleyen Onaylar
 
 > Bu dosya cevaplanmayı bekleyen soruların tek listesidir. Cevaplanan madde `DECISIONS.md`'ye taşınır ve buradan silinir.
-> Son güncelleme: 2026-09-18
+> Son güncelleme: 2026-09-19 (D3 → D-022)
 
 ## A. Yeni makine / kurulum (M0 öncesi — bloklayıcı)
 
@@ -35,7 +35,6 @@
 |---|---|---|---|
 | D1 | Asset Store bütçesi var mı, varsa yaklaşık ne kadar? (zombie + environment + weapon paketleri) | **M2 öncesi** | ⏳ Bekliyor |
 | D2 | AI destekli texture/UI üretimi için hangi aracı kullanıyorsun? (ticari kullanım şartlarını `ASSET_SOURCES.md`'ye kaydedeceğim) | M2 / M11 | ⏳ Bilgi |
-| D3 | Oyuncu karakteri: tek asker mi, baştan 2 karakter mi? (meta ilerleme için) | M9 | ⏳ Bilgi |
 | D4 | Gore seviyesi: referans görseldeki yoğunluk mu, biraz daha ölçülü mü? (Play yaş derecelendirmesini etkiler) | M11 / M14 | ⏳ Bilgi |
 
 ## E. Benim aldığım, itiraz gelmezse geçerli sayılacak kararlar
