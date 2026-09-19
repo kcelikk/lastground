@@ -24,6 +24,9 @@ namespace LastGround.Gameplay.Combat
     public sealed partial class WeaponController : ITickable, IWeaponStatus
     {
         public const float HitRadius = 0.5f;
+        /// <summary>Body radius the standard <see cref="HitRadius"/> is tuned for; bigger types add the difference.</summary>
+        public const float StandardZombieRadius = 0.45f;
+        readonly float[] _typeExtraRadius;
         const float BarrelHitRadius = 0.45f;
         const float IdleReloadDelay = 1f;
         const float MuzzleForward = 0.6f;
@@ -71,6 +74,7 @@ namespace LastGround.Gameplay.Combat
             _shots = shots;
             _predictions = predictions;
             _catalog = catalog;
+            _typeExtraRadius = catalog != null ? HitQuery.ExtraRadii(catalog.Zombies, StandardZombieRadius) : null;
             _zombieHealth = zombieHealth;
             _dealt = new float[targets.Capacity];
             _dealtGeneration = new byte[targets.Capacity];
@@ -183,7 +187,7 @@ namespace LastGround.Gameplay.Combat
                 math.sincos(angle, out float sin, out float cos);
                 var dir = new float2(baseDir.x * cos - baseDir.y * sin, baseDir.x * sin + baseDir.y * cos);
                 int hits = HitQuery.Cast(_targets, _nav, origin, dir, stats.Range, HitRadius, maxHits, _hitSlots, _hitDistances,
-                    out float end, _presumedDead);
+                    out float end, _presumedDead, _typeExtraRadius);
 
                 for (int k = 0; k < hits; k++)
                 {

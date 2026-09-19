@@ -94,7 +94,7 @@ namespace LastGround.Gameplay.Zombies
         /// <summary>Slows the zombie: the strongest slow and the longest duration win.</summary>
         public void ApplySlow(int slot, float multiplier, float seconds)
         {
-            if ((uint)slot >= (uint)_capacity || _alive[slot] == 0 || multiplier >= 1f) return;
+            if ((uint)slot >= (uint)_capacity || _alive[slot] == 0 || multiplier >= 1f || IsDriven(slot)) return;
             _slowMultiplier[slot] = _slowTimer[slot] > 0f ? math.min(_slowMultiplier[slot], multiplier) : multiplier;
             _slowTimer[slot] = math.max(_slowTimer[slot], seconds);
         }
@@ -102,7 +102,7 @@ namespace LastGround.Gameplay.Zombies
         /// <summary>Stuns: no steering and no attacks; windups, lunges and spits in progress are cancelled.</summary>
         public void ApplyStun(int slot, float seconds)
         {
-            if ((uint)slot >= (uint)_capacity || _alive[slot] == 0 || seconds <= 0f) return;
+            if ((uint)slot >= (uint)_capacity || _alive[slot] == 0 || seconds <= 0f || IsDriven(slot)) return;
             _stunTimer[slot] = math.max(_stunTimer[slot], seconds);
             _stagger[slot] = math.max(_stagger[slot], seconds);
             _lunge[slot] = 0f;

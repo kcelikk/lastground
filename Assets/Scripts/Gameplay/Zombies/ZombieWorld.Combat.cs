@@ -81,6 +81,8 @@ namespace LastGround.Gameplay.Zombies
         {
             if ((uint)slot >= (uint)_capacity || _alive[slot] == 0) return false;
             amount *= _damageTaken[slot];
+            amount *= DrivenDamageScale(slot, direction, amount, sourcePlayer);
+            if (amount <= 0f) return false;
             float2 p = _position[slot];
             _crowd.Hits.Publish(new CrowdHit
             {
@@ -144,7 +146,7 @@ namespace LastGround.Gameplay.Zombies
                 }
 
                 ZombieDefinition definition = _types[_type[i]];
-                if (definition.Behaviour == ZombieBehaviour.Exploder) continue;
+                if (definition.Behaviour == ZombieBehaviour.Exploder || definition.Behaviour == ZombieBehaviour.Boss) continue;
                 switch (_attackPhase[i])
                 {
                     case PhaseReady:

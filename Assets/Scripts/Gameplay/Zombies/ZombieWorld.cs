@@ -16,7 +16,7 @@ namespace LastGround.Gameplay.Zombies
     /// spatial grid and steering, flow fields per player, surround slots, AI LOD and anti-stuck. Results are
     /// mirrored into <see cref="CrowdState"/>, which replication and rendering already consume.
     /// No GameObject, NavMeshAgent, Rigidbody or Collider per zombie.
-    /// Partials: <c>.Targeting</c> (target selection, anti-stuck), <c>.Combat</c> (health, attacks, knockback),
+    /// Partials: <c>.Targeting</c> (target selection, anti-stuck), <c>.Combat</c> (health, attacks, knockback), <c>.Driven</c> (boss body),
     /// <c>.Types</c> (Runner lunge, Spitter spit, Exploder fuse), <c>.Status</c> (burn, slow, stun, elites).
     /// </summary>
     public sealed partial class ZombieWorld : ITickable, IDisposable
@@ -290,7 +290,7 @@ namespace LastGround.Gameplay.Zombies
                 _crowd.PosX[i] = _position[i].x;
                 _crowd.PosZ[i] = _position[i].y;
                 _crowd.Heading[i] = _heading[i];
-                _crowd.Anim[i] = _outState[i];
+                if (!IsDriven(i)) _crowd.Anim[i] = _outState[i];
             }
         }
 
