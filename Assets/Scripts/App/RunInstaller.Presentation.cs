@@ -86,6 +86,7 @@ namespace LastGround.App
             {
                 Weapons = _combat.Weapons, Crowd = parts.Crowd, LocalWeapon = parts.Weapon, Blasts = parts.Blasts, Projectiles = parts.Projectiles,
             });
+            loop.Register(TickPhase.Presentation, new BossAudio(sfx, parts.Players, parts.Boss, _boss, parts.Crowd, parts.Extraction));
 
             _hud.Bind(_service, parts.Crowd);
         }

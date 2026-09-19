@@ -23,6 +23,9 @@ namespace LastGround.Audio
             clips[(int)SfxId.Spit] = Create("sfx_spit", 0.25f, 7u, Spit);
             clips[(int)SfxId.FuseBeep] = Create("sfx_fuse_beep", 0.12f, 8u, Beep);
             clips[(int)SfxId.Swap] = Create("sfx_swap", 0.12f, 9u, Swap);
+            clips[(int)SfxId.BossRoar] = Create("sfx_boss_roar", 1.8f, 10u, Roar);
+            clips[(int)SfxId.BossSlam] = Create("sfx_boss_slam", 1.4f, 11u, Slam);
+            clips[(int)SfxId.RotorThump] = Create("sfx_rotor", 0.14f, 12u, Rotor);
             return clips;
         }
 
@@ -96,6 +99,34 @@ namespace LastGround.Audio
             lowPass += (noise - lowPass) * 0.6f;
             float click = t < 0.02f || (t > 0.07f && t < 0.09f) ? 1f : 0f;
             return lowPass * click * 0.8f;
+        }
+
+        /// <summary>Deep, rough growl rising then falling (the boss's roar).</summary>
+        static float Roar(float t, float noise, ref float lowPass)
+        {
+            lowPass += (noise - lowPass) * 0.12f;
+            float envelope = Mathf.Clamp01(t * 4f) * Mathf.Exp(-Mathf.Max(0f, t - 0.9f) * 3f);
+            float frequency = 62f + 22f * Mathf.Sin(Mathf.PI * Mathf.Clamp01(t / 1.6f));
+            float growl = Mathf.Sin(2f * Mathf.PI * frequency * t) * (0.55f + 0.45f * Mathf.Sin(2f * Mathf.PI * 31f * t));
+            float rasp = lowPass * (0.6f + 0.4f * Mathf.Sin(2f * Mathf.PI * 47f * t));
+            return (growl * 0.7f + rasp * 1.3f) * envelope;
+        }
+
+        /// <summary>Concrete-cracking impact with a long sub rumble.</summary>
+        static float Slam(float t, float noise, ref float lowPass)
+        {
+            lowPass += (noise - lowPass) * 0.04f;
+            float sub = Mathf.Sin(2f * Mathf.PI * Mathf.Lerp(48f, 26f, t / 1.4f) * t) * Mathf.Exp(-t * 2.6f);
+            float crack = noise * Mathf.Exp(-t * 40f);
+            return sub * 1.1f + lowPass * 3.5f * Mathf.Exp(-t * 3.2f) + crack * 0.6f;
+        }
+
+        /// <summary>One chopping blade pass: a low, band-limited whump.</summary>
+        static float Rotor(float t, float noise, ref float lowPass)
+        {
+            lowPass += (noise - lowPass) * 0.1f;
+            float whump = Mathf.Sin(2f * Mathf.PI * 70f * t) * Mathf.Sin(Mathf.PI * Mathf.Clamp01(t / 0.14f));
+            return (whump * 0.6f + lowPass * 1.2f) * Mathf.Sin(Mathf.PI * Mathf.Clamp01(t / 0.14f));
         }
 
         static float Hurt(float t, float noise, ref float lowPass)
