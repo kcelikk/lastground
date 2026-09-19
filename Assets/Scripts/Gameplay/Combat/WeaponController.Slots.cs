@@ -35,6 +35,12 @@ namespace LastGround.Gameplay.Combat
         /// <summary>Grenade throws go here (host: LoadoutAuthority; client: network). Null = no grenades.</summary>
         public IGrenadeSink Grenades { get; set; }
 
+        /// <summary>Barrels and fuel tanks the local player's bullets can hit (M7). Null = none.</summary>
+        public Interactables.InteractableTable Interactables { get; set; }
+
+        /// <summary>Where barrel hits go (host: InteractableSystem; client: network).</summary>
+        public Interactables.IInteractableHitSink InteractableHits { get; set; }
+
         /// <summary>Kept pointed at the weapon in hand (range, assist cone).</summary>
         public AimResolver Aim { get; set; }
 

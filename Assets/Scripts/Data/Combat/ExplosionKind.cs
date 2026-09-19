@@ -6,5 +6,7 @@ namespace LastGround.Data.Combat
         Grenade = 0,
         Exploder = 1,
         Volatile = 2,
+        /// <summary>Explosive barrel or fuel tank (M7 interactables).</summary>
+        Barrel = 3,
     }
 }

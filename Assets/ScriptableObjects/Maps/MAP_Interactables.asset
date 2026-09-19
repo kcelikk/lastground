@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 750e14eb4763a6388a2de2a308156cd0, type: 3}
+  m_Name: MAP_Interactables
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Map.InteractableProfile
+  BarrelHealth: 30
+  BarrelBlast:
+    Radius: 4.5
+    Damage: 130
+    EdgeDamageScale: 0.3
+    Knockback: 7
+    StunSeconds: 0.8
+    PlayerDamageScale: 0.35
+  TankHealth: 60
+  TankBlast:
+    Radius: 6.5
+    Damage: 220
+    EdgeDamageScale: 0.3
+    Knockback: 9
+    StunSeconds: 1.2
+    PlayerDamageScale: 0.35
+  RespawnSeconds: 120
+  HitRadius: 0.45
+  AmmoRadius: 2
+  AmmoCooldown: 45
+  MedRadius: 2.2
+  MedHealPerSecond: 12
+  MedCharge: 150
+  MedRechargePerSecond: 2
