@@ -6,6 +6,7 @@ using LastGround.Core.Net.Link;
 using LastGround.Core.Net.Protocol;
 using LastGround.Core.Net.Wire;
 using LastGround.Core.Run;
+using Unity.Profiling;
 
 namespace LastGround.Core.Net.Session
 {
@@ -335,10 +336,22 @@ namespace LastGround.Core.Net.Session
             return raw;
         }
 
+        /// <summary>One profiler marker per message id ("LG.Msg.21"): allocation captures show which handler allocates.</summary>
+        static readonly ProfilerMarker[] DispatchMarkers = CreateDispatchMarkers();
+
+        static ProfilerMarker[] CreateDispatchMarkers()
+        {
+            var markers = new ProfilerMarker[256];
+            for (int i = 0; i < markers.Length; i++)
+                markers[i] = new ProfilerMarker("LG.Msg." + i.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            return markers;
+        }
+
         void Dispatch(PlayerId sender, byte id, ref NetReader reader)
         {
             var list = _handlers[id];
             if (list == null) return;
+            using ProfilerMarker.AutoScope scope = DispatchMarkers[id].Auto();
             for (int i = 0; i < list.Count; i++)
             {
                 NetReader copy = reader;
