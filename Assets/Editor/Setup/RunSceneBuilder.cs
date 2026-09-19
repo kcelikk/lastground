@@ -111,7 +111,7 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_bloodParticleMaterial", bloodParticle);
             UiFactory.Assign(installer, "_bloodSplatMaterial", bloodSplat);
             UiFactory.Assign(installer, "_tracerMaterial", tracer);
-            UiFactory.Assign(installer, "_debrisMaterial", AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/Environment/Materials/SRF_Concrete034.mat"));
+            UiFactory.Assign(installer, "_debrisMaterial", AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/Environment/Materials/SRF_Concrete042A_roof.mat"));
             UiFactory.Assign(installer, "_coinMaterial", coin);
             UiFactory.Assign(installer, "_medkitMaterial", medkit);
             UiFactory.Assign(installer, "_ammoMaterial", ammo);

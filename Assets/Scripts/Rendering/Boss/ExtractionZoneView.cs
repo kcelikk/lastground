@@ -77,9 +77,10 @@ namespace LastGround.Rendering.Boss
             float progress = _state.Phase == ExtractionPhase.Extracted ? 1f : _state.Progress;
             _rotorAngle += dt * (400f + 500f * progress);
             float size = Mathf.Lerp(5f, 7.5f, progress);
-            _matrix[0] = Matrix4x4.TRS(centre + Vector3.up * 0.01f, Quaternion.Euler(0f, _rotorAngle, 0f), new Vector3(size, 1f, size));
+            // The particle material is not instanced: a plain draw.
+            Matrix4x4 m = Matrix4x4.TRS(centre + Vector3.up * 0.01f, Quaternion.Euler(0f, _rotorAngle, 0f), new Vector3(size, 1f, size));
             var rp = new RenderParams(_shadowMaterial) { shadowCastingMode = ShadowCastingMode.Off, receiveShadows = false };
-            Graphics.RenderMeshInstanced(rp, _rotor, 0, _matrix, 1);
+            Graphics.RenderMesh(rp, _rotor, 0, m);
         }
 
         void Emit(Mesh mesh, Vector3 position, float radius, Color color, float intensity)

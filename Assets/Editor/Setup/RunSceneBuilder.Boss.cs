@@ -30,6 +30,7 @@ namespace LastGround.EditorTools.Setup
             fillRect.offsetMin = new Vector2(3f, 3f);
             fillRect.offsetMax = new Vector2(-3f, -3f);
             var fill = fillRect.gameObject.AddComponent<Image>();
+            fill.sprite = WhiteSprite();
             fill.color = new Color(0.62f, 0.08f, 0.06f);
             fill.type = Image.Type.Filled;
             fill.fillMethod = Image.FillMethod.Horizontal;
@@ -37,7 +38,8 @@ namespace LastGround.EditorTools.Setup
             RectTransform phase2 = Mark("Phase2Mark", fillRect);
             RectTransform enraged = Mark("EnragedMark", fillRect);
 
-            var bar = root.gameObject.AddComponent<BossHealthBar>();
+            // The component sits on the always-active safe area: hiding the bar must not stop its Update.
+            var bar = safe.gameObject.AddComponent<BossHealthBar>();
             UiFactory.Assign(bar, "_root", root.gameObject);
             UiFactory.Assign(bar, "_name", name);
             UiFactory.Assign(bar, "_fill", fill);
@@ -68,6 +70,7 @@ namespace LastGround.EditorTools.Setup
             RectTransform barRect = UiFactory.Rect("Hold", root);
             UiFactory.Place(barRect, new Vector2(0.5f, 0f), Vector2.zero, new Vector2(460f, 8f));
             var bar = barRect.gameObject.AddComponent<Image>();
+            bar.sprite = WhiteSprite();
             bar.color = ExtractionBlue;
             bar.type = Image.Type.Filled;
             bar.fillMethod = Image.FillMethod.Horizontal;
@@ -82,8 +85,8 @@ namespace LastGround.EditorTools.Setup
             arrowImage.color = new Color(ExtractionBlue.r, ExtractionBlue.g, ExtractionBlue.b, 0.95f);
             arrowImage.raycastTarget = false;
 
-            var hud = root.gameObject.AddComponent<ExtractionHud>();
-            UiFactory.Assign(hud, "_root", line.transform.parent.gameObject);
+            var hud = safe.gameObject.AddComponent<ExtractionHud>();
+            UiFactory.Assign(hud, "_root", root.gameObject);
             UiFactory.Assign(hud, "_line", line);
             UiFactory.Assign(hud, "_progress", bar);
             UiFactory.Assign(hud, "_arrow", arrow);

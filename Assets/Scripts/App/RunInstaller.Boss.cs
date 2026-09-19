@@ -99,12 +99,14 @@ namespace LastGround.App
         }
 
         /// <summary>Dev bot (-lg-extract): walk to an open landing zone and stay in it.</summary>
-        static Vector2 DevExtractionDirection(PlayerStateTable players, ExtractionState extraction)
+        static Vector2 DevExtractionDirection(PlayerStateTable players, ExtractionState extraction, DevPathSeeker seeker)
         {
             int me = players.Local.IsValid ? players.Local.Value : -1;
             if (me < 0 || DevAutomation.ExtractAt < 0f || !extraction.IsOpen || !players.CanAct(me)) return Vector2.zero;
-            var to = new Vector2(extraction.X - players.X[me], extraction.Z - players.Z[me]);
-            return to.sqrMagnitude > extraction.Radius * extraction.Radius * 0.25f ? to.normalized : Vector2.zero;
+            var from = new Unity.Mathematics.float2(players.X[me], players.Z[me]);
+            var goal = new Unity.Mathematics.float2(extraction.X, extraction.Z);
+            if (Unity.Mathematics.math.distancesq(from, goal) <= extraction.Radius * extraction.Radius * 0.25f) return Vector2.zero;
+            return seeker.Direction(from, goal);
         }
     }
 }

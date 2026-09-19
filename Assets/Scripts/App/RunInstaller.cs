@@ -250,10 +250,11 @@ namespace LastGround.App
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             // Soak-test bot: walk to a downed teammate so revives happen without hands on the phones.
             Gameplay.Extraction.ExtractionState extractionState = parts.Extraction;
+            var seeker = new DevPathSeeker(parts.Nav);
             loop.Register(TickPhase.Input, new TickAction(_ =>
             {
                 Vector2 seek = DevReviveDirection(players);
-                TouchTwinStickInput.DevSeek = seek != Vector2.zero ? seek : DevExtractionDirection(players, extractionState);
+                TouchTwinStickInput.DevSeek = seek != Vector2.zero ? seek : DevExtractionDirection(players, extractionState, seeker);
             }));
             if (DevAutomation.AutoGrenades) loop.Register(TickPhase.Input, new DevGrenadier(players, parts.Loadouts, parts.Crowd));
 #endif

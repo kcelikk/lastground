@@ -173,8 +173,9 @@ namespace LastGround.Rendering.Boss
             float flightStart = a.TelegraphSeconds - a.FlightSeconds;
             if (age < flightStart || _chunkMaterial == null) return;
             float k = Mathf.Clamp01((age - flightStart) / Mathf.Max(0.05f, a.FlightSeconds));
-            Vector3 p = Vector3.Lerp(origin + Vector3.up * TumourHeight, target, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * 6f);
-            _matrix[0] = Matrix4x4.TRS(p, Quaternion.Euler(age * 240f, age * 170f, 0f), new Vector3(1.4f, 1f, 1.2f));
+            // A low arc: a high one passes right under the top-down camera and fills the screen.
+            Vector3 p = Vector3.Lerp(origin + Vector3.up * 3f, target, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * 2.5f);
+            _matrix[0] = Matrix4x4.TRS(p, Quaternion.Euler(age * 240f, age * 170f, 0f), new Vector3(0.9f, 0.7f, 0.8f));
             var rp = new RenderParams(_chunkMaterial) { shadowCastingMode = ShadowCastingMode.Off, receiveShadows = false };
             Graphics.RenderMeshInstanced(rp, _chunk, 0, _matrix, 1);
         }
