@@ -3,7 +3,7 @@
 _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 
 ## Şu an neredeyiz
-- **Branch:** `m7-map-events` (M6 main'e merge edildi ve push edildi).
+- **Branch:** `m7-map-events` (M6 main'e merge edildi ve push edildi; M7 commit'leri yalnızca yerelde).
 - **M7 — Harita, Olaylar ve Çevre: onay bekliyor** (branch `m7-map-events`, merge/push yok). Rapor: `docs/reports/M7_REPORT.md`.
 - EditMode testleri: **163 / 163** geçiyor. OnePlus 30 FPS, Redmi 60 FPS, oyun kodu GC 0 B/kare.
 - Harita yeniden üretimi: `MinimapBaker.BakeBatch` (grafikli) → `RebuildScenesBatch`. `ProjectSetup` QualitySettings MSAA'yı 0'a çekiyor; commit'lemeden `git checkout ProjectSettings/QualitySettings.asset`.
@@ -12,9 +12,8 @@ _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 - `ProjectSettings` (MSAA 2x, ışık ayarları) kullanıcı onayıyla tutuldu.
 
 ## Sonraki oturumda ilk adımlar
-1. Kullanıcıdan M6 onayını al.
-2. Onay gelince: `M6_REPORT.md` durumunu "Onaylandı" yap → commit → `git checkout main && git merge --no-ff m6-combat-content` → `git push origin main m6-combat-content` → `git checkout -b m7-map-events`.
-3. **M7 — Map, Events & Environment** (TDD_03 §36): 3 bölge (sonra 7), portal grafı, bölge culling, mini-map, lighting grid bake, 6 event + görevler (D-019), çevre etkileşimlileri (varil, yakıt tankı). Görsel hedef: `docs/reference/maps` (sanayi bölgesi, dökümhane, benzin istasyonu, hastane + tahliye) ve `lastground-img-1.png` atmosferi.
+1. Kullanıcıdan M7 onayını al (rapor: `docs/reports/M7_REPORT.md`; OPEN ISSUES'taki MSAA kararı dahil).
+2. Onay gelince: `M7_REPORT.md` durumunu "Onaylandı" yap → commit → `git checkout main && git merge --no-ff m7-map-events` → `git push origin main m7-map-events` → M8 branch'i (TDD_03 §36; VirtualHorde M8'e ertelendi).
 
 ## Tamamlanan milestone'lar
 | M | Konu | Durum |
