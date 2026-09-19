@@ -9,8 +9,9 @@ using LastGround.Gameplay.Objectives;
 namespace LastGround.Networking.Replication
 {
     /// <summary>
-    /// Objective state host → clients (TDD_01 §12.4: ObjectiveState, reliable, on change, counter updates merged to
-    /// ≤ 4 Hz; phase changes go out at once). 8 B.
+    /// Objective state host → clients (TDD_01 §12.1 EventState + §12.4 ObjectiveState, reliable, on change, counter
+    /// updates merged to ≤ 4 Hz; phase changes go out at once): kind, region, anchor, radius, stage, counter, seconds
+    /// left and the generator sentry. 23 B.
     /// </summary>
     public sealed class ObjectiveSync : ITickable, IDisposable
     {
@@ -47,6 +48,15 @@ namespace LastGround.Networking.Replication
             w.WriteUShort((ushort)Math.Min(ushort.MaxValue, _state.Current));
             w.WriteUShort((ushort)Math.Min(ushort.MaxValue, _state.Target));
             w.WriteByte((byte)_state.Phase);
+            w.WriteByte((byte)_state.Kind);
+            w.WriteByte(_state.Stage);
+            w.WriteUShort(Quantize.Position(_state.AnchorX));
+            w.WriteUShort(Quantize.Position(_state.AnchorZ));
+            w.WriteByte((byte)Math.Min(255f, _state.Radius * 10f));
+            w.WriteUShort((ushort)Math.Min(ushort.MaxValue, Math.Max(0, _state.SecondsLeft)));
+            w.WriteUShort(Quantize.Position(_state.TurretX));
+            w.WriteUShort(Quantize.Position(_state.TurretZ));
+            w.WriteByte((byte)Math.Min(255, _state.TurretSeconds));
             _session.SendToClients(NetChannel.Reliable);
         }
 
@@ -62,7 +72,22 @@ namespace LastGround.Networking.Replication
             int current = r.ReadUShort();
             int target = r.ReadUShort();
             var phase = (ObjectivePhase)r.ReadByte();
-            if (!r.Failed) _state.Set(instance, zone, current, target, phase);
+            var kind = (Data.Objectives.ObjectiveKind)r.ReadByte();
+            byte stage = r.ReadByte();
+            float x = Quantize.Position(r.ReadUShort());
+            float z = Quantize.Position(r.ReadUShort());
+            float radius = r.ReadByte() / 10f;
+            int seconds = r.ReadUShort();
+            float tx = Quantize.Position(r.ReadUShort());
+            float tz = Quantize.Position(r.ReadUShort());
+            int turret = r.ReadByte();
+            if (r.Failed) return;
+            if (instance != _state.Instance || kind != _state.Kind) _state.SetEvent(kind, x, z, radius);
+            else _state.MoveAnchor(x, z);
+            _state.SetStage(stage);
+            _state.SetSeconds(seconds);
+            _state.SetTurret(tx, tz, turret);
+            _state.Set(instance, zone, current, target, phase);
         }
     }
 }

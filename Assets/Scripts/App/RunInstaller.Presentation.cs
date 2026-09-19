@@ -8,6 +8,8 @@ using LastGround.Rendering;
 using LastGround.Rendering.Carnage;
 using LastGround.Rendering.Combat;
 using LastGround.Rendering.Crowd;
+using LastGround.Rendering.Interactables;
+using LastGround.Gameplay.Objectives;
 using LastGround.Rendering.Lighting;
 using LastGround.Rendering.Loot;
 using LastGround.Rendering.Objectives;
@@ -20,6 +22,10 @@ namespace LastGround.App
     {
         ZombieRenderSystem _crowdRenderer;
 
+        /// <summary>Scene naming shared with the editor map builder.</summary>
+        const string MapRootName = "Map_Industrial";
+        const string InteractablePrefix = "Interactable_";
+
         /// <summary>
         /// Presentation phase, in order: remote shots (feeds the shot stream), camera, crowd, blood, tracers,
         /// damage numbers, players, sound. None of it knows whether an event was simulated here or replicated.
@@ -27,12 +33,17 @@ namespace LastGround.App
         void BuildPresentation(RunParts parts, TickLoop loop)
         {
             loop.Register(TickPhase.Presentation, new RemoteShotEmitter(parts.Players, parts.Crowd, parts.Nav, parts.Loadouts, parts.Shots));
+            if (!parts.Session.IsAuthority)
+                loop.Register(TickPhase.Presentation, new RemoteTurretEmitter(parts.Objective, parts.Crowd, parts.Nav, parts.Shots));
+            GameObject mapRoot = GameObject.Find(MapRootName);
+            loop.Register(TickPhase.Presentation, new InteractableViews(parts.Interactables, mapRoot != null ? mapRoot.transform : null, InteractablePrefix));
             // The camera looks ahead with the raw sticks: auto-aim target switches must not swing it around.
             var cameraRig = new TopDownCameraRig(_camera, parts.Players, _input, _cameraProfile) { Weapon = parts.Weapon };
             loop.Register(TickPhase.Presentation, cameraRig);
 
             float worldSize = parts.Nav.Width * parts.Nav.CellSize;
-            _disposables.Add(new LightingGrid(new Vector2(parts.Nav.Origin.x, parts.Nav.Origin.y), worldSize, 256, LightingGrid.GreyboxLamps()));
+            LightingGrid.Lamp[] lamps = _map != null ? LightingGrid.FromMap(_map) : LightingGrid.GreyboxLamps();
+            _disposables.Add(new LightingGrid(new Vector2(parts.Nav.Origin.x, parts.Nav.Origin.y), worldSize, 256, lamps));
             _crowdRenderer = new ZombieRenderSystem(parts.Crowd, _crowdCatalog, _camera, parts.Preset, parts.Deaths, parts.Hits)
             {
                 EliteGlows = EliteGlows(),
@@ -44,7 +55,7 @@ namespace LastGround.App
             _disposables.Add(blood);
             loop.Register(TickPhase.Presentation, blood);
 
-            var zoneMarker = new ZoneMarker(parts.Objective, _zones, _tracerMaterial);
+            var zoneMarker = new ZoneMarker(parts.Objective, Zones, _tracerMaterial);
             _disposables.Add(zoneMarker);
             loop.Register(TickPhase.Presentation, zoneMarker);
             var tracers = new TracerSystem(parts.Shots, _tracerMaterial, parts.Preset.TracerCap);

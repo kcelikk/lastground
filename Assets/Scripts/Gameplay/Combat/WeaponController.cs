@@ -24,6 +24,7 @@ namespace LastGround.Gameplay.Combat
     public sealed partial class WeaponController : ITickable, IWeaponStatus
     {
         public const float HitRadius = 0.5f;
+        const float BarrelHitRadius = 0.45f;
         const float IdleReloadDelay = 1f;
         const float MuzzleForward = 0.6f;
         const float FiringFlagHold = 0.2f;
@@ -213,6 +214,7 @@ namespace LastGround.Gameplay.Combat
                     }
                 }
 
+                end = HitBarrel(me, origin, dir, end, stats, seed, pellet);
                 float2 muzzle = origin + baseDir * MuzzleForward;
                 float2 tip = origin + dir * math.max(end, MuzzleForward);
                 _shots?.Publish(new ShotFired
@@ -221,6 +223,30 @@ namespace LastGround.Gameplay.Combat
                     FirstPellet = pellet == 0, Local = true,
                 });
             }
+        }
+
+        /// <summary>
+        /// The pellet's first intact barrel or fuel tank before <paramref name="end"/> takes its damage (host checks it);
+        /// the tracer then stops there. Returns the new end distance.
+        /// </summary>
+        float HitBarrel(int me, float2 origin, float2 dir, float end, in WeaponStats stats, uint seed, int pellet)
+        {
+            if (Interactables == null || InteractableHits == null) return end;
+            int best = -1;
+            float bestDistance = end;
+            for (int i = 0; i < Interactables.Count; i++)
+            {
+                if (!Interactables.Intact[i] || !Interactables.IsExplosive(i)) continue;
+                float2 to = Interactables.Position[i] - origin;
+                float along = math.dot(to, dir);
+                if (along <= 0f || along >= bestDistance) continue;
+                if (math.lengthsq(to - dir * along) > BarrelHitRadius * BarrelHitRadius) continue;
+                best = i;
+                bestDistance = along;
+            }
+            if (best < 0) return end;
+            InteractableHits.HitInteractable(me, best, DamageResolver.Resolve(stats, seed, pellet, out _));
+            return bestDistance;
         }
 
         void TrackDamage(int slot, byte generation, float damage)

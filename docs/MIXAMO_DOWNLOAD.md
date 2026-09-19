@@ -9,7 +9,7 @@ Lisans: Mixamo karakter ve animasyonları oyuna gömülü olarak ticari kullanı
 Assets/ThirdParty/Mixamo/Characters/   ← karakter FBX'leri
 Assets/ThirdParty/Mixamo/Animations/   ← animasyon FBX'leri
 ```
-Klasörleri ben oluşturmadım; dosyaları dosya yöneticisiyle bu yollara kopyalaman yeterli (Unity açık olmasa da olur).
+**Durum (2026-09-19): tamamlandı.** 8 karakter + 18 hareket indirildi ve oyuna bake edildi (M6). Ham FBX'ler git dışında (kullanıcı kararı); yeniden indirme: `MIXAMO_TOKEN=… python3 Tools/Mixamo/mixamo_fetch.py`. Ayrıntı: [MIXAMO_STATUS.md](MIXAMO_STATUS.md).
 
 ## 1. Karakterler — mixamo.com → Characters → aramaya `zombie`, sonra `mutant`
 İndirme ayarı: **Format: FBX for Unity (.fbx) · Pose: T-pose**
@@ -40,4 +40,4 @@ Emin olmadığın modelleri de indir; ben referansa ve mobil bütçeye (poligon,
 | Runner lunge | `zombie biting` veya `jump attack` | Sıçrayarak saldırı |
 | Spitter | `zombie scream` veya `throw` | Tükürme telegraph'ı |
 
-Bitince bana haber ver; import ayarlarını, bake'i (kemik texture'ı + LOD + texture array) ve doğrulamayı ben yaparım.
+Entegrasyon M6'da yapıldı: Humanoid import + ayrı FBX kliplerinin her gövdeye retarget edilerek örneklenmesi (`MixamoImport`, `PoseSampler`), gövde başına albedo (UDIM parçaları birleşik), kemik texture + LOD bake (`CrowdBaker`), tip görünümleri (`CrowdCatalogBuilder`).

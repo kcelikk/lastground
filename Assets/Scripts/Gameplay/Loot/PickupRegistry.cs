@@ -184,6 +184,12 @@ namespace LastGround.Gameplay.Loot
             }
         }
 
+        /// <summary>Objective reward: an instanced weapon pickup for everyone.</summary>
+        public void DropWeaponAt(float2 at) => DropWeapon(at);
+
+        /// <summary>Objective reward: an instanced grenade pickup for everyone.</summary>
+        public void DropGrenadeAt(float2 at) => Spawn(PickupType.Grenade, at, 1, _loot.GrenadeLifetime, AllPlayersMask());
+
         bool IsPrimary(int i) => Weapons[i] != null && Weapons[i].Slot == Data.Weapons.WeaponSlot.Primary;
 
         void AddCoin(float2 position, int value)

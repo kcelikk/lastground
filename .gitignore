@@ -72,3 +72,10 @@ Thumbs.db
 !/Assets/ThirdParty/Mixamo/Characters/README.md.meta
 !/Assets/ThirdParty/Mixamo/Animations/README.md
 !/Assets/ThirdParty/Mixamo/Animations/README.md.meta
+
+# CC0 environment sources (Poly Haven, ambientCG): large; restored by Tools/Environment/fetch_cc0.py.
+# Processed props/materials under Assets/Art/Environment are committed.
+/Assets/ThirdParty/PolyHaven/
+/Assets/ThirdParty/PolyHaven.meta
+/Assets/ThirdParty/AmbientCG/
+/Assets/ThirdParty/AmbientCG.meta

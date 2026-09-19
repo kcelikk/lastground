@@ -66,6 +66,14 @@ namespace LastGround.Data.Director
         public Vector2Int SurroundSectorSize = new Vector2Int(4, 6);
         public float PackSpreadDeg = 18f;
 
+        [Header("Anti-camping (TDD_01 §9.8)")]
+        /// <summary>The team's centre counts as "in one spot" while it stays within this radius.</summary>
+        public float CampRadius = 12f;
+        public float CampSeconds = 45f;
+        public float CampRateMultiplier = 1.5f;
+        /// <summary>Spitter card weight multiplier while camping.</summary>
+        public float CampSpitterWeight = 3f;
+
         [Header("HUD HORDE label thresholds (CALM · LOW · MEDIUM · HIGH · EXTREME)")]
         public float LowThreshold = 0.15f;
         public float MediumThreshold = 0.35f;

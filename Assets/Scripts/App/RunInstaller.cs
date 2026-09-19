@@ -22,6 +22,7 @@ using LastGround.Gameplay.Combat;
 using LastGround.Gameplay.Crowd;
 using LastGround.Gameplay.Loot;
 using LastGround.Gameplay.Director;
+using LastGround.Gameplay.Interactables;
 using LastGround.Gameplay.Navigation;
 using LastGround.Gameplay.Objectives;
 using LastGround.Gameplay.Players;
@@ -55,6 +56,7 @@ namespace LastGround.App
         [SerializeField] Camera _camera;
         [SerializeField] Transform _worldRoot;
         [SerializeField] CrowdVisualCatalog _crowdCatalog;
+        [SerializeField] MapDefinition _map;
         [SerializeField] NavGridAsset _navGrid;
         [SerializeField] CombatCatalog _combat;
         [SerializeField] SpawnDeckDefinition _spawnDeck;
@@ -68,6 +70,11 @@ namespace LastGround.App
         [SerializeField] LootDefinition _loot;
         [SerializeField] MapZoneSet _zones;
         [SerializeField] ObjectiveDefinition _clearArea;
+        /// <summary>Every map event (M7); empty = Clear Area only.</summary>
+        [SerializeField] ObjectiveDefinition[] _objectives;
+        [SerializeField] InteractableProfile _interactables;
+
+        ObjectiveDefinition[] Events => _objectives != null && _objectives.Length > 0 ? _objectives : new[] { _clearArea };
         [SerializeField] Material _coinMaterial;
         [SerializeField] Material _medkitMaterial;
         [SerializeField] Material _ammoMaterial;
@@ -90,6 +97,21 @@ namespace LastGround.App
         [SerializeField] ObjectivePanel _objectivePanel;
         [SerializeField] ObjectiveIndicator _objectiveIndicator;
         [SerializeField] WeaponHud _weaponHud;
+        [SerializeField] MinimapHud _minimap;
+        [SerializeField] RegionCard _regionCard;
+
+        /// <summary>The map's regions, or the M5 greybox zones when no map is assigned.</summary>
+        MapZoneSet Zones => _map != null && _map.Regions != null ? _map.Regions : _zones;
+
+        NavGridAsset NavAsset => _map != null && _map.NavGrid != null ? _map.NavGrid : _navGrid;
+
+        /// <summary>Player start: the map's spawn points by player index, else the M4 line.</summary>
+        Vector2 SpawnPoint(int player)
+        {
+            if (_map != null && _map.PlayerSpawns != null && _map.PlayerSpawns.Length > 0)
+                return _map.PlayerSpawns[player % _map.PlayerSpawns.Length];
+            return new Vector2(player * 3f - 4.5f, -3f);
+        }
 
         readonly List<System.IDisposable> _disposables = new List<System.IDisposable>();
         SessionService _service;
@@ -118,6 +140,8 @@ namespace LastGround.App
             public PickupCollector Collector;
             public ExplosionSystem Explosions;
             public ProjectileSystem ProjectileSim;
+            public InteractableTable Interactables;
+            public InteractableSystem InteractableHost;
             public ZombieWorld World;
             public CombatAuthority Authority;
             public PlayerHealthSystem Health;
@@ -150,7 +174,7 @@ namespace LastGround.App
             {
                 Session = session,
                 Preset = AppServices.Get<QualityService>().Current,
-                Nav = benchmark || _navGrid == null ? NavGrid.Open((int)BenchmarkWorldSize) : NavGrid.FromAsset(_navGrid),
+                Nav = benchmark || NavAsset == null ? NavGrid.Open((int)BenchmarkWorldSize) : NavGrid.FromAsset(NavAsset),
                 Players = new PlayerStateTable { Local = session.LocalPlayer },
                 Shots = new EventChannel<ShotFired>(128),
                 Status = new RunStatus(),
@@ -163,6 +187,7 @@ namespace LastGround.App
                 Loadouts = new LoadoutTable(_combat.Weapons),
                 Projectiles = new ProjectileTable(_combat.Projectiles),
                 Blasts = new EventChannel<ExplosionFx>(32),
+                Interactables = new InteractableTable(_map),
             };
             _disposables.Add(parts.Nav);
             float worldSize = parts.Nav.Width * parts.Nav.CellSize;
@@ -188,6 +213,9 @@ namespace LastGround.App
             var loadoutSync = new LoadoutSync(session, parts.Loadouts, parts.LoadoutAuthority);
             _disposables.Add(loadoutSync);
             loop.Register(TickPhase.NetSend, loadoutSync);
+            var interactableSync = new InteractableSync(session, parts.Interactables, parts.InteractableHost);
+            _disposables.Add(interactableSync);
+            loop.Register(TickPhase.NetSend, interactableSync);
             var fxSync = new CombatFxSync(session, parts.Projectiles, parts.Blasts);
             _disposables.Add(fxSync);
             loop.Register(session.IsAuthority ? TickPhase.NetSend : TickPhase.Presentation, fxSync);
@@ -222,6 +250,7 @@ namespace LastGround.App
                 session.IsAuthority ? null : parts.Crowd as CrowdReplica, _combat)
             {
                 Builds = parts.Builds, Grenades = loadoutSync, Aim = parts.Aim, Pickups = parts.Pickups,
+                Interactables = parts.Interactables, InteractableHits = interactableSync,
             };
             parts.Aim.Ignore = parts.Weapon.PresumedDeadMask;
             _input.GrenadeTapDistance = _combat.TapThrowDistance;
@@ -235,8 +264,9 @@ namespace LastGround.App
             else
             {
                 PlayerId me = session.LocalPlayer;
+                Vector2 spawn = SpawnPoint(me.Value);
                 loop.Register(TickPhase.LocalPlayer, Gate(new PlayerMotor(players, parts.Aim, _playerDefinition, worldSize,
-                    me.Value * 3f - 4.5f, -3f, parts.Nav, parts.Crowd) { Builds = parts.Builds, Weapon = parts.Weapon }));
+                    spawn.x, spawn.y, parts.Nav, parts.Crowd) { Builds = parts.Builds, Weapon = parts.Weapon }));
                 loop.Register(TickPhase.LocalPlayer, Gate(parts.Weapon));
                 WeaponController weapon = parts.Weapon;
                 parts.Collector = new PickupCollector(parts.Pickups, players, _loot, pickupClaims)
@@ -244,6 +274,8 @@ namespace LastGround.App
                     Builds = parts.Builds, NeedsAmmo = () => weapon.NeedsAmmo, Loadouts = parts.Loadouts, MaxGrenades = _combat.MaxGrenades,
                 };
                 loop.Register(TickPhase.LocalPlayer, Gate(parts.Collector));
+                if (_interactables != null)
+                    loop.Register(TickPhase.LocalPlayer, Gate(new LocalStations(parts.Interactables, _interactables, players, parts.Weapon)));
             }
             loop.Register(TickPhase.NetSend, sync);
             loop.Register(TickPhase.NetSend, vitals);
@@ -256,8 +288,10 @@ namespace LastGround.App
             _weaponHud.Bind(parts.Weapon, parts.Collector, parts.Pickups, parts.Loadouts);
             _input.Blockers.Add(_weaponHud.TakeButtonRect);
             _xpBar.Bind(parts.Xp);
-            _objectivePanel.Bind(parts.Objective, _zones, _clearArea);
-            _objectiveIndicator.Bind(parts.Objective, _zones, _camera);
+            _objectivePanel.Bind(parts.Objective, Zones, Events);
+            _objectiveIndicator.Bind(parts.Objective, Zones, _camera);
+            if (_minimap != null && _map != null) _minimap.Bind(_map, players, parts.Crowd);
+            if (_regionCard != null) _regionCard.Bind(Zones, players);
             _levelUp.Bind(parts.Offers, _upgrades, () => CountActive(players) <= 1);
             _pause = _levelUp;
             _input.Blocker = () => _levelUp.BlockingRect;
@@ -358,10 +392,17 @@ namespace LastGround.App
             loop.Register(TickPhase.LootEvents, Gate(parts.Registry));
             TeamWallet wallet = parts.Wallet;
             parts.Referee.Coins = () => wallet.Coins;
-            var objectives = new ObjectiveSystem(crowd, parts.Players, _zones, _clearArea, parts.Status, parts.Objective, seed)
+            var objectives = new ObjectiveSystem(crowd, parts.Players, Zones, Events, parts.Status, parts.Objective, seed)
             {
-                Director = parts.Director, Loot = parts.Registry,
+                Director = parts.Director, Loot = parts.Registry, Map = _map, World = world, Progress = parts.Progress,
+                Health = parts.Health, Turret = new SentryTurret(world, parts.Nav, parts.Shots),
             };
+            if (_interactables != null)
+            {
+                parts.InteractableHost = new InteractableSystem(parts.Interactables, _interactables, parts.Players, parts.Nav, explosions);
+                explosions.Listener = parts.InteractableHost;
+                loop.Register(TickPhase.Combat, Gate(parts.InteractableHost));
+            }
             loop.Register(TickPhase.LootEvents, Gate(objectives));
             loop.Register(TickPhase.Combat, Gate(parts.LoadoutAuthority));
             loop.Register(TickPhase.Combat, Gate(parts.Authority));

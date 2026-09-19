@@ -65,6 +65,14 @@ namespace LastGround.Rendering.Lighting
             Shader.SetGlobalVector(RectId, new Vector4(min.x, min.y, 1f / size, 1f / size));
         }
 
+        /// <summary>The lamps a map definition lists (street lamps, yard floodlights, canopy lights).</summary>
+        public static Lamp[] FromMap(LastGround.Data.Map.MapDefinition map)
+        {
+            var lamps = new Lamp[map.Lamps != null ? map.Lamps.Length : 0];
+            for (int i = 0; i < lamps.Length; i++) lamps[i] = new Lamp(map.Lamps[i].Position, map.Lamps[i].Radius, map.Lamps[i].Color);
+            return lamps;
+        }
+
         /// <summary>Six lamps on a ring plus one at the centre: the greybox arena layout of TDD_01 §0.5.</summary>
         public static Lamp[] GreyboxLamps()
         {

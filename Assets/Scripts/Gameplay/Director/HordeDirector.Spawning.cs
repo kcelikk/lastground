@@ -167,7 +167,7 @@ namespace LastGround.Gameplay.Director
             float d2 = _profile.DespawnDistance * _profile.DespawnDistance;
             for (int i = 0; i < _world.Crowd.Capacity; i++)
             {
-                if (!_world.IsAlive(i)) continue;
+                if (!_world.IsAlive(i) || _world.IsPinned(i)) continue;
                 float2 p = _world.PositionOf(i);
                 bool near = false;
                 for (int k = 0; k < PlayerStateTable.Max && !near; k++)

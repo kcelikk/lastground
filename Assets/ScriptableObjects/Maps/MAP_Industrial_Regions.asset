@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ad764d0804baf5e4a3194daf171fe0c, type: 3}
+  m_Name: MAP_Industrial_Regions
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Map.MapZoneSet
+  Zones:
+  - Id: foundry_yard
+    NameKey: region.foundry_yard
+    Center: {x: -35, y: 35}
+    HalfSize: {x: 29, y: 29}
+    DangerLevel: 2
+    Concept: {fileID: 2800000, guid: 4dccc898dafc30488a2a5549b8d4b355, type: 3}
+  - Id: gas_station
+    NameKey: region.gas_station
+    Center: {x: 35, y: 35}
+    HalfSize: {x: 29, y: 29}
+    DangerLevel: 2
+    Concept: {fileID: 2800000, guid: 86dc03faffea6f1d48cc0bda211f2d96, type: 3}
+  - Id: hospital_yard
+    NameKey: region.hospital_yard
+    Center: {x: 0, y: -35}
+    HalfSize: {x: 64, y: 29}
+    DangerLevel: 3
+    Concept: {fileID: 2800000, guid: 33da44646aa89c171bff7bccbc6b8340, type: 3}

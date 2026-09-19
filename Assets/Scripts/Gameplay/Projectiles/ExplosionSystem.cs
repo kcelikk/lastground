@@ -43,6 +43,9 @@ namespace LastGround.Gameplay.Projectiles
             Blasts = blasts ?? new EventChannel<ExplosionFx>(32);
         }
 
+        /// <summary>Barrels and tanks caught in a blast (chains). Optional.</summary>
+        public IBlastListener Listener { get; set; }
+
         public int Exploded { get; private set; }
         public int Dropped { get; private set; }
 
@@ -69,6 +72,7 @@ namespace LastGround.Gameplay.Projectiles
             Exploded++;
             ExplosionSpec spec = blast.Spec;
             Blasts.Publish(new ExplosionFx { X = blast.Center.x, Z = blast.Center.y, Radius = spec.Radius, Kind = blast.Kind });
+            Listener?.OnBlast(blast.Center, spec.Radius, spec.Damage);
             float r2 = spec.Radius * spec.Radius;
             int local = _players.Local.IsValid ? _players.Local.Value : -1;
             bool localSource = blast.Source >= 0 && blast.Source == local;

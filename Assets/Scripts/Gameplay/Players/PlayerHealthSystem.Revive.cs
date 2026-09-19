@@ -44,6 +44,13 @@ namespace LastGround.Gameplay.Players
             Deaths++;
         }
 
+        /// <summary>Rescue Signal reward: dead players return on the next tick (while someone is standing).</summary>
+        public void ReturnTheDead()
+        {
+            for (int p = 0; p < PlayerStateTable.Max; p++)
+                if (_players.IsDead(p)) _players.Countdown[p] = 0f;
+        }
+
         void TickDead(int p, float dt, int standing)
         {
             // The timer only runs while someone is still up to come back to.

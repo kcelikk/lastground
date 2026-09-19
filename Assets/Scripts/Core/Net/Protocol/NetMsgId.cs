@@ -38,6 +38,8 @@ namespace LastGround.Core.Net.Protocol
         public const byte Explosion = 44;
         public const byte ThrowGrenade = 45;
         public const byte LoadoutState = 46;
+        public const byte InteractableHit = 47;
+        public const byte InteractableState = 48;
 
         // Director / run status (50–59)
         public const byte DirectorInfo = 50;
