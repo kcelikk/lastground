@@ -37,6 +37,16 @@ namespace LastGround.App
         /// <summary>The last run's banking, for the results screen (null before the first run).</summary>
         public BankReport LastReport { get; private set; }
 
+        /// <summary>Dev (-lg-character): owns and equips a character without Scrap.</summary>
+        public void DevEquipCharacter(string id)
+        {
+            int index = MetaCatalog.IndexOf(Catalog.Characters, id);
+            if (index < 0) return;
+            CharacterDefinition character = Catalog.Characters[index];
+            if (!Profile.Owns(character)) Profile.Data.Owned.Add(character.Id);
+            Equip(character);
+        }
+
         public void Attach(ISession session)
         {
             _session = session;

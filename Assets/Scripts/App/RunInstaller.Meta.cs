@@ -53,6 +53,20 @@ namespace LastGround.App
             foreach (EmoteDefinition emote in equipped)
                 entries.Add(((byte)System.Array.IndexOf(meta.Catalog.Emotes, emote), emote.NameKey));
             if (_emoteBar != null) _emoteBar.Bind(entries, sync.Play);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (Dev.DevAutomation.EmoteEvery > 0f && entries.Count > 0)
+            {
+                float every = Dev.DevAutomation.EmoteEvery, timer = every;
+                byte first = entries[0].Item1;
+                loop.Register(TickPhase.Input, new TickAction(dt =>
+                {
+                    timer -= dt;
+                    if (timer > 0f) return;
+                    timer = every;
+                    sync.Play(first);
+                }));
+            }
+#endif
             if (_emoteBubbles != null) _emoteBubbles.Bind(parts.Players, meta.Catalog, _camera);
         }
 
