@@ -136,5 +136,22 @@
   "hud.new_zombie": "{0} detected",
   "hud.take_weapon": "TAKE",
   "hud.no_ammo": "NO AMMO",
-  "hud.grenade_short": "GRENADE"
+  "hud.grenade_short": "GRENADE",
+  "objective.arriving": "Arriving in {0}s",
+  "objective.failed": "FAILED",
+  "objective.weapon_cache.guard": "Kill the guard",
+  "objective.elite_hunt.counter": "Kill the marked elite",
+  "objective.supply_drop.title": "Supply drop — {0}",
+  "objective.supply_drop.counter": "Open the crate: {0:1}s",
+  "objective.weapon_cache.title": "Weapon cache — {0}",
+  "objective.weapon_cache.counter": "Open the cache: {0:1}s",
+  "objective.power_generator.title": "Start the generator — {0}",
+  "objective.power_generator.counter": "Repair: {0:1}s",
+  "objective.rescue_signal.title": "Rescue signal — {0}",
+  "objective.rescue_signal.counter": "Defend: {0:0}s",
+  "objective.elite_hunt.title": "Elite hunt — {0}",
+  "region.foundry_yard": "Foundry Yard",
+  "region.gas_station": "Gas Station",
+  "region.hospital_yard": "Hospital Yard",
+  "map.industrial": "Industrial District"
 }

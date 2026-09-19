@@ -21,7 +21,8 @@ namespace LastGround.Gameplay.Upgrades
             _taken = new bool[catalog.Upgrades.Length];
         }
 
-        public UpgradeOffer Generate(PlayerBuild build, int player, ushort offerId)
+        /// <param name="minRarity">Objective rewards raise every card to at least this rarity.</param>
+        public UpgradeOffer Generate(PlayerBuild build, int player, ushort offerId, UpgradeRarity minRarity = UpgradeRarity.Common)
         {
             var rng = DeterministicRandom.ForStream(_seed, "upgrade", Hash32.Combine((uint)player, offerId));
             var offer = new UpgradeOffer { Id = offerId };
@@ -32,7 +33,8 @@ namespace LastGround.Gameplay.Upgrades
                 int upgrade = PickUpgrade(build, ref rng);
                 if (upgrade < 0) break;
                 _taken[upgrade] = true;
-                offer.Set(c, upgrade, RollRarity(ref rng));
+                UpgradeRarity rarity = RollRarity(ref rng);
+                offer.Set(c, upgrade, rarity < minRarity ? minRarity : rarity);
                 offer.Count++;
             }
             return offer;

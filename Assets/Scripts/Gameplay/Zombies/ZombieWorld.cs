@@ -44,6 +44,7 @@ namespace LastGround.Gameplay.Zombies
         NativeArray<byte> _playerActive;
 
         readonly float2[] _stuckAnchor;
+        readonly bool[] _pinned;
         DeterministicRandom _rng;
         float _targetTimer;
         float _surroundTimer;
@@ -76,6 +77,7 @@ namespace LastGround.Gameplay.Zombies
             for (int t = 0; t < types.Length; t++) _typeParams[t] = ZombieTypeParams.From(types[t], tuning);
             _cellOf = Alloc<int>(); _sorted = Alloc<int>();
             _stuckAnchor = new float2[_capacity];
+            _pinned = new bool[_capacity];
             AllocateCombat();
             AllocateStatus();
 
@@ -131,16 +133,21 @@ namespace LastGround.Gameplay.Zombies
         {
             if (_alive[slot] == 0) return;
             _alive[slot] = 0;
+            _pinned[slot] = false;
             if (died) OnDied(slot);
             _crowd.Despawn(slot, died);
         }
 
         public byte TypeOf(int slot) => _type[slot];
 
+        /// <summary>Objective zombies (cache guard, hunted elite) are never recycled or despawned.</summary>
+        public void SetPinned(int slot, bool pinned) => _pinned[slot] = pinned;
+        public bool IsPinned(int slot) => _pinned[slot];
+
         /// <summary>Moves a live zombie elsewhere (recycling far or stuck zombies, TDD_01 §8.4).</summary>
         public void Teleport(int slot, float2 position)
         {
-            if (_alive[slot] == 0) return;
+            if (_alive[slot] == 0 || _pinned[slot]) return;
             // Recycling is a despawn + spawn so clients see a new generation instead of a 60 m slide.
             float heading = _heading[slot];
             byte type = _type[slot], elite = _crowd.Elite[slot];

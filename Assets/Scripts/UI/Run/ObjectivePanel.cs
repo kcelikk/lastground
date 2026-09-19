@@ -9,14 +9,16 @@ using UnityEngine;
 namespace LastGround.UI.Run
 {
     /// <summary>
-    /// Objective panel (TDD_01 §9.11, §12.4 HudObjectivePanel, D-019): top-left, title with the zone name and a
-    /// counter scoped to the objective ("Kill zombies: 12/50"); flashes "completed". Hidden between objectives.
-    /// Only the title is formatted with a string (when an objective starts); the counter uses SetText.
+    /// Objective panel (TDD_01 §9.11, §12.4 HudObjectivePanel, D-019): top-left, title with the region name and a
+    /// counter scoped to the event — kills "12/50", seconds left for hold/defend ("Open: 2.4 s", "Defend: 43 s"), the
+    /// arrival countdown, or the step to do ("Kill the guard"); flashes "completed"/"failed". Hidden between events.
+    /// Only the title is formatted with a string (when an event starts); counters use SetText.
     /// </summary>
     public sealed class ObjectivePanel : MonoBehaviour
     {
         static readonly Color ActiveColor = new Color(1f, 0.85f, 0.35f);
         static readonly Color DoneColor = new Color(0.45f, 1f, 0.5f);
+        static readonly Color FailColor = new Color(1f, 0.4f, 0.3f);
 
         [SerializeField] GameObject _root;
         [SerializeField] TMP_Text _title;
@@ -24,20 +26,24 @@ namespace LastGround.UI.Run
 
         ObjectiveState _state;
         MapZoneSet _zones;
-        ObjectiveDefinition _definition;
+        ObjectiveDefinition[] _events;
         ILocalizationService _localization;
         int _shownVersion = -1;
         ushort _titledInstance;
-        string _counterFormat;
+        string _counterFormat, _arriving, _guard, _hunt, _completed, _failed;
         float _flash;
 
-        public void Bind(ObjectiveState state, MapZoneSet zones, ObjectiveDefinition definition)
+        public void Bind(ObjectiveState state, MapZoneSet zones, ObjectiveDefinition[] events)
         {
             _state = state;
             _zones = zones;
-            _definition = definition;
+            _events = events;
             _localization = AppServices.Get<ILocalizationService>();
-            _counterFormat = _localization.Get(definition.CounterKey);
+            _arriving = _localization.Get("objective.arriving");
+            _guard = _localization.Get("objective.weapon_cache.guard");
+            _hunt = _localization.Get("objective.elite_hunt.counter");
+            _completed = _localization.Get("objective.completed");
+            _failed = _localization.Get("objective.failed");
             _root.SetActive(false);
         }
 
@@ -52,28 +58,63 @@ namespace LastGround.UI.Run
             }
             if (_state.Version == _shownVersion) return;
             _shownVersion = _state.Version;
-
-            bool show = _state.Phase != ObjectivePhase.None && _zones != null && (uint)_state.Zone < (uint)_zones.Zones.Length;
+            ObjectiveDefinition definition = DefinitionOf(_state.Kind);
+            bool show = _state.Phase != ObjectivePhase.None && definition != null && _zones != null
+                        && (uint)_state.Zone < (uint)_zones.Zones.Length;
             if (_root.activeSelf != show) _root.SetActive(show);
             if (!show) return;
-
             if (_state.Instance != _titledInstance)
             {
                 _titledInstance = _state.Instance;
                 string zone = _localization.Get(_zones.Zones[_state.Zone].NameKey);
-                _title.text = _localization.Format(_definition.TitleKey, zone);
+                _title.text = _localization.Format(definition.TitleKey, zone);
+                _counterFormat = _localization.Get(definition.CounterKey);
             }
-            if (_state.Phase == ObjectivePhase.Completed)
+            ShowCounter(definition);
+        }
+
+        void ShowCounter(ObjectiveDefinition definition)
+        {
+            _counter.color = ActiveColor;
+            switch (_state.Phase)
             {
-                _counter.SetText(_localization.Get("objective.completed"));
-                _counter.color = DoneColor;
-                _flash = 1f;
+                case ObjectivePhase.Completed:
+                    _counter.SetText(_completed);
+                    _counter.color = DoneColor;
+                    _flash = 1f;
+                    return;
+                case ObjectivePhase.Failed:
+                    _counter.SetText(_failed);
+                    _counter.color = FailColor;
+                    _flash = 1f;
+                    return;
+                case ObjectivePhase.Announced:
+                    _counter.SetText(_arriving, _state.SecondsLeft);
+                    return;
             }
-            else
+            switch (definition.Kind)
             {
-                _counter.SetText(_counterFormat, _state.Current, _state.Target);
-                _counter.color = ActiveColor;
+                case ObjectiveKind.ClearArea:
+                    _counter.SetText(_counterFormat, _state.Current, _state.Target);
+                    break;
+                case ObjectiveKind.EliteHunt:
+                    _counter.SetText(_hunt);
+                    break;
+                case ObjectiveKind.WeaponCache when _state.Stage == 0:
+                    _counter.SetText(_guard);
+                    break;
+                default:
+                    // Hold / defend: seconds still needed.
+                    _counter.SetText(_counterFormat, Mathf.Max(0f, (_state.Target - _state.Current) / 10f));
+                    break;
             }
+        }
+
+        ObjectiveDefinition DefinitionOf(ObjectiveKind kind)
+        {
+            if (_events == null) return null;
+            foreach (ObjectiveDefinition e in _events) if (e != null && e.Kind == kind) return e;
+            return null;
         }
     }
 }

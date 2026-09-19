@@ -185,7 +185,10 @@ namespace LastGround.Tests
             var deck = UnityEditor.AssetDatabase.LoadAssetAtPath<SpawnDeckDefinition>("Assets/ScriptableObjects/Director/DIR_SpawnDeck.asset");
             var player = Asset<PlayerDefinition>();
             player.SoloAdrenaline = 1000;
-            using (var run = new SimRun(21u, Asset<DirectorProfile>(), Asset<ThreatCurveDefinition>(), Asset<PlayerCountScalingProfile>(),
+            // The bot never moves: keep anti-camping out of the schedule check (it boosts Spitters).
+            var profile = Asset<DirectorProfile>();
+            profile.CampSeconds = float.MaxValue;
+            using (var run = new SimRun(21u, profile, Asset<ThreatCurveDefinition>(), Asset<PlayerCountScalingProfile>(),
                 catalog.Zombies, deck, catalog.Elites, player, Asset<CameraProfile>()))
             {
                 var announcements = run.Status.Announcements.CreateReader();
@@ -212,6 +215,22 @@ namespace LastGround.Tests
                 Assert.AreEqual(catalog.Zombies.Length - 1, newTypes, "one banner per new type, none for walkers");
                 Assert.AreEqual(run.EliteSpawns, elites);
                 Assert.AreEqual(0, run.OnScreenSpawns);
+            }
+        }
+
+        [Test]
+        public void AntiCamping_StartsWhenTheTeamHoldsOneSpot_AndStopsWhenItMoves()
+        {
+            using (SimRun run = Sim(5u))
+            {
+                var profile = Asset<DirectorProfile>();
+                run.Run(profile.CampSeconds - 5f);
+                Assert.IsFalse(run.Director.Camping, "not before the camp time");
+                run.Run(10f);
+                Assert.IsTrue(run.Director.Camping, "standing still for longer than the camp time");
+                run.Players.SetLocal(profile.CampRadius + 5f, 0f, 0f, 0f, 0f);
+                run.Run(1f);
+                Assert.IsFalse(run.Director.Camping, "moving out of the circle resets it");
             }
         }
 

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6aa45bb4e2ee46fc800df1eb9ef8833, type: 3}
+  m_Name: OBJ_supply_drop
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Objectives.ObjectiveDefinition
+  Id: supply_drop
+  Kind: 1
+  TitleKey: objective.supply_drop.title
+  CounterKey: objective.supply_drop.counter
+  MinRunSeconds: 60
+  Weight: 1.2
+  Anchor: 0
+  TimeLimit: 75
+  TargetBase: 30
+  TargetPerExtraPlayer: 0.5
+  TargetPerThreat: 10
+  ArriveSeconds: 15
+  Radius: 2.5
+  HoldSeconds: 3
+  PressureWhileHolding: 0
+  FirstDelay: 20
+  Cooldown: 25
+  CompletedShowTime: 4
+  RewardCoinsPerPlayer: 10
+  RewardMedkits: 1
+  RewardWeapon: 1
+  RewardGrenades: 2
+  RewardOfferRarity: -1
+  TurretSeconds: 0
+  RewardRespawn: 0

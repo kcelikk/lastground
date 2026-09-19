@@ -5,7 +5,10 @@ using UnityEngine.UI;
 
 namespace LastGround.UI.Run
 {
-    /// <summary>Screen-edge arrow towards the active objective zone while its centre is off screen (TDD_01 §12.4).</summary>
+    /// <summary>
+    /// Screen-edge arrow towards the active objective while it is off screen (TDD_01 §12.1 "kenar oku", §12.4): the
+    /// event anchor (crate, generator, hunted elite) when there is one, else the region centre.
+    /// </summary>
     public sealed class ObjectiveIndicator : MonoBehaviour
     {
         const float EdgeInset = 90f;
@@ -32,11 +35,12 @@ namespace LastGround.UI.Run
         {
             if (_state == null) return;
             _time += Time.unscaledDeltaTime;
-            bool show = _state.Phase == ObjectivePhase.Active && _zones != null && (uint)_state.Zone < (uint)_zones.Zones.Length;
+            bool show = (_state.Phase == ObjectivePhase.Active || _state.Phase == ObjectivePhase.Announced)
+                        && _zones != null && (uint)_state.Zone < (uint)_zones.Zones.Length;
             Vector3 viewport = Vector3.zero;
             if (show)
             {
-                Vector2 c = _zones.Zones[_state.Zone].Center;
+                Vector2 c = _state.HasAnchor ? new Vector2(_state.AnchorX, _state.AnchorZ) : _zones.Zones[_state.Zone].Center;
                 viewport = _camera.WorldToViewportPoint(new Vector3(c.x, 0f, c.y));
                 show = viewport.z < 0f || viewport.x < 0.05f || viewport.x > 0.95f || viewport.y < 0.05f || viewport.y > 0.95f;
             }

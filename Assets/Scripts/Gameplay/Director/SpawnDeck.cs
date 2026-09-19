@@ -29,6 +29,9 @@ namespace LastGround.Gameplay.Director
         }
 
         public int CardCount => _definition.Cards.Length;
+
+        /// <summary>Anti-camping: Spitter weight multiplier (1 = normal).</summary>
+        public float SpitterBoost { get; set; } = 1f;
         public ref readonly SpawnCard Card(int index) => ref _definition.Cards[index];
 
         /// <summary>Recounts alive zombies per type and alive elites (once per plan).</summary>
@@ -59,6 +62,7 @@ namespace LastGround.Gameplay.Director
                 bool capped = card.MaxConcurrentPerPlayer > 0 && _alive[type] + _queued[type] >= card.MaxConcurrentPerPlayer * players;
                 if (runSeconds >= card.MinRunSeconds && card.Cost <= points && !capped)
                     weight = card.Weight != null ? UnityEngine.Mathf.Max(0f, card.Weight.Evaluate((runSeconds - card.MinRunSeconds) / 60f)) : 1f;
+                if (card.Zombie.Behaviour == Data.Zombies.ZombieBehaviour.Spitter) weight *= SpitterBoost;
                 _weights[c] = weight;
                 total += weight;
             }

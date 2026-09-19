@@ -136,5 +136,22 @@
   "hud.new_zombie": "{0} görüldü",
   "hud.take_weapon": "AL",
   "hud.no_ammo": "MERMİ YOK",
-  "hud.grenade_short": "BOMBA"
+  "hud.grenade_short": "BOMBA",
+  "objective.arriving": "İnişe {0} sn",
+  "objective.failed": "BAŞARISIZ",
+  "objective.weapon_cache.guard": "Bekçiyi öldür",
+  "objective.elite_hunt.counter": "İşaretli eliti öldür",
+  "objective.supply_drop.title": "İkmal sandığı — {0}",
+  "objective.supply_drop.counter": "Sandığı aç: {0:1} sn",
+  "objective.weapon_cache.title": "Silah deposu — {0}",
+  "objective.weapon_cache.counter": "Depoyu aç: {0:1} sn",
+  "objective.power_generator.title": "Jeneratörü çalıştır — {0}",
+  "objective.power_generator.counter": "Onar: {0:1} sn",
+  "objective.rescue_signal.title": "Kurtarma sinyali — {0}",
+  "objective.rescue_signal.counter": "Savun: {0:0} sn",
+  "objective.elite_hunt.title": "Elit avı — {0}",
+  "region.foundry_yard": "Dökümhane Avlusu",
+  "region.gas_station": "Benzin İstasyonu",
+  "region.hospital_yard": "Hastane Avlusu",
+  "map.industrial": "Sanayi Bölgesi"
 }

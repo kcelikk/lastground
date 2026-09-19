@@ -94,10 +94,17 @@ namespace LastGround.Gameplay.Upgrades
             _builds.Apply(player, upgrade, rarity);
         }
 
-        void Offer(int player)
+        /// <summary>Objective reward (TDD_01 §12.2 "Legendary teklif"): one extra offer for every player.</summary>
+        public void GrantBonusOffer(UpgradeRarity minRarity)
+        {
+            for (int p = 0; p < PlayerStateTable.Max; p++)
+                if (_players.Active[p]) Offer(p, minRarity);
+        }
+
+        void Offer(int player, UpgradeRarity minRarity = UpgradeRarity.Common)
         {
             if (_queueCount[player] >= QueueCapacity) return;
-            UpgradeOffer offer = _generator.Generate(_builds.Of(player), player, _nextOfferId++);
+            UpgradeOffer offer = _generator.Generate(_builds.Of(player), player, _nextOfferId++, minRarity);
             if (offer.Count == 0) return;
             _queue[player * QueueCapacity + (_queueHead[player] + _queueCount[player]) % QueueCapacity] = offer;
             _queueCount[player]++;

@@ -21,6 +21,7 @@ namespace LastGround.Gameplay.Director
         const float RelaxMaxDuration = 45f;
         const float DespawnInterval = 1f;
         const int QueueCapacity = 256;
+        const float PressureRate = 1.6f;
 
         readonly ZombieWorld _world;
         readonly PlayerStateTable _players;
@@ -78,6 +79,11 @@ namespace LastGround.Gameplay.Director
 
         public int Elites { get; private set; }
 
+        float _pressure;
+
+        /// <summary>An objective is being held under fire (generator, rescue signal): +60 % spawn rate this second.</summary>
+        public void HoldPressure() => _pressure = 1f;
+
         /// <summary>Dev: start the run clock later (unlock types and elites without waiting).</summary>
         public void SkipTo(float runSeconds)
         {
@@ -94,12 +100,14 @@ namespace LastGround.Gameplay.Director
         {
             _status.RunSeconds += dt;
             _status.Threat = _threat.LevelAt(_status.RunSeconds);
+            if (_pressure > 0f) _pressure -= dt;
 
             _sampleTimer -= dt;
             if (_sampleTimer <= 0f)
             {
                 _sampleTimer += SampleInterval;
                 _intensity.Sample(SampleInterval);
+                SampleCamp(SampleInterval);
                 _status.Intensity = _intensity.Team;
                 UpdateLabel(SampleInterval);
             }
@@ -110,7 +118,8 @@ namespace LastGround.Gameplay.Director
             float minutes = _status.RunSeconds / 60f;
             float governor = Governor.Multiplier;
             float rate = math.min(_profile.SpawnRateCap, _profile.SpawnRateStart + _profile.SpawnRatePerMinute * minutes)
-                         * StateRate() * _scaling.SpawnRateFor(math.max(1, players)) * threatScale * governor * _rateScale;
+                         * StateRate() * _scaling.SpawnRateFor(math.max(1, players)) * threatScale * governor * _rateScale
+                         * (_pressure > 0f ? PressureRate : 1f) * CampRate();
             float maxAlive = (_profile.MaxAliveStart + _profile.MaxAlivePerMinute * minutes)
                              * _scaling.HordeCountFor(math.max(1, players)) * threatScale;
             int cap = (int)math.min(_profile.MaxAliveCap * governor, maxAlive);
