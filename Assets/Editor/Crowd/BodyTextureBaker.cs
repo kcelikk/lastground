@@ -30,6 +30,7 @@ namespace LastGround.EditorTools.Crowd
                         int sx = Mathf.Min(input.width - 1, (int)((x + 0.5f) * input.width / TileSize));
                         Color32 c = Average(src, input.width, input.height, sx, sy);
                         if (source.MuteCyan) c = Mute(c);
+                        if (source.Fleshify) c = Fleshify(c);
                         c.a = 255;
                         pixels[y * TileSize * tiles + t * TileSize + x] = c;
                     }
@@ -80,6 +81,18 @@ namespace LastGround.EditorTools.Crowd
         }
 
         /// <summary>Saturated cyan/teal → the grey-brown of the surrounding flesh.</summary>
+        /// <summary>
+        /// Boss skin (docs/reference/models/06-brute-boss.png): glowing green/cyan growths become dark raw meat, the
+        /// rest turns into pale grey flesh; dark cloth stays dark.
+        /// </summary>
+        static Color32 Fleshify(Color32 c)
+        {
+            Color.RGBToHSV(c, out float h, out float s, out float v);
+            if (h > 0.2f && h < 0.6f && s > 0.3f && v > 0.25f)
+                return Color.HSVToRGB(0.99f, 0.5f, Mathf.Min(1f, v * 0.36f));
+            return Color.HSVToRGB(0.03f, Mathf.Min(s, 0.12f), Mathf.Min(1f, v * 1.15f));
+        }
+
         static Color32 Mute(Color32 c)
         {
             Color.RGBToHSV(c, out float h, out float s, out float v);

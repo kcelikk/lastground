@@ -35,6 +35,8 @@ namespace LastGround.EditorTools.Crowd
         public string[] DiffuseTiles;
         /// <summary>Turn saturated cyan (sci-fi glow details) into dull flesh tones.</summary>
         public bool MuteCyan;
+        /// <summary>Boss skin: growths → raw meat, the rest → pale grey flesh.</summary>
+        public bool Fleshify;
 
         const string Characters = MixamoImport.Characters;
         const string Motions = MixamoImport.Animations;
@@ -50,6 +52,7 @@ namespace LastGround.EditorTools.Crowd
             Tank(),
             Zombie("spitter", "Parasite_L_Starkie", "parasiteZombie_diffuse.png", walk: "Zombie_Walk_Creeping", attack: "Zombie_Scream", death: "Zombie_Death_Back"),
             Zombie("exploder", "Survivor_A_Lusth", "Survivor_diffuse.png", walk: "Zombie_Walk", attack: "Zombie_Attack_Swipe", death: "Zombie_Death_Forward"),
+            Brute(),
         };
 
         static CrowdBodySource Zombie(string id, string model, string diffuse, string walk, string attack, string death, string[] tiles = null)
@@ -91,6 +94,32 @@ namespace LastGround.EditorTools.Crowd
                     Clip(CrowdClipId.Attack, "Mutant_Swipe", true),
                     Clip(CrowdClipId.Hit, "Zombie_Hit", false),
                     Clip(CrowdClipId.Crawl, "Zombie_Crawl", true),
+                    Clip(CrowdClipId.Death, "Mutant_Death", false),
+                },
+            };
+        }
+
+        /// <summary>
+        /// Boss (D-021): the Mutant with its own clip table — Attack = Ground Slam (punch), Hit = Prop Throw (swipe),
+        /// Crawl = roar (intro, Summon Scream, charge windup), Run = charge.
+        /// </summary>
+        static CrowdBodySource Brute()
+        {
+            return new CrowdBodySource
+            {
+                Id = "boss_brute",
+                ModelPath = Characters + "Mutant.fbx",
+                Humanoid = true,
+                Fleshify = true,
+                DiffuseTiles = Tiles("Mutant", new[] { "Mutant_diffuse.png" }),
+                Clips = new[]
+                {
+                    Clip(CrowdClipId.Walk, "Mutant_Walk", true),
+                    Clip(CrowdClipId.Idle, "Mutant_Idle", true),
+                    Clip(CrowdClipId.Run, "Mutant_Run", true),
+                    Clip(CrowdClipId.Attack, "Mutant_Punch", false),
+                    Clip(CrowdClipId.Hit, "Mutant_Swipe", false),
+                    Clip(CrowdClipId.Crawl, "Mutant_Roar", false),
                     Clip(CrowdClipId.Death, "Mutant_Death", false),
                 },
             };

@@ -25,6 +25,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0cc3b1e809eb77238b1c53b700473b0e, type: 2}
   - {fileID: 11400000, guid: a0b194278226697ef9e659fb60180a74, type: 2}
   - {fileID: 11400000, guid: 2bcfb2b7815b1226ba043c4c98685eac, type: 2}
+  - {fileID: 11400000, guid: 49647be7696748c4babd0a40cacb6f9b, type: 2}
   Projectiles:
   - {fileID: 11400000, guid: dff80b5277d31a8ad81e049f5b959df9, type: 2}
   - {fileID: 11400000, guid: 46e7865cf7aec4d89a8f036a97440778, type: 2}

@@ -70,6 +70,22 @@ namespace LastGround.EditorTools.Setup
                 };
             });
 
+            // M8 boss body (D-021): driven by BossController, never in the spawn deck. Health comes from BossDefinition;
+            // the huge MaxHealth only keeps clients from predicting its death.
+            var brute = Zombie("brute", 5, ZombieBehaviour.Boss, z =>
+            {
+                z.DisplayNameKey = "boss.mutant_brute";
+                z.MaxHealth = 100000f;
+                z.Xp = 150;
+                z.CoinChance = 0f;
+                z.MinSpeed = 0f;
+                z.MaxSpeed = 0f;
+                z.AttackDamage = 0f;
+                z.KnockbackScale = 0f;
+                z.Mass = 40f;
+                z.Radius = 1.6f;
+            });
+
             WeaponContentBuilder.Ensure<SpawnDeckDefinition>(DeckPath, d =>
             {
                 d.Cards = new[]
@@ -82,7 +98,7 @@ namespace LastGround.EditorTools.Setup
                 };
                 d.EliteModifiers = elites;
             });
-            return new[] { walker, runner, tank, spitter, exploder };
+            return new[] { walker, runner, tank, spitter, exploder, brute };
         }
 
         static ZombieDefinition Zombie(string id, byte typeIndex, ZombieBehaviour behaviour, System.Action<ZombieDefinition> init)

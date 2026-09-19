@@ -83,6 +83,9 @@ namespace LastGround.Gameplay.Objectives
         /// <summary>Generator reward.</summary>
         public SentryTurret Turret { get; set; }
 
+        /// <summary>No new event starts while set (boss fight, open extraction window); a running one continues.</summary>
+        public bool Paused { get; set; }
+
         public int Completed { get; private set; }
         public int Failed { get; private set; }
 
@@ -97,7 +100,7 @@ namespace LastGround.Gameplay.Objectives
             {
                 case ObjectivePhase.None:
                     _timer -= dt;
-                    if (_timer <= 0f) Begin();
+                    if (_timer <= 0f && !Paused) Begin();
                     break;
                 case ObjectivePhase.Announced:
                 case ObjectivePhase.Active:

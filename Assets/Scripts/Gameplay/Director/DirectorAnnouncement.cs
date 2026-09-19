@@ -6,6 +6,8 @@ namespace LastGround.Gameplay.Director
         /// <summary>A zombie type appears for the first time this run ("Runners detected").</summary>
         NewZombieType = 0,
         EliteSpawned = 1,
+        /// <summary>The boss arrived (M8); ZombieType is its body type.</summary>
+        BossArrived = 2,
     }
 
     /// <summary>A director announcement. Host publishes; clients receive it replicated.</summary>

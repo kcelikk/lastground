@@ -11,9 +11,11 @@ Menüler, HUD ve dev araçları. Bağımlılık: Core, Localization, Gameplay, T
 - `Run/TeamPanel`, `Run/TeammateIndicators` — takım listesi, ekran dışı takım okları.
 - `Run/LevelUpPanel`, `Run/XpBar` — 3 kartlık upgrade seçimi (solo'da duraklatır), takım XP'si.
 - `Run/ObjectivePanel`, `Run/ObjectiveIndicator` — görev başlığı + sayaç, bölgeye ok.
-- `Run/MinimapHud` — sağ üst radar: önceden render edilmiş harita + 5 Hz nokta katmanı (zombi/takım).
+- `Run/MinimapHud` — sağ üst radar: önceden render edilmiş harita + 5 Hz nokta katmanı (zombi/takım) + uzak sürülerin yönü için 12 dilimli halka.
 - `Run/RegionCard` — yeni bölgeye girince konsept görsel + ad + tehlike seviyesi (D-020).
 - `Run/ObjectivePanel`, `Run/ObjectiveIndicator` — olay başlığı/sayacı ve ekran kenarı yön oku (çapalı olaylar).
+- `Run/BossHealthBar` — boss adı + can barı, faz işaretleri, sersemken yanıp söner.
+- `Run/ExtractionHud` — ikinci durum satırı (TAHLİYE süre/tutma → bölge), tutma çubuğu, mavi kenar oku.
 - `Run/ResultsScreen` — run sonu istatistikleri, ana menü.
 - `Common/CharLine` — yerelleştirilmiş kelime + sayı satırları için tahsissiz karakter tamponu.
 - `Run/DamageNumbers` — yerel oyuncunun isabet sayıları, dünya uzayında TMP havuzu (preset `DamageNumberCap`).

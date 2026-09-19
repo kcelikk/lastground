@@ -60,6 +60,9 @@ namespace LastGround.Networking.Replication
         readonly float[] _deathYaw;
         EventReader<CrowdDeath> _deathReader;
 
+        /// <summary>Zombie type sent at the top rate at any distance (boss body, M8); 255 = none.</summary>
+        public byte PriorityType { get; set; } = 255;
+
         public CrowdReplicationSender(ISession session, CrowdState crowd, PlayerStateTable players, ReplicationTuning tuning)
         {
             if (crowd.Capacity > 1 << ReplicationTuning.SlotBits)
@@ -130,6 +133,8 @@ namespace LastGround.Networking.Replication
                 float dz = _crowd.PosZ[i] - oz;
                 float d2 = dx * dx + dz * dz;
                 float rate = d2 < a2 ? _tuning.TierARate : d2 < b2 ? _tuning.TierBRate : d2 < c2 ? _tuning.TierCRate : 0f;
+                // The boss is big, drives telegraphs and is seen from afar: always relevant at the top rate.
+                if (_crowd.Type[i] == PriorityType) rate = _tuning.TierARate;
 
                 if (!view.Relevant[i] || view.KnownGeneration[i] != _crowd.Generation[i])
                 {

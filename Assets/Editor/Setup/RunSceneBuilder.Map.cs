@@ -40,7 +40,9 @@ namespace LastGround.EditorTools.Setup
             arrowImage.color = Color.white;
             arrowImage.raycastTarget = false;
 
+            Image[] sectors = BuildHordeRing(frame);
             var hud = safe.gameObject.AddComponent<MinimapHud>();
+            UiFactory.AssignArray(hud, "_sectors", sectors);
             UiFactory.Assign(hud, "_map", map);
             UiFactory.Assign(hud, "_dots", dots);
             UiFactory.Assign(hud, "_arrow", arrow);
@@ -51,7 +53,7 @@ namespace LastGround.EditorTools.Setup
         static RegionCard BuildRegionCard(RectTransform safe)
         {
             RectTransform card = UiFactory.Rect("RegionCard", safe);
-            UiFactory.Place(card, new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(560f, 150f));
+            UiFactory.Place(card, new Vector2(0.5f, 1f), new Vector2(0f, -250f), new Vector2(560f, 150f));
             var background = card.gameObject.AddComponent<Image>();
             background.color = UiFactory.PanelColor;
             background.raycastTarget = false;

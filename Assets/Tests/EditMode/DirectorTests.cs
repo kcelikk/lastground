@@ -196,8 +196,12 @@ namespace LastGround.Tests
                 Debug.Log($"[Test] deck 10 min: first seen {string.Join(", ", System.Array.ConvertAll(run.FirstSeen, t => t.ToString("0")))} s, " +
                           $"elites {run.EliteSpawns} (first {run.FirstElite:0} s), spawned {run.Director.Spawned}");
                 Assert.That(run.FirstSeen[0], Is.InRange(0f, 15f), "walkers right after the calm start");
+                int deckTypes = 0;
                 for (int type = 1; type < catalog.Zombies.Length; type++)
                 {
+                    // The boss body (M8) is not in the deck.
+                    if (!System.Array.Exists(deck.Cards, c => c.Zombie.TypeIndex == type)) continue;
+                    deckTypes++;
                     float unlock = System.Array.Find(deck.Cards, c => c.Zombie.TypeIndex == type).MinRunSeconds;
                     Assert.GreaterOrEqual(run.FirstSeen[type], unlock, catalog.Zombies[type].Id + " not before its unlock");
                     Assert.Less(run.FirstSeen[type], unlock + 120f, catalog.Zombies[type].Id + " shows up within two minutes of unlocking");
@@ -212,9 +216,34 @@ namespace LastGround.Tests
                     if (a.Kind == AnnouncementKind.NewZombieType) newTypes++;
                     else elites++;
                 }
-                Assert.AreEqual(catalog.Zombies.Length - 1, newTypes, "one banner per new type, none for walkers");
+                Assert.AreEqual(deckTypes, newTypes, "one banner per new type, none for walkers");
                 Assert.AreEqual(run.EliteSpawns, elites);
                 Assert.AreEqual(0, run.OnScreenSpawns);
+            }
+        }
+
+        [Test]
+        public void FarZombies_JoinAVirtualGroup_ThatMarchesBack_AndMaterializesOffScreen()
+        {
+            using (SimRun run = Sim(8u))
+            {
+                var summary = new HordeSummary();
+                run.Director.Summary = summary;
+                run.Run(2f);
+                int slot = run.World.Spawn(new float2(55f, 55f), 0f);
+                Assert.GreaterOrEqual(slot, 0);
+                byte generation = run.Crowd.Generation[slot];
+                run.Run(1.5f);
+                Assert.IsTrue(!run.World.IsAlive(slot) || run.Crowd.Generation[slot] != generation, "beyond the despawn distance");
+                Assert.AreEqual(1, run.Director.VirtualFolded, "it joined a group instead of vanishing");
+                Assert.AreEqual(1, run.Director.VirtualCount);
+                Assert.AreEqual(1, summary.Count, "the 1 Hz summary shows the group");
+                Assert.Greater(math.length(new float2(summary.X[0], summary.Z[0])), 60f);
+
+                run.Run(25f);
+                Assert.AreEqual(1, run.Director.VirtualMaterialized, "it marched back and turned into a zombie again");
+                Assert.AreEqual(0, run.Director.VirtualCount);
+                Assert.AreEqual(0, run.OnScreenSpawns, "never on screen");
             }
         }
 

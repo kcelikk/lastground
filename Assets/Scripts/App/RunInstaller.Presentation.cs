@@ -40,6 +40,7 @@ namespace LastGround.App
             // The camera looks ahead with the raw sticks: auto-aim target switches must not swing it around.
             var cameraRig = new TopDownCameraRig(_camera, parts.Players, _input, _cameraProfile) { Weapon = parts.Weapon };
             loop.Register(TickPhase.Presentation, cameraRig);
+            BuildBossPresentation(parts, loop, cameraRig);
 
             float worldSize = parts.Nav.Width * parts.Nav.CellSize;
             LightingGrid.Lamp[] lamps = _map != null ? LightingGrid.FromMap(_map) : LightingGrid.GreyboxLamps();
@@ -85,6 +86,7 @@ namespace LastGround.App
             {
                 Weapons = _combat.Weapons, Crowd = parts.Crowd, LocalWeapon = parts.Weapon, Blasts = parts.Blasts, Projectiles = parts.Projectiles,
             });
+            loop.Register(TickPhase.Presentation, new BossAudio(sfx, parts.Players, parts.Boss, _boss, parts.Crowd, parts.Extraction));
 
             _hud.Bind(_service, parts.Crowd);
         }

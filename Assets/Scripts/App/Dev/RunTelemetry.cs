@@ -83,6 +83,19 @@ namespace LastGround.App.Dev
             _registry = registry;
         }
 
+        LastGround.Gameplay.Boss.BossState _boss;
+        LastGround.Gameplay.Boss.BossController _bossHost;
+        LastGround.Gameplay.Extraction.ExtractionState _extraction;
+
+        /// <summary>M8: boss and extraction counters (host controller optional).</summary>
+        public void BindBoss(LastGround.Gameplay.Boss.BossState boss, LastGround.Gameplay.Boss.BossController host,
+            LastGround.Gameplay.Extraction.ExtractionState extraction)
+        {
+            _boss = boss;
+            _bossHost = host;
+            _extraction = extraction;
+        }
+
         public void BindProgress(TeamXp xp, TeamBuilds builds)
         {
             _xp = xp;
@@ -164,6 +177,17 @@ namespace LastGround.App.Dev
                 line += string.Format(CultureInfo.InvariantCulture, " level={0} xp={1}/{2} picks={3} tapped={4} autoPicked={5}", _xp.Level,
                     _xp.Xp, _xp.XpToNext, _builds.Of(me).Picks, LastGround.UI.Run.LevelUpPanel.TappedPicks, LastGround.UI.Run.LevelUpPanel.AutoPicks);
             if (_wallet != null) line += string.Format(CultureInfo.InvariantCulture, " coins={0}", _wallet.Coins);
+            if (_boss != null)
+            {
+                line += string.Format(CultureInfo.InvariantCulture, " boss={0} bossHp={1:0}/{2:0} bossDefeats={3} lz={4} lzHold={5}/{6}", _boss.Phase,
+                    _boss.Health, _boss.MaxHealth, _boss.Defeats, _extraction.Phase, _extraction.Hold, _extraction.HoldTarget);
+                if (_bossHost != null)
+                    line += string.Format(CultureInfo.InvariantCulture, " bossAttacks={0} bossHits={1} weakHits={2} summoned={3}",
+                        _bossHost.AttacksStarted, _bossHost.PlayerHits, _bossHost.WeakPointHits, _bossHost.Summoned);
+            }
+            if (_director != null)
+                line += string.Format(CultureInfo.InvariantCulture, " virtual={0} launched={1} folded={2} materialized={3}", _director.VirtualCount,
+                    _director.VirtualLaunched, _director.VirtualFolded, _director.VirtualMaterialized);
             if (_registry != null)
                 line += string.Format(CultureInfo.InvariantCulture, " drops={0} pickups={1} pickupRejects={2}", _registry.Dropped, _registry.Claimed, _registry.Rejected);
             if (_status != null)

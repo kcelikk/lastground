@@ -150,6 +150,10 @@ MonoBehaviour:
     Kind: 1
     Region: 0
     Position: {x: -30, y: 51}
+  - Id: foundry_extraction
+    Kind: 4
+    Region: 0
+    Position: {x: -20, y: 24}
   - Id: gas_supply
     Kind: 0
     Region: 1
@@ -162,6 +166,10 @@ MonoBehaviour:
     Kind: 1
     Region: 1
     Position: {x: 60, y: 21}
+  - Id: gas_extraction
+    Kind: 4
+    Region: 1
+    Position: {x: 35, y: 15}
   - Id: hospital_extraction
     Kind: 4
     Region: 2

@@ -21,6 +21,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5006463d6407198a88165ce86e715d2b, type: 2}
   - {fileID: 11400000, guid: 9b23668d6005da26cb31ad03d14e4e9f, type: 2}
   - {fileID: 11400000, guid: d22189bb107d76fb0adc48794b6345b7, type: 2}
+  - {fileID: 11400000, guid: a686141c48585a9e891b58078eacb80e, type: 2}
   Material: {fileID: 2100000, guid: 5c5b52e04ab10ba01b790d6ef8aeb593, type: 2}
   TargetHeight: 1.8
   ScaleVariation: 0.08
@@ -30,23 +31,34 @@ MonoBehaviour:
     Scale: 1
     Glow: {r: 0, g: 0, b: 0, a: 1}
     GlowStrength: 0
+    ClipsFromStateStart: 0
   - ZombieId: runner
     Bodies: 04000000
     Scale: 1
     Glow: {r: 0, g: 0, b: 0, a: 1}
     GlowStrength: 0
+    ClipsFromStateStart: 0
   - ZombieId: tank
     Bodies: 05000000
     Scale: 1.25
     Glow: {r: 0, g: 0, b: 0, a: 1}
     GlowStrength: 0
+    ClipsFromStateStart: 0
   - ZombieId: spitter
     Bodies: 06000000
     Scale: 1
     Glow: {r: 0.45, g: 1, b: 0.2, a: 1}
     GlowStrength: 0.08
+    ClipsFromStateStart: 0
   - ZombieId: exploder
     Bodies: 07000000
     Scale: 1.1
     Glow: {r: 1, g: 0.45, b: 0.1, a: 1}
     GlowStrength: 0.12
+    ClipsFromStateStart: 0
+  - ZombieId: brute
+    Bodies: 08000000
+    Scale: 3.5
+    Glow: {r: 0, g: 0, b: 0, a: 1}
+    GlowStrength: 0
+    ClipsFromStateStart: 1

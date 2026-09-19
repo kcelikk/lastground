@@ -25,7 +25,7 @@ namespace LastGround.Tests
             CombatCatalog catalog = Catalog();
             Assert.AreEqual(6, catalog.Weapons.Length);
             for (int i = 0; i < catalog.Weapons.Length; i++) Assert.AreEqual(i, catalog.Weapons[i].NetIndex, catalog.Weapons[i].Id);
-            Assert.AreEqual(5, catalog.Zombies.Length);
+            Assert.AreEqual(6, catalog.Zombies.Length, "5 types + the M8 boss body");
             for (int i = 0; i < catalog.Zombies.Length; i++) Assert.AreEqual(i, catalog.Zombies[i].TypeIndex, catalog.Zombies[i].Id);
             for (int i = 0; i < catalog.Projectiles.Length; i++) Assert.AreEqual(i, catalog.Projectiles[i].NetIndex, catalog.Projectiles[i].Id);
             for (int i = 0; i < catalog.Elites.Length; i++) Assert.AreEqual(i + 1, catalog.Elites[i].NetIndex, catalog.Elites[i].Id);
@@ -57,7 +57,9 @@ namespace LastGround.Tests
             var deck = AssetDatabase.LoadAssetAtPath<SpawnDeckDefinition>(DeckPath);
             Assert.IsNotNull(deck);
             CombatCatalog catalog = Catalog();
-            Assert.AreEqual(catalog.Zombies.Length, deck.Cards.Length);
+            // Every type but the boss body (driven by BossController, never spawned by the deck).
+            Assert.AreEqual(catalog.Zombies.Length - 1, deck.Cards.Length);
+            foreach (SpawnCard card in deck.Cards) Assert.AreNotEqual(Data.Zombies.ZombieBehaviour.Boss, card.Zombie.Behaviour);
             foreach (SpawnCard card in deck.Cards)
             {
                 Assert.IsNotNull(card.Zombie);

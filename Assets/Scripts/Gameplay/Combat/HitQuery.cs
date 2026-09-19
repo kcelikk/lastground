@@ -17,21 +17,24 @@ namespace LastGround.Gameplay.Combat
         /// zombies hit (≤ maxHits); <paramref name="endDistance"/> is where the tracer stops (wall, range, or the
         /// last zombie the bullet could not pass).
         /// </summary>
+        /// <param name="typeExtraRadius">Extra body radius per zombie type (Tank, boss); null = same for all.</param>
         public static int Cast(ICrowdRenderSource crowd, NavGrid nav, float2 origin, float2 dir, float range, float radius,
-            int maxHits, int[] slots, float[] distances, out float endDistance, bool[] ignore = null)
+            int maxHits, int[] slots, float[] distances, out float endDistance, bool[] ignore = null, float[] typeExtraRadius = null)
         {
             float wall = nav != null ? nav.Raycast(origin, dir, range) : range;
-            float r2 = radius * radius;
             int count = 0;
             bool[] alive = crowd.Alive;
             float[] xs = crowd.X;
             float[] zs = crowd.Z;
+            byte[] types = crowd.Types;
             for (int i = 0; i < crowd.Capacity; i++)
             {
                 if (!alive[i] || (ignore != null && ignore[i])) continue;
+                float r = typeExtraRadius != null && types[i] < typeExtraRadius.Length ? radius + typeExtraRadius[types[i]] : radius;
+                float r2 = r * r;
                 float2 to = new float2(xs[i], zs[i]) - origin;
                 float along = math.dot(to, dir);
-                if (along < 0f || along > wall + radius) continue;
+                if (along < 0f || along > wall + r) continue;
                 float side2 = math.lengthsq(to) - along * along;
                 if (side2 > r2) continue;
                 float entry = along - math.sqrt(r2 - side2);
@@ -40,6 +43,14 @@ namespace LastGround.Gameplay.Combat
             }
             endDistance = count == maxHits ? distances[count - 1] : wall;
             return count;
+        }
+
+        /// <summary>Extra hit radius per type: body radius beyond the standard zombie's (<paramref name="baseRadius"/>).</summary>
+        public static float[] ExtraRadii(Data.Zombies.ZombieDefinition[] types, float baseRadius)
+        {
+            var extra = new float[types != null ? types.Length : 0];
+            for (int t = 0; t < extra.Length; t++) extra[t] = types[t] != null ? math.max(0f, types[t].Radius - baseRadius) : 0f;
+            return extra;
         }
 
         /// <summary>Keeps the nearest <paramref name="maxHits"/> hits sorted by distance.</summary>

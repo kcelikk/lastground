@@ -40,6 +40,10 @@ namespace LastGround.Networking.Replication
             w.WriteVarUInt((uint)result.Revives);
             w.WriteVarUInt((uint)result.Coins);
             w.WriteBool(result.Extracted);
+            w.WriteVarUInt((uint)Math.Max(0, result.ExtractionBonus));
+            w.WriteByte(result.StandingMask);
+            w.WriteVarUInt((uint)Math.Max(0, result.Banked));
+            w.WriteVarUInt((uint)Math.Max(0, result.BankedLeftBehind));
             _session.SendToClients(NetChannel.Reliable);
         }
 
@@ -58,6 +62,10 @@ namespace LastGround.Networking.Replication
                 Revives = (int)r.ReadVarUInt(),
                 Coins = (int)r.ReadVarUInt(),
                 Extracted = r.ReadBool(),
+                ExtractionBonus = (int)r.ReadVarUInt(),
+                StandingMask = r.ReadByte(),
+                Banked = (int)r.ReadVarUInt(),
+                BankedLeftBehind = (int)r.ReadVarUInt(),
             };
             if (!r.Failed) _outcome.End(result);
         }

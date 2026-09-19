@@ -22,6 +22,8 @@ namespace LastGround.App.Dev
     ///   -lg-autopick          pick the rarest upgrade automatically on level-up (soak tests)
     ///   -lg-grenades          the bot throws a grenade at nearby zombies whenever it has one (every ~10 s)
     ///   -lg-run-time SEC      host: start the run clock at SEC (unlocks later zombie types and elites at once)
+    ///   -lg-boss SEC          host: the boss appears SEC seconds into the run (M8 tests)
+    ///   -lg-extract SEC       host: an extraction window opens SEC seconds into the run; the bot walks to open zones
     ///   -lg-bench [SEC]       crowd rendering benchmark, SEC per step (default 60), quits when done
     ///   -lg-quality N         force quality tier 0/1/2 for this launch (benchmarks)
     ///   -lg-gc-capture [SEC]  record 300 profiler frames with allocation call stacks after SEC s (default 8; GcAllocReport)
@@ -48,6 +50,12 @@ namespace LastGround.App.Dev
         /// <summary>-lg-run-time: host run clock starts here (seconds; 0 = normal).</summary>
         public static float RunTimeSkip { get; private set; }
 
+        /// <summary>-lg-boss: seconds into the run at which the boss appears (-1 = normal schedule).</summary>
+        public static float BossAt { get; private set; } = -1f;
+
+        /// <summary>-lg-extract: seconds into the run at which a landing zone opens (-1 = normal); the bot seeks open zones.</summary>
+        public static float ExtractAt { get; private set; } = -1f;
+
         public static void Install(GameObject root, SessionService service)
         {
             List<string> args = ReadArguments();
@@ -68,6 +76,12 @@ namespace LastGround.App.Dev
                     case "-lg-solo": _solo = true; break;
                     case "-lg-wander": LastGround.Input.TouchTwinStickInput.DevWander = true; break;
                     case "-lg-autofire": ForceAutoFire = true; break;
+                    case "-lg-boss" when i + 1 < args.Count:
+                        if (float.TryParse(args[++i], NumberStyles.Float, CultureInfo.InvariantCulture, out float bossAt)) BossAt = bossAt;
+                        break;
+                    case "-lg-extract" when i + 1 < args.Count:
+                        if (float.TryParse(args[++i], NumberStyles.Float, CultureInfo.InvariantCulture, out float extractAt)) ExtractAt = extractAt;
+                        break;
                     case "-lg-autopick": LastGround.UI.Run.LevelUpPanel.DevAutoPick = true; break;
                     case "-lg-grenades": AutoGrenades = true; break;
                     case "-lg-run-time" when i + 1 < args.Count:

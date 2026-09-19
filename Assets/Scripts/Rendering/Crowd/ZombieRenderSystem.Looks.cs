@@ -31,6 +31,20 @@ namespace LastGround.Rendering.Crowd
             return CrowdVariety.Body(hash, _catalog.Bodies.Length);
         }
 
+        /// <summary>Seconds since this slot's animation state changed, for types that start clips with the state; else -1.</summary>
+        float ClipAge(int slot, byte type, byte state)
+        {
+            CrowdTypeLook[] looks = _catalog.TypeLooks;
+            if (looks == null || type >= looks.Length || !looks[type].ClipsFromStateStart) return -1f;
+            // Stored as state + 1 so a fresh slot (0) always counts as a change.
+            if (_stateShown[slot] != state + 1)
+            {
+                _stateShown[slot] = (byte)(state + 1);
+                _stateSince[slot] = _time;
+            }
+            return _time - _stateSince[slot];
+        }
+
         float ScaleOf(byte type)
         {
             CrowdTypeLook[] looks = _catalog.TypeLooks;

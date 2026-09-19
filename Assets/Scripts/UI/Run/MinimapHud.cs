@@ -1,5 +1,6 @@
 using LastGround.Data.Map;
 using LastGround.Gameplay.Crowd;
+using LastGround.Gameplay.Director;
 using LastGround.Gameplay.Players;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,6 +22,10 @@ namespace LastGround.UI.Run
         [SerializeField] RectTransform _arrow;
         /// <summary>World metres across the radar.</summary>
         [SerializeField] float _range = 70f;
+        /// <summary>12 ring segments around the radar (TDD_01 §9.11): direction and size of far hordes; index 0 = east, counter-clockwise.</summary>
+        [SerializeField] Image[] _sectors;
+        /// <summary>Group size at which a segment is fully lit.</summary>
+        [SerializeField] float _sectorFull = 30f;
 
         static readonly Color32 Clear = new Color32(0, 0, 0, 0);
         static readonly Color32 Zombie = new Color32(220, 40, 30, 255);
@@ -31,6 +36,8 @@ namespace LastGround.UI.Run
         ICrowdRenderSource _crowd;
         Texture2D _overlay;
         Color32[] _pixels;
+        HordeSummary _horde;
+        readonly float[] _sectorSize = new float[12];
         float _timer;
 
         public void Bind(MapDefinition map, PlayerStateTable players, ICrowdRenderSource crowd)
@@ -42,8 +49,12 @@ namespace LastGround.UI.Run
             _overlay = new Texture2D(DotResolution, DotResolution, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
             _pixels = new Color32[DotResolution * DotResolution];
             _dots.texture = _overlay;
+            SetSectors(0f);
             gameObject.SetActive(map.Minimap != null);
         }
+
+        /// <summary>Far horde groups for the direction ring (VirtualHorde summary, M8).</summary>
+        public void BindHorde(HordeSummary horde) => _horde = horde;
 
         void OnDestroy()
         {
@@ -70,6 +81,39 @@ namespace LastGround.UI.Run
                 if (p != me && _players.Active[p]) Plot(_players.X[p] - px, _players.Z[p] - pz, Teammate, 1);
             _overlay.SetPixels32(_pixels);
             _overlay.Apply(false);
+            UpdateSectors(px, pz);
+        }
+
+        void UpdateSectors(float px, float pz)
+        {
+            if (_sectors == null || _sectors.Length == 0) return;
+            for (int s = 0; s < _sectorSize.Length; s++) _sectorSize[s] = 0f;
+            if (_horde != null)
+            {
+                for (int g = 0; g < _horde.Count; g++)
+                {
+                    float angle = Mathf.Atan2(_horde.Z[g] - pz, _horde.X[g] - px) * Mathf.Rad2Deg;
+                    int sector = (int)Mathf.Repeat(Mathf.Round(angle / 30f), 12f);
+                    _sectorSize[sector] += _horde.Size[g];
+                }
+            }
+            for (int s = 0; s < _sectors.Length && s < _sectorSize.Length; s++)
+            {
+                Color c = _sectors[s].color;
+                c.a = Mathf.Clamp01(_sectorSize[s] / _sectorFull) * 0.9f;
+                _sectors[s].color = c;
+            }
+        }
+
+        void SetSectors(float alpha)
+        {
+            if (_sectors == null) return;
+            foreach (Image sector in _sectors)
+            {
+                Color c = sector.color;
+                c.a = alpha;
+                sector.color = c;
+            }
         }
 
         /// <summary>A dot (1 or 3 px) at a player-relative offset, clipped to the round radar.</summary>

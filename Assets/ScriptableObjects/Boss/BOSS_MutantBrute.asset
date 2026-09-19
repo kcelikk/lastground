@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c94cc4829361c70488117da37b5e3cb, type: 3}
+  m_Name: BOSS_MutantBrute
+  m_EditorClassIdentifier: LastGround.Data::LastGround.Data.Boss.BossDefinition
+  Id: mutant_brute
+  NameKey: boss.mutant_brute
+  Zombie: {fileID: 11400000, guid: 49647be7696748c4babd0a40cacb6f9b, type: 2}
+  BaseHealth: 4000
+  HealthByPlayers:
+  - 1
+  - 1.7
+  - 2.3
+  - 2.9
+  HealthPerReturn: 0.35
+  Phase2At: 0.6
+  EnragedAt: 0.25
+  MoveSpeed: {x: 1.6, y: 2, z: 2.6}
+  CooldownScale: {x: 1, y: 0.85, z: 0.65}
+  FrenzyInEnraged: 1
+  IntroSeconds: 3
+  StopDistance: 3
+  TurnDegreesPerSecond: 120
+  ExtraSummonByPlayers: 00000000010000000100000002000000
+  CooldownByPlayers:
+  - 1
+  - 1
+  - 0.9
+  - 0.85
+  AggroSwitch: {x: 8, y: 12}
+  AggroPerDamage: 1
+  AggroProximity: 40
+  WeakPointMultiplier: 2
+  WeakPointDot: 0.35
+  Attacks:
+  - {fileID: 11400000, guid: e37fa6d229fb5bdeeb175da5b5c0992a, type: 2}
+  - {fileID: 11400000, guid: 9b4db7d56e2a730ea9118261bb6b6c31, type: 2}
+  - {fileID: 11400000, guid: 7c822746e83456a05b9ac4596e7cb250, type: 2}
+  - {fileID: 11400000, guid: 5d92cfcec3eaa57fdb24b57fbc906d0e, type: 2}
+  FirstThreat: 4
+  ReturnFromThreat: 6
+  SpawnDistance: 24
+  DirectorRateScale: 0.4
+  RewardCoinsPerPlayer: 40
+  RewardMedkits: 2
+  RewardWeapon: 1
+  RewardGrenades: 2

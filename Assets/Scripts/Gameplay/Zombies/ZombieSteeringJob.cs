@@ -134,6 +134,8 @@ namespace LastGround.Gameplay.Zombies
 
             byte t = Target[i];
             ZombieTypeParams type = TypeParams[Type[i]];
+            // Driven bodies (boss) are moved by their controller; others still separate from them (mass).
+            if (type.Behaviour == (byte)Data.Zombies.ZombieBehaviour.Boss) return;
             bool hasTarget = t != NoTarget && PlayerActive[t] != 0;
             bool staggered = Stagger[i] > 0f;
             bool lunging = Lunge[i] > 0f && !staggered;
