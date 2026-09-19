@@ -49,7 +49,16 @@ namespace LastGround.EditorTools.Crowd
                 Look("tank", bodies, "tank", 1.25f, Color.black, 0f),
                 Look("spitter", bodies, "spitter", 1f, new Color(0.45f, 1f, 0.2f), 0.08f),
                 Look("exploder", bodies, "exploder", 1.1f, new Color(1f, 0.45f, 0.1f), 0.12f),
+                BossLook(bodies),
             };
+        }
+
+        /// <summary>Mutant Brute (D-021): ~3.5× a player, clips start with each attack so telegraphs and swings line up.</summary>
+        static CrowdTypeLook BossLook(CrowdAnimationSet[] bodies)
+        {
+            CrowdTypeLook look = Look("brute", bodies, "boss_", 3.5f, Color.black, 0f);
+            look.ClipsFromStateStart = true;
+            return look;
         }
 
         static CrowdTypeLook Look(string zombie, CrowdAnimationSet[] bodies, string prefix, float scale, Color glow, float strength)

@@ -48,6 +48,8 @@ namespace LastGround.Rendering.Crowd
         readonly IGameEventStream<CrowdDeath> _deaths;
         readonly IGameEventStream<CrowdHit> _hits;
         readonly float[] _flashUntil;
+        readonly float[] _stateSince;
+        readonly byte[] _stateShown;
         EventReader<CrowdHit> _hitReader;
         readonly Material _material;
         readonly Batch[] _batches;
@@ -70,6 +72,8 @@ namespace LastGround.Rendering.Crowd
             _hits = hits;
             if (hits != null) _hitReader = hits.CreateReader();
             _flashUntil = new float[source.Capacity];
+            _stateSince = new float[source.Capacity];
+            _stateShown = new byte[source.Capacity];
 
             _material = new Material(catalog.Material) { name = "Crowd (runtime)", enableInstancing = true };
             if (preset.RimLight) _material.EnableKeyword("LG_RIM");
@@ -186,7 +190,8 @@ namespace LastGround.Rendering.Crowd
                 float d2 = _candidateDistance[c];
                 int lod = d2 < lod0 ? 0 : d2 < lod1 ? 1 : 2;
                 float flash = Mathf.Clamp01((_flashUntil[slot] - _time) / HitFlashDuration);
-                Emit(slot, types[slot], xs[slot], 0f, zs[slot], yaws[slot], lod, (CrowdClipId)anim[slot], -1f, flash, GlowOf(slot, types[slot]));
+                Emit(slot, types[slot], xs[slot], 0f, zs[slot], yaws[slot], lod, (CrowdClipId)anim[slot], -1f, flash, GlowOf(slot, types[slot]),
+                    ClipAge(slot, types[slot], anim[slot]));
             }
             return count;
         }
@@ -207,14 +212,15 @@ namespace LastGround.Rendering.Crowd
                 float dz = corpse.Z - focus.y;
                 float d2 = dx * dx + dz * dz;
                 int lod = d2 < lod0 ? 0 : d2 < lod1 ? 1 : 2;
-                if (Emit(corpse.Slot, corpse.Type, corpse.X, -sink, corpse.Z, corpse.Yaw, lod, CrowdClipId.Death, age, 0f, Vector4.zero)) drawn++;
+                if (Emit(corpse.Slot, corpse.Type, corpse.X, -sink, corpse.Z, corpse.Yaw, lod, CrowdClipId.Death, age, 0f, Vector4.zero, -1f)) drawn++;
             }
             return drawn;
         }
 
         /// <summary>Adds one instance. <paramref name="deathAge"/> ≥ 0 plays the death clip once and holds the last frame.</summary>
+        /// <param name="clipAge">≥ 0: seconds since the animation state began (types whose clips start with the state).</param>
         bool Emit(int slot, byte type, float x, float y, float z, float yaw, int lod, CrowdClipId clipId, float deathAge, float flash,
-            Vector4 glow)
+            Vector4 glow, float clipAge)
         {
             uint hash = CrowdVariety.Hash(slot);
             int body = BodyOf(type, hash);
@@ -227,6 +233,11 @@ namespace LastGround.Rendering.Crowd
             if (deathAge >= 0f)
             {
                 frame = Mathf.Min(deathAge * set.FrameRate, clip.FrameCount - 1);
+            }
+            else if (clipAge >= 0f)
+            {
+                frame = clipAge * set.FrameRate;
+                frame = clip.Loop ? frame % clip.FrameCount : Mathf.Min(frame, clip.FrameCount - 1);
             }
             else
             {
