@@ -26,7 +26,6 @@ namespace LastGround.EditorTools.Setup
     static partial class RunSceneBuilder
     {
         const string MaterialDir = "Assets/Art/Materials";
-        const float GroundSize = 140f;
         static RunStatusHud _statusHud;
         static TeamPanel _teamPanel;
         static TeammateIndicators _indicators;
@@ -36,6 +35,7 @@ namespace LastGround.EditorTools.Setup
         static ObjectivePanel _objectivePanel;
         static ObjectiveIndicator _objectiveIndicator;
         static WeaponHud _weaponHud;
+        static MinimapHud _minimapHud;
 
         public static void Build(string path)
         {
@@ -72,23 +72,17 @@ namespace LastGround.EditorTools.Setup
             weaponPickup.SetColor("_EmissionColor", new Color(0.9f, 0.55f, 0.1f));
             var catalog = AssetDatabase.LoadAssetAtPath<CrowdVisualCatalog>("Assets/Art/Crowd/CrowdCatalog.asset");
             if (catalog == null) Debug.LogWarning("[Setup] Crowd catalog missing; run LastGround/Crowd/Bake Bodies first.");
-            Material ground = CreateMaterial("M1_Ground", new Color(0.16f, 0.17f, 0.18f));
 
-            GameObject map = GreyboxMapBuilder.Build(CreateMaterial("M1_Wall", new Color(0.24f, 0.25f, 0.27f)),
-                CreateMaterial("M1_Prop", new Color(0.3f, 0.27f, 0.22f)));
-            var navGrid = NavGridBaker.Bake(map, GreyboxMapBuilder.Size, "Assets/Art/Maps/Greybox_NavGrid.asset");
-
-            var groundGo = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            groundGo.name = "Ground (greybox)";
-            groundGo.transform.localScale = new Vector3(GroundSize / 10f, 1f, GroundSize / 10f);
-            groundGo.GetComponent<MeshRenderer>().sharedMaterial = ground;
-            Object.DestroyImmediate(groundGo.GetComponent<Collider>());
+            // M7: the industrial district (CC0 scenery, docs/reference/maps) replaces the greybox arena.
+            Scenery.IndustrialMapBuilder.Build();
+            var mapDefinition = AssetDatabase.LoadAssetAtPath<LastGround.Data.Map.MapDefinition>(Scenery.IndustrialMapBuilder.MapPath);
+            float mapSize = Scenery.IndustrialMapBuilder.Size;
 
             // Light pools: one quad over the ground drawing the lighting grid additively.
             var pools = GameObject.CreatePrimitive(PrimitiveType.Quad);
             pools.name = "LightPools (lighting grid)";
-            pools.transform.SetPositionAndRotation(new Vector3(0f, 0.02f, 0f), Quaternion.Euler(90f, 0f, 0f));
-            pools.transform.localScale = new Vector3(GroundSize, GroundSize, 1f);
+            pools.transform.SetPositionAndRotation(new Vector3(0f, 0.05f, 0f), Quaternion.Euler(90f, 0f, 0f));
+            pools.transform.localScale = new Vector3(mapSize, mapSize, 1f);
             pools.GetComponent<MeshRenderer>().sharedMaterial = CreateFxMaterial("M_LightPools", "LG/LightPoolGround");
             Object.DestroyImmediate(pools.GetComponent<Collider>());
 
@@ -102,7 +96,10 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(installer, "_camera", camera);
             UiFactory.Assign(installer, "_worldRoot", world.transform);
             UiFactory.Assign(installer, "_crowdCatalog", catalog);
-            UiFactory.Assign(installer, "_navGrid", navGrid);
+            UiFactory.Assign(installer, "_map", mapDefinition);
+            UiFactory.AssignArray(installer, "_objectives", ObjectiveContentBuilder.Build());
+            UiFactory.Assign(installer, "_interactables", AssetDatabase.LoadAssetAtPath<LastGround.Data.Map.InteractableProfile>(ObjectiveContentBuilder.InteractablesPath));
+            UiFactory.Assign(installer, "_minimap", _minimapHud);
             UiFactory.Assign(installer, "_bloodParticleMaterial", bloodParticle);
             UiFactory.Assign(installer, "_bloodSplatMaterial", bloodSplat);
             UiFactory.Assign(installer, "_tracerMaterial", tracer);
@@ -210,6 +207,7 @@ namespace LastGround.EditorTools.Setup
             UiFactory.Assign(input, "_aimKnob", aimKnob);
             UiFactory.Assign(input, "_aimKnobImage", aimKnobImage);
             _weaponHud = BuildWeaponHud(safe, canvasGo, input);
+            _minimapHud = BuildMinimap(safe);
 
             var hud = canvasGo.AddComponent<RunHud>();
             UiFactory.Assign(hud, "_statusLabel", status);
