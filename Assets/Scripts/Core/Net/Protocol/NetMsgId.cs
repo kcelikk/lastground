@@ -13,6 +13,7 @@ namespace LastGround.Core.Net.Protocol
         public const byte LobbyRoster = 4;
         public const byte Ping = 5;
         public const byte Pong = 6;
+        public const byte PlayerMetaUpdate = 7;
 
         // Run flow (10–19)
         public const byte LoadRun = 10;

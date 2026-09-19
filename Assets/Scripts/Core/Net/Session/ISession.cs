@@ -35,6 +35,9 @@ namespace LastGround.Core.Net.Session
         /// <summary>Host only: whether new joins are accepted (false once a run starts).</summary>
         bool AcceptingPlayers { get; set; }
 
+        /// <summary>Changes this player's meta selection (lobby); the roster carries it to everyone (M9).</summary>
+        void SetLocalMeta(ulong meta);
+
         event Action<SessionState> StateChanged;
         event Action RosterChanged;
         event Action<PlayerId> PlayerLeft;

@@ -10,6 +10,8 @@ namespace LastGround.Gameplay.Upgrades
     public sealed class PlayerBuild
     {
         readonly float[] _totals = new float[(int)StatId.Count];
+        /// <summary>Run-long base modifiers from the player's perk (M9); upgrades add on top, Clear keeps them.</summary>
+        readonly float[] _base = new float[(int)StatId.Count];
         readonly byte[] _stacks;
 
         public PlayerBuild(int upgradeCount)
@@ -20,7 +22,16 @@ namespace LastGround.Gameplay.Upgrades
         public int Version { get; private set; }
         public int Picks { get; private set; }
 
-        public float Get(StatId stat) => _totals[(int)stat];
+        public float Get(StatId stat) => _totals[(int)stat] + _base[(int)stat];
+
+        /// <summary>Replaces the perk modifiers (net-zero pair, TDD_01 §14.7).</summary>
+        public void SetPerk(StatId plus, float plusValue, StatId minus, float minusValue)
+        {
+            System.Array.Clear(_base, 0, _base.Length);
+            _base[(int)plus] += plusValue;
+            _base[(int)minus] += minusValue;
+            Version++;
+        }
         public int StacksOf(int upgrade) => (uint)upgrade < (uint)_stacks.Length ? _stacks[upgrade] : 0;
 
         public void Apply(UpgradeCatalog catalog, int upgrade, UpgradeRarity rarity)

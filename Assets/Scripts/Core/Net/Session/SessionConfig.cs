@@ -12,6 +12,8 @@ namespace LastGround.Core.Net.Session
         public string PlayerName = "Player";
         public string PlayerGuid = "";
         public string SessionName = "";
+        /// <summary>This player's meta selection, sent with the join request (M9).</summary>
+        public ulong LocalMeta;
         public ushort Port = NetProtocol.DefaultGamePort;
         public int MaxPlayers = NetProtocol.MaxPlayers;
 

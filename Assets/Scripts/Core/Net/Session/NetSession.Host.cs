@@ -57,6 +57,17 @@ namespace LastGround.Core.Net.Session
                 return;
             }
 
+            if (id == NetMsgId.PlayerMetaUpdate)
+            {
+                var update = default(PlayerMetaUpdate);
+                update.Read(ref reader);
+                if (reader.Failed || player.Meta == update.Meta) return;
+                player.Meta = update.Meta;
+                BroadcastRoster();
+                RosterChanged?.Invoke();
+                return;
+            }
+
             Dispatch(player.Id, id, ref reader);
         }
 
@@ -86,6 +97,7 @@ namespace LastGround.Core.Net.Session
             {
                 Id = FreePlayerId(),
                 Name = SanitizeName(request.PlayerName),
+                Meta = request.Meta,
                 HasConnection = true,
                 ConnectionId = connectionId,
             };
@@ -129,6 +141,7 @@ namespace LastGround.Core.Net.Session
                     Name = _players[i].Name,
                     IsHost = _players[i].IsHost,
                     RttMs = (ushort)Math.Min(65535, _players[i].RttMs),
+                    Meta = _players[i].Meta,
                 };
             }
             SendToClients(new LobbyRoster { Members = _rosterBuffer, Count = _players.Count });

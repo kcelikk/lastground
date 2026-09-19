@@ -37,6 +37,17 @@ namespace LastGround.Gameplay.Combat
             _projectiles = projectiles;
         }
 
+        readonly byte[] _startPrimary = { 255, 255, 255, 255 };
+        readonly byte[] _startGrenades = { 255, 255, 255, 255 };
+
+        /// <summary>Starting primary and grenades from the player's meta loadout (M9); 255 = catalog default.</summary>
+        public void SetStart(int player, byte primaryNetIndex, byte grenades)
+        {
+            if ((uint)player >= (uint)_startPrimary.Length) return;
+            _startPrimary[player] = primaryNetIndex;
+            _startGrenades[player] = grenades;
+        }
+
         public int Thrown { get; private set; }
         public int Refused { get; private set; }
 
@@ -61,7 +72,11 @@ namespace LastGround.Gameplay.Combat
                     continue;
                 }
                 if (!_loadouts.HasLoadout(p))
-                    _loadouts.Set(p, _catalog.StartPrimary.NetIndex, _catalog.StartSidearm.NetIndex, (byte)_catalog.StartGrenades);
+                {
+                    byte primary = _startPrimary[p] != 255 ? _startPrimary[p] : _catalog.StartPrimary.NetIndex;
+                    byte grenades = _startGrenades[p] != 255 ? _startGrenades[p] : (byte)_catalog.StartGrenades;
+                    _loadouts.Set(p, primary, _catalog.StartSidearm.NetIndex, grenades);
+                }
             }
             for (int i = 0; i < _count; i++) Resolve(_queue[i]);
             _count = 0;

@@ -17,7 +17,11 @@ namespace LastGround.Gameplay.Players
             {
                 int reviver = NearestReviver(p);
                 if (reviver >= 0)
+                {
                     rate = 1f / _definition.ReviveTime * (_sinceHurt[reviver] < RecentHurtWindow ? _definition.HurtReviveFactor : 1f);
+                    // The reviver's perk (M9) speeds it up or slows it down.
+                    if (_builds != null) rate *= math.max(0.1f, 1f + _builds.Of(reviver).Get(Data.Upgrades.StatId.ReviveSpeedPct) / 100f);
+                }
             }
 
             if (rate > 0f)
