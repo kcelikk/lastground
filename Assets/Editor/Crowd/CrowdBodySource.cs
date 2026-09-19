@@ -33,6 +33,12 @@ namespace LastGround.EditorTools.Crowd
         public ClipSource[] Clips;
         /// <summary>Diffuse textures by UDIM tile (u ∈ [k, k+1) uses entry k); one entry for ordinary UVs.</summary>
         public string[] DiffuseTiles;
+        /// <summary>
+        /// Several materials with their own 0–1 UVs (not UDIM): material-name fragments in <see cref="DiffuseTiles"/>
+        /// order, matched against "renderer name/material name"; a submesh matching entry k is moved to tile k.
+        /// Unmatched ones use the last tile.
+        /// </summary>
+        public string[] MaterialTiles;
         /// <summary>Turn saturated cyan (sci-fi glow details) into dull flesh tones.</summary>
         public bool MuteCyan;
         /// <summary>Boss skin: growths → raw meat, the rest → pale grey flesh.</summary>
@@ -53,6 +59,10 @@ namespace LastGround.EditorTools.Crowd
             Zombie("spitter", "Parasite_L_Starkie", "parasiteZombie_diffuse.png", walk: "Zombie_Walk_Creeping", attack: "Zombie_Scream", death: "Zombie_Death_Back"),
             Zombie("exploder", "Survivor_A_Lusth", "Survivor_diffuse.png", walk: "Zombie_Walk", attack: "Zombie_Attack_Swipe", death: "Zombie_Death_Forward"),
             Brute(),
+            Player("player_ranger", "Swat_Guy", null, new[] { "Ch15_1001_Diffuse.png", "Ch15_1002_Diffuse.png" }),
+            Player("player_survivor", "Erika_Archer", null, new[] { "Erika_Archer_Clothes_diffuse.png", "FemaleFitA_Body_diffuse.png" },
+                // Mixamo's mesh names are shuffled in this file; the materials are right (clothes = Akai_MAT).
+                new[] { "/Akai_MAT", "/Body_MAT" }),
         };
 
         static CrowdBodySource Zombie(string id, string model, string diffuse, string walk, string attack, string death, string[] tiles = null)
@@ -121,6 +131,35 @@ namespace LastGround.EditorTools.Crowd
                     Clip(CrowdClipId.Hit, "Mutant_Swipe", false),
                     Clip(CrowdClipId.Crawl, "Mutant_Roar", false),
                     Clip(CrowdClipId.Death, "Mutant_Death", false),
+                },
+            };
+        }
+
+        /// <summary>
+        /// Player character (M9, D-022): aimed rifle clips (Walk = run forward, Run = run backwards), downed crawl,
+        /// death and the three emotes. Baked like crowd bodies; no zombie type look points at them.
+        /// </summary>
+        static CrowdBodySource Player(string id, string model, string diffuse, string[] tiles = null, string[] materials = null)
+        {
+            return new CrowdBodySource
+            {
+                Id = id,
+                MaterialTiles = materials,
+                ModelPath = Characters + model + ".fbx",
+                Humanoid = true,
+                DiffuseTiles = Tiles(model, tiles ?? new[] { diffuse }),
+                Clips = new[]
+                {
+                    Clip(CrowdClipId.Walk, "Rifle_Run", true),
+                    Clip(CrowdClipId.Idle, "Rifle_Aiming_Idle", true),
+                    Clip(CrowdClipId.Run, "Rifle_Run_Backwards", true),
+                    Clip(CrowdClipId.Attack, "Rifle_Firing", true),
+                    Clip(CrowdClipId.Hit, "Rifle_Hit", false),
+                    Clip(CrowdClipId.Crawl, "Zombie_Crawl", true),
+                    Clip(CrowdClipId.Death, "Rifle_Death", false),
+                    Clip(CrowdClipId.EmoteWave, "Emote_Waving", true),
+                    Clip(CrowdClipId.EmoteSalute, "Emote_Salute", false),
+                    Clip(CrowdClipId.EmoteCheer, "Emote_Cheering", true),
                 },
             };
         }
