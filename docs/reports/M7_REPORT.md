@@ -1,6 +1,6 @@
 # M7 Raporu — Harita, Olaylar ve Çevre
 
-- **Tarih:** 2026-09-19 · **Branch:** `m7-map-events` · **Unity:** 6000.3.24f1 · **Durum:** ⏳ Onay bekliyor
+- **Tarih:** 2026-09-19 · **Branch:** `m7-map-events` · **Unity:** 6000.3.24f1 · **Durum:** ✅ Onaylandı (2026-09-19), `main`e merge edildi
 - **Cihazlar:** Redmi Pad Pro = MID (USB `368a7a72`) · OnePlus 5T = LOW (USB `3e415066`)
 
 ## Çıkış kriterleri (TDD_03 §36 M7)
@@ -76,12 +76,10 @@ Yok (sahne kurucuları atar).
 - **Benzinlikte kanopi kaldırıldı:** referans görselde (`maps/03`) kanopi yok; iki pompa adası + lamba havuzları.
 - **VirtualHorde (M5'ten ertelenen)** bu milestone'a sığmadı → M8 (tahliye ile birlikte büyük harita akışı).
 - Olay açılış süreleri ve ödüller hipotez (TDD balance kuralı); playtest gerekli.
-- `ProjectSetup` (`QualityLevels.cs`) her çalıştığında MEDIUM seviyesinin `antiAliasing`'ini 0'a çekiyor; M6'da tutulan MSAA 2x ayarı her seferinde geri alındı (commit'lenmedi). Kalıcı çözüm için karar gerekli (OPEN ISSUES).
+- MSAA: kullanıcı kararıyla MEDIUM kalite seviyesi 2x; `QualityLevels.Level.Msaa` ile `ProjectSetup` artık bunu korur.
 
 ## OPEN ISSUES
 - **Görsel yoğunluk:** referanstaki çöp/moloz/bitki, çatı klimaları, kırık araba, yol çatlakları ve ıslak zemin yansımaları henüz az; bina cepheleri düz kutu (pencere/kapı detayı yok). M11 sanat geçişi veya ek CC0 set gerekli.
 - Oyuncu hâlâ kapsül (M6'dan); tablette üst satır can barıyla çakışıyor (M11).
 - **Host kcp2k tahsisi ~0.9 KB/kare** (üçüncü taraf): Mirror/kcp2k güncellemesi veya NonAlloc sunucu — M13 performans geçişinde.
-- `QualityLevels.cs` MSAA: MEDIUM'da 2x'i script'e mi yazalım, yoksa URP asset'ine mi bırakalım? Kullanıcı kararı.
-- `docs/ASSET_SOURCES.md` CC0 listesi Codex oturumunun dosyası; Poly Haven/ambientCG kaynakları `Tools/Environment/fetch_cc0.py` içinde listeli, belgeye eklenmesi gerekiyor.
 - VirtualHorde → M8. Harita 3 → 7 bölge sonraki harita milestone'unda.

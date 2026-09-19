@@ -3,17 +3,16 @@
 _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 
 ## Şu an neredeyiz
-- **Branch:** `m7-map-events` (M6 main'e merge edildi ve push edildi; M7 commit'leri yalnızca yerelde).
-- **M7 — Harita, Olaylar ve Çevre: onay bekliyor** (branch `m7-map-events`, merge/push yok). Rapor: `docs/reports/M7_REPORT.md`.
+- **Branch:** `m8-boss-extraction` (M7 main'e merge edildi ve push edildi).
+- **M7 — Harita, Olaylar ve Çevre: onaylandı (2026-09-19).** Rapor: `docs/reports/M7_REPORT.md`. **M8 başladı.**
 - EditMode testleri: **163 / 163** geçiyor. OnePlus 30 FPS, Redmi 60 FPS, oyun kodu GC 0 B/kare.
-- Harita yeniden üretimi: `MinimapBaker.BakeBatch` (grafikli) → `RebuildScenesBatch`. `ProjectSetup` QualitySettings MSAA'yı 0'a çekiyor; commit'lemeden `git checkout ProjectSettings/QualitySettings.asset`.
+- Harita yeniden üretimi: `MinimapBaker.BakeBatch` (grafikli) → `RebuildScenesBatch`.
 - Zombiler artık gerçekçi Mixamo gövdeleri (8 karakter). Ham FBX'ler git dışında: yeniden bake için önce `MIXAMO_TOKEN=… python3 Tools/Mixamo/mixamo_fetch.py`, sonra `CrowdBaker.BakeAllBatch`. Görünüm kontrolü: `CrowdPreview.RenderBatch` (batchmode, `-nographics` olmadan).
-- **Paralel oturum:** Codex aynı repoda `docs/reference`, `docs/ASSET_SOURCES.md`, `docs/MIXAMO_*` ve `Assets/ThirdParty/Mixamo` README/meta üzerinde çalışıyor; kullanıcı bunları ayrı commit'liyor. `git add -A` kullanma.
+- **Paralel oturum:** Codex aynı repoda `docs/reference`, `docs/ASSET_SOURCES.md`, `docs/MIXAMO_*` ve `Assets/ThirdParty/Mixamo` README/meta üzerinde çalışabiliyor; o dosyalar ayrı commit'lenir. `git add -A` kullanma.
 - `ProjectSettings` (MSAA 2x, ışık ayarları) kullanıcı onayıyla tutuldu.
 
 ## Sonraki oturumda ilk adımlar
-1. Kullanıcıdan M7 onayını al (rapor: `docs/reports/M7_REPORT.md`; OPEN ISSUES'taki MSAA kararı dahil).
-2. Onay gelince: `M7_REPORT.md` durumunu "Onaylandı" yap → commit → `git checkout main && git merge --no-ff m7-map-events` → `git push origin main m7-map-events` → M8 branch'i (TDD_03 §36; VirtualHorde M8'e ertelendi).
+1. **M8 — Boss & Extraction** (TDD_03 §36): Mutant Brute (fazlar, telegraph'lar), `ExtractionController` (periyodik tahliye pencereleri, hastane helipad'i = `hospital_extraction` çapası), Threat ile boss tekrarı, ödül dönüşümü; M7'den ertelenen VirtualHorde. Görsel hedef: `docs/reference/models/06-brute-boss.png`, `maps/04-hospital-extraction.png`.
 
 ## Tamamlanan milestone'lar
 | M | Konu | Durum |
@@ -24,7 +23,7 @@ _Son güncelleme: 2026-09-19 · Sonraki oturum buradan devam eder._
 | M3 | Horde simulation (Burst ZombieWorld, flow field, katmanlı surround, AI LOD) | ✅ onaylı, main |
 | M4 | Shooting & Combat — MVP kapısı (twin-stick, host doğrulamalı hit claim, windup'lı zombi saldırısı, VFX, ses) | ✅ onaylı, main |
 | M5 | Endless loop (director, threat, downed/revive, XP + 12 upgrade, coin + instanced pickup, "Bölgeyi temizle", sonuç ekranı) | ✅ onaylı, main |
-| M7 | Harita, olaylar, çevre (3 bölge, CC0 çevre, mini-harita, 6 olay, etkileşimliler, anti-kamp, bölge kartı) | ⏳ onay bekliyor |
+| M7 | Harita, olaylar, çevre (3 bölge, CC0 çevre, mini-harita, 6 olay, etkileşimliler, anti-kamp, bölge kartı) | ✅ onaylı, main |
 | M6 | Combat Content I (6 silah, 2 slot, granat, Runner/Tank/Spitter/Exploder, elite, durum efektleri, spawn deck, gerçekçi Mixamo zombileri) | ✅ onaylı, main |
 
 ## M6'dan açık konular (rapordaki OPEN ISSUES)
